@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 #include "Engine/DataAsset.h"
 #include "TFDPlayerDataAsset.generated.h"
 
@@ -32,5 +33,14 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Stats")
 	float Speed;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Tags")
+	FGameplayTag TeamTag;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Tags")
+	FGameplayTagContainer AbilityTags;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Tags")
+	FGameplayTagContainer InitialStateTags;
 
 };
