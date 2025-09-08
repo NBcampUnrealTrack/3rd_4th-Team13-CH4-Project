@@ -7,8 +7,6 @@
 UENUM(BlueprintType)
 enum class EHUDLayout : uint8
 {
-	// 타이틀과 로비
-	OutGame,
 	// 플레이어가 일반적으로 게임을 플레이할 때 (체력/스킬바/미니맵 등 표시)
 	InGame,
 
@@ -17,7 +15,8 @@ enum class EHUDLayout : uint8
 
 	// 메인 메뉴 화면 (로그인, 캐릭터 선택 등)
 	MainMenu,
-
+	// 로비
+	Lobby,
 	// 게임 일시정지 메뉴
 	PauseMenu
 };
