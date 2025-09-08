@@ -4,11 +4,6 @@
 #include "UHUDLayoutWidget.h"
 
 
-#include "CoreMinimal.h"
-#include "Blueprint/UserWidget.h"
-#include "Components/CanvasPanel.h"
-
-
 UCanvasPanel* UHUDLayoutWidget::GetLayerSlot(EUILayer Layer)
 {
 	UCanvasPanel* returnPanel = nullptr;
@@ -33,18 +28,18 @@ UCanvasPanel* UHUDLayoutWidget::GetLayerSlot(EUILayer Layer)
 
 void UHUDLayoutWidget::AddToLayer(EUILayer Layer, UUserWidget* Widget)
 {
-	UCanvasPanel* Slot = GetLayerSlot(Layer);
-	if (Slot && Widget)
+	UCanvasPanel* LayerSlot = GetLayerSlot(Layer);
+	if (LayerSlot && Widget)
 	{
-		Slot->AddChild(Widget);
+		LayerSlot->AddChild(Widget);
 	}
 }
 
 void UHUDLayoutWidget::RemoveFromLayer(EUILayer Layer, UUserWidget* Widget)
 {
-	UCanvasPanel* Slot = GetLayerSlot(Layer);
-	if (Slot && Widget)
+	UCanvasPanel* LayerSlot = GetLayerSlot(Layer);
+	if (LayerSlot && Widget)
 	{
-		Slot->RemoveChild(Widget);
+		LayerSlot->RemoveChild(Widget);
 	}
 }

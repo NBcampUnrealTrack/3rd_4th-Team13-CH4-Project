@@ -4,8 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "Subsystems/LocalPlayerSubsystem.h"
+#include "EUIDefine.h"
+#include "Components/CanvasPanel.h"
 #include "GameUIRouterSubsystem.generated.h"
-
+class UHUDLayoutWidget;
 /**
  * UI 관리 서브 시스템
  * - LocalPlayerSubsystem 기반으로 자동 클라 전용
@@ -20,9 +22,9 @@ private:
 	TMap<EUILayer, UUserWidget*> ActiveWidgets;
 	
 	// 이전 Layout 저장 (PopLayout용) 한 번에 훨씬 많은 레이아웃이 활성화 되면 TArray로 확장필요.
-	EHUDLayout PreviousLayout;
+	::EHUDLayout PreviousLayout;
 	// 현재 HUD Layout 추적
-	EHUDLayout CurrentLayout;
+	::EHUDLayout CurrentLayout;
 	
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UHUDLayoutWidget> HUDLayoutClass;

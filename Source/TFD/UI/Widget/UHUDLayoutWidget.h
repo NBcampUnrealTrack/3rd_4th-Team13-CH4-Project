@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "Components/CanvasPanel.h"
 #include "UI/EUIDefine.h"
 #include "UHUDLayoutWidget.generated.h"
 
