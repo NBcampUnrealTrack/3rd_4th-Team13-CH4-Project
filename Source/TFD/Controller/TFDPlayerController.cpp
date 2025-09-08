@@ -5,6 +5,7 @@
 
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
+#include "Character/TFDCharacter.h"
 #include "GameFramework/Character.h"
 
 ATFDPlayerController::ATFDPlayerController()
@@ -44,6 +45,34 @@ void ATFDPlayerController::SetupInputComponent()
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ATFDPlayerController::Jump);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this,
 		                                   &ATFDPlayerController::StopJumping);
+
+		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Triggered, this,
+								   &ATFDPlayerController::Dash);
+	}
+}
+
+void ATFDPlayerController::Dash(const FInputActionValue& Value)
+{
+	if (APawn* ControlledPawn = GetPawn())
+	{
+	
+		if (ATFDCharacter* MyCharacter = Cast<ATFDCharacter>(ControlledPawn))
+		{
+			
+			if (UAbilitySystemComponent* ASC = MyCharacter->GetAbilitySystemComponent())
+			{
+				// StartupAbilities 배열 중 Dash Ability 찾기
+			
+				for (TSubclassOf<UGameplayAbility> AbilityClass : MyCharacter->GetStartupAbilities())
+				{
+					if (AbilityClass && AbilityClass->GetName().Contains(TEXT("BP_GA_TFDDashAbility"))) // 이름 기준 예시
+					{
+						ASC->TryActivateAbilityByClass(AbilityClass);
+						break; // 한 번만 발동
+					}
+				}
+			}
+		}
 	}
 }
 
