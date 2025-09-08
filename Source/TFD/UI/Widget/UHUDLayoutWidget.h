@@ -15,7 +15,7 @@ class TFD_API UHUDLayoutWidget : public UUserWidget
 {
 	GENERATED_BODY()
 	
-public:
+protected:
 	// Layer 슬롯 맵 WBP에서 CanvasPanel을 BindWidget
 	UPROPERTY(meta=(BindWidget))
 	UCanvasPanel* GameLayerSlot;
@@ -29,6 +29,7 @@ public:
 	UPROPERTY(meta=(BindWidget))
 	UCanvasPanel* NotificationLayerSlot;
 
+public:
 	UCanvasPanel* GetLayerSlot(::EUILayer Layer);
 	// 레이어에 위젯 추가
 	void AddToLayer(EUILayer Layer, UUserWidget* Widget);
