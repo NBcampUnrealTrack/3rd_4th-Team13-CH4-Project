@@ -138,5 +138,10 @@ void ATFDCharacter::SetDAPlayerStat()
 		{
 			GetCharacterMovement()->MaxWalkSpeed = AttributeSet->GetSpeed();
 		}
+		//팀태그 넘겨주는 코드
+		if (AbilitySystemComponent && CharacterData)
+		{
+			AbilitySystemComponent->AddLooseGameplayTag(CharacterData->TeamTag);
+		}
 	}
 }
