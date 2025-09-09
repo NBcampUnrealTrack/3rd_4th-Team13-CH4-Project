@@ -47,7 +47,7 @@ protected:
 
 	// DataAsset 설정 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GAS")
-	class UTFDPlayerDataAsset* CharacterData;
+	class UTFDPlayerDataAsset* CharacterDataAsset;
 
 
 public:
@@ -76,4 +76,6 @@ private:
 	// GAS 기본 생성자
 	void BaseSetting();
 	void SetDAPlayerStat();
+	void OnSpeedAttributeChanged(const FOnAttributeChangeData& Data);
+	
 };

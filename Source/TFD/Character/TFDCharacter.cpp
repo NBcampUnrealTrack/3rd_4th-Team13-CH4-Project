@@ -125,23 +125,35 @@ void ATFDCharacter::BaseSetting()
 
 void ATFDCharacter::SetDAPlayerStat()
 {
-	if (CharacterData && AttributeSet)
+	if (CharacterDataAsset && AttributeSet)
 	{
 		// AttributeSet의 초기값을 데이터 에셋의 값으로 설정
-		AttributeSet->SetHealth(CharacterData->Health);
-		AttributeSet->SetMaxHealth(CharacterData->MaxHealth);
-		AttributeSet->SetMana(CharacterData->Mana);
-		AttributeSet->SetMaxMana(CharacterData->MaxMana);
-		AttributeSet->SetSpeed(CharacterData->Speed);
+		AttributeSet->SetHealth(CharacterDataAsset->Health);
+		AttributeSet->SetMaxHealth(CharacterDataAsset->MaxHealth);
+		AttributeSet->SetMana(CharacterDataAsset->Mana);
+		AttributeSet->SetMaxMana(CharacterDataAsset->MaxMana);
+		AttributeSet->SetSpeed(CharacterDataAsset->Speed);
+		AttributeSet->SetGold(CharacterDataAsset->Gold);
 
 		if (GetCharacterMovement() && AttributeSet)
 		{
 			GetCharacterMovement()->MaxWalkSpeed = AttributeSet->GetSpeed();
+			// Speed 능력치의 변화 이벤트에 델리게이트를 연결합니다.
+			AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(
+				UTFDAttributeSet::GetSpeedAttribute()).AddUObject(this, &ATFDCharacter::OnSpeedAttributeChanged);
 		}
 		//팀태그 넘겨주는 코드
-		if (AbilitySystemComponent && CharacterData)
+		if (AbilitySystemComponent && CharacterDataAsset)
 		{
-			AbilitySystemComponent->AddLooseGameplayTag(CharacterData->TeamTag);
+			AbilitySystemComponent->AddLooseGameplayTag(CharacterDataAsset->TeamTag);
 		}
+	}
+}
+
+void ATFDCharacter::OnSpeedAttributeChanged(const FOnAttributeChangeData& Data)
+{
+	if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
+	{
+		MoveComp->MaxWalkSpeed = Data.NewValue;
 	}
 }
