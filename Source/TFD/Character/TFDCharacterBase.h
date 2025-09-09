@@ -13,7 +13,8 @@
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
 UCLASS()
-class TFD_API ATFDCharacterBase : public ACharacter
+class TFD_API ATFDCharacterBase
+	: public ACharacter
 	, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
@@ -31,6 +32,11 @@ public:
 	virtual void BeginPlay() override;
 
 protected:
+	// GAS 기본 생성자
+	void BaseSetting();
+	void SetDAPlayerStat();
+
+protected:
 	// GAS 핵심 컴포넌트들
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAS")
 	class UAbilitySystemComponent* AbilitySystemComponent;
@@ -41,8 +47,4 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GAS")
 	class UTFDPlayerDataAsset* CharacterData;
 
-private:
-	// GAS 기본 생성자
-	void BaseSetting();
-	void SetDAPlayerStat();
 };
