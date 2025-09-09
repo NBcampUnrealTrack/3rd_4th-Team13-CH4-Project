@@ -16,6 +16,7 @@ ATFDCharacterBase::ATFDCharacterBase()
 	// AttributeSet 생성
 	AttributeSet = CreateDefaultSubobject<UTFDAttributeSet>(TEXT("AttributeSet"));
 
+	BaseSetting();
 }
 
 // Called when the game starts or when spawned
@@ -56,6 +57,7 @@ void ATFDCharacterBase::PossessedBy(AController* NewController)
 
 void ATFDCharacterBase::BaseSetting()
 {
+	UE_LOG(LogTemp, Warning, TEXT("BaseSetting"));;
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 

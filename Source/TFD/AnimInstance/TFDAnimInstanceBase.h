@@ -4,8 +4,8 @@
 #include "Animation/AnimInstance.h"
 #include "TFDAnimInstanceBase.generated.h"
 
-class ATFDCharacter;
-//class TFDCharacterBase
+//class ATFDCharacter;
+class ATFDCharacterBase;
 class UCharacterMovementComponent;
 
 UCLASS()
@@ -20,7 +20,7 @@ public:
 
 protected:
 	UPROPERTY()
-	TObjectPtr<ATFDCharacter> OwnerCharacter; //TFDCharacterBase
+	TObjectPtr<ATFDCharacterBase> OwnerCharacter; //TFDCharacterBase
 
 	UPROPERTY()
 	TObjectPtr<UCharacterMovementComponent> OwnerCharacterMovementComponent;
