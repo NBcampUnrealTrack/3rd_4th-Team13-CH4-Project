@@ -45,6 +45,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GAS")
 	TArray<TSubclassOf<UGameplayAbility>> StartupAbilities;
 
+	// DataAsset 설정 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GAS")
 	class UTFDPlayerDataAsset* CharacterData;
 
@@ -52,6 +53,7 @@ protected:
 public:
 	ATFDCharacter();
 
+	TArray<TSubclassOf<UGameplayAbility>>  GetStartupAbilities() const;
 	// IAbilitySystemInterface
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 

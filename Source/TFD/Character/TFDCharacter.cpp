@@ -32,6 +32,11 @@ ATFDCharacter::ATFDCharacter()
 	BaseSetting();
 }
 
+TArray<TSubclassOf<UGameplayAbility>> ATFDCharacter::GetStartupAbilities() const
+{
+	return StartupAbilities;
+}
+
 UAbilitySystemComponent* ATFDCharacter::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComponent;
