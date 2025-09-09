@@ -7,7 +7,7 @@
 #include "RandomMoveAbility.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class TFD_API URandomMoveAbility : public UTFDGameplayAbility
@@ -35,7 +35,7 @@ public:
 
 	void DoRandomMove();
 private:
-	
+
 	FTimerHandle TimerHandle;
 
 	UPROPERTY(EditAnywhere, Category = "AI")
@@ -47,4 +47,6 @@ private:
 	UPROPERTY(EditAnywhere, Category = "AI")
 	float MaxWaitTime = 3.f;
 
+	// 델리게이트 바인딩 여부 체크
+	bool bIsMoveDelegateBound = false;
 };

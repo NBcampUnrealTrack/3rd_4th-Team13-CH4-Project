@@ -16,7 +16,7 @@ ATFDCharacterBase::ATFDCharacterBase()
 	// AttributeSet 생성
 	AttributeSet = CreateDefaultSubobject<UTFDAttributeSet>(TEXT("AttributeSet"));
 
-	BaseSetting();
+	
 }
 
 // Called when the game starts or when spawned
@@ -24,6 +24,7 @@ void ATFDCharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
 
+	BaseSetting();
 }
 
 UAbilitySystemComponent* ATFDCharacterBase::GetAbilitySystemComponent() const
@@ -39,6 +40,8 @@ void ATFDCharacterBase::NotifyControllerChanged()
 void ATFDCharacterBase::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
+
+	
 
 	// 서버일 때만 실행
 	if (HasAuthority())

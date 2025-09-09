@@ -1,7 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
-
-#include "GameAbilitySystem/Ability/AI/RandomMoveAbility.h"
+﻿#include "GameAbilitySystem/Ability/AI/RandomMoveAbility.h"
 #include "AIController.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "TimerManager.h"
@@ -14,13 +11,14 @@ URandomMoveAbility::URandomMoveAbility()
 }
 
 void URandomMoveAbility::ActivateAbility(
-	const FGameplayAbilitySpecHandle Handle, 
-	const FGameplayAbilityActorInfo* ActorInfo, 
+	const FGameplayAbilitySpecHandle Handle,
+	const FGameplayAbilityActorInfo* ActorInfo,
 	const FGameplayAbilityActivationInfo ActivationInfo,
 	const FGameplayEventData* TriggerEventData)
 {
 	if (!ActorInfo->AvatarActor.IsValid())
 	{
+		UE_LOG(LogTemp, Warning, TEXT("AvatarActor is invalid"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 		return;
 	}
@@ -28,19 +26,20 @@ void URandomMoveAbility::ActivateAbility(
 	// 서버에서만 실행
 	if (!ActorInfo->AvatarActor->HasAuthority())
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Server authority missing"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 		return;
 	}
 
-	// 바로 이동
+	// 바로 이동 시작
 	DoRandomMove();
 }
 
 void URandomMoveAbility::EndAbility(
-	const FGameplayAbilitySpecHandle Handle, 
-	const FGameplayAbilityActorInfo* ActorInfo, 
-	const FGameplayAbilityActivationInfo ActivationInfo, 
-	bool bReplicateEndAbility, 
+	const FGameplayAbilitySpecHandle Handle,
+	const FGameplayAbilityActorInfo* ActorInfo,
+	const FGameplayAbilityActivationInfo ActivationInfo,
+	bool bReplicateEndAbility,
 	bool bWasCancelled)
 {
 	if (ActorInfo->AvatarActor.IsValid())
@@ -60,18 +59,11 @@ void URandomMoveAbility::DoRandomMove()
 	if (!AICon) return;
 
 	FVector Origin = Pawn->GetActorLocation();
+	FVector RandomPoint = UKismetMathLibrary::RandomPointInBoundingBox(Origin, FVector(MoveRadius, MoveRadius, 0.f));
 
-	// 랜덤 거리 계산
-	float RandomDistance = FMath::FRandRange(0.f, MoveRadius);
-	FVector RandomDirection = UKismetMathLibrary::RandomUnitVector();
-	RandomDirection.Z = 0.f; // 평면 이동
-	FVector RandomPoint = Origin + RandomDirection * RandomDistance;
-
-	FNavPathSharedPtr NavPath;
-
-	EPathFollowingRequestResult::Type Result = AICon->MoveToLocation(
+	AICon->MoveToLocation(
 		RandomPoint,
-		50.f,  // AcceptanceRadius
+		100.f,  // AcceptanceRadius
 		true,  // bStopOnOverlap
 		true,  // bUsePathfinding
 		true,  // bCanStrafe
@@ -79,14 +71,12 @@ void URandomMoveAbility::DoRandomMove()
 		nullptr // OutPath
 	);
 
-	if (Result == EPathFollowingRequestResult::RequestSuccessful)
+	// 이동 완료 Lambda, Ability 시작 시 1번만 바인딩
+	if (!bIsMoveDelegateBound)
 	{
-		// 이동 완료 Lambda
-		AICon->GetPathFollowingComponent()->OnRequestFinished.AddLambda([this, AICon](FAIRequestID RequestID, const FPathFollowingResult& MoveResult)
+		bIsMoveDelegateBound = true;
+		AICon->GetPathFollowingComponent()->OnRequestFinished.AddLambda([this](FAIRequestID RequestID, const FPathFollowingResult& MoveResult)
 			{
-				// Delegate 중복 방지
-				AICon->GetPathFollowingComponent()->OnRequestFinished.Clear();
-
 				// 랜덤 대기 후 다음 이동
 				float WaitTime = FMath::FRandRange(MinWaitTime, MaxWaitTime);
 				GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &URandomMoveAbility::DoRandomMove, WaitTime, false);
