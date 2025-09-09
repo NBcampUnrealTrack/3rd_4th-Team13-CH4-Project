@@ -44,7 +44,8 @@ void ATFDGoldBar::BeginPlay()
 void ATFDGoldBar::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (!GoldRewardEffect) return;
+	if (!GoldRewardEffect)
+		return;
 
 	if (ATFDCharacter* Player = Cast<ATFDCharacter>(OtherActor))
 	{
