@@ -53,7 +53,7 @@ public:
 	FGameplayAttributeData Speed;
 	ATTRIBUTE_ACCESSORS(UTFDAttributeSet, Speed)
 
-	UPROPERTY(BlueprintReadOnly, Category = "Speed", ReplicatedUsing = OnRep_Gold)
+	UPROPERTY(BlueprintReadOnly, Category = "Gold", ReplicatedUsing = OnRep_Gold)
 	FGameplayAttributeData Gold;
 	ATTRIBUTE_ACCESSORS(UTFDAttributeSet, Gold)
 
@@ -85,5 +85,7 @@ protected:
 
 	UFUNCTION()
 	virtual void OnRep_Gold(const FGameplayAttributeData& OldGold);
-	
+
+protected:
+
 };

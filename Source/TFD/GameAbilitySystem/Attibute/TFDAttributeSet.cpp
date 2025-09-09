@@ -2,7 +2,11 @@
 
 
 #include "GameAbilitySystem/Attibute/TFDAttributeSet.h"
-#include "Net/UnrealNetwork.h"
+
+
+#include "Character/TFDCharacter.h"
+#include "AbilitySystemComponent.h"
+
 
 UTFDAttributeSet::UTFDAttributeSet()
 {
@@ -61,3 +65,4 @@ void UTFDAttributeSet::OnRep_Gold(const FGameplayAttributeData& OldGold)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UTFDAttributeSet, Gold, OldGold);
 }
+
