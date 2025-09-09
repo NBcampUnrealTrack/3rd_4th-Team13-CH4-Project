@@ -13,6 +13,8 @@ UTFDAttributeSet::UTFDAttributeSet()
 	InitMaxMana(50.0f);
 	InitStamina(100.0f);
 	InitMaxStamina(100.0f);
+	InitSpeed(300.0f);
+	InitGold(100.0f);
 }
 
 void UTFDAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -53,4 +55,9 @@ void UTFDAttributeSet::OnRep_MaxStamina(const FGameplayAttributeData& OldMaxStam
 void UTFDAttributeSet::OnRep_Speed(const FGameplayAttributeData& OldSpeed)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UTFDAttributeSet, Speed, OldSpeed);
+}
+
+void UTFDAttributeSet::OnRep_Gold(const FGameplayAttributeData& OldGold)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UTFDAttributeSet, Gold, OldGold);
 }
