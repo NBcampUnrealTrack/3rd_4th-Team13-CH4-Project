@@ -13,5 +13,7 @@ UCLASS()
 class TFD_API ATFDPlayerState : public APlayerState
 {
 	GENERATED_BODY()
-	
+
+private:
+	EPlayerRole PlayRole;
 };
