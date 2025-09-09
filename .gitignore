@@ -1,4 +1,10 @@
 /Content/Frank_Slash_Pack/**
+/Content/Characters/
+/Content/ThirdParty/
+/Content/ThirdPerson/
+/Content/LevelPrototyping/
+/Content/__ExternalActors__/
+/Content/__ExternalObjects__/
 
 
 ### UnrealEngine ###
