@@ -34,6 +34,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Stats")
 	float Speed;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item")
+	float Gold;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Tags")
 	FGameplayTag TeamTag;
 
