@@ -1,5 +1,6 @@
 ﻿#include "GameAbilitySystem/Ability/TFDArrestedAbility.h"
 #include "Character/TFDCharacter.h"
+#include "Character/TFDAICharacter.h"
 #include "AbilitySystemComponent.h"
 #include "AIController.h"
 #include "Controller/TFDPlayerController.h"
@@ -26,26 +27,10 @@ void UTFDArrestedAbility::ActivateAbility(
         return;
     }
 
-    ATFDCharacter* Char = Cast<ATFDCharacter>(ActorInfo->AvatarActor.Get());
-    if (!Char)
+    if (ATFDCharacter* PlayerChar = Cast<ATFDCharacter>(ActorInfo->AvatarActor.Get()))
     {
-        UE_LOG(LogTemp, Warning, TEXT("[GA_Arrested] AvatarActor is not ATFDCharacter"));
-        EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
-        return;
-    }
-
-    // 1️⃣ 서버 Authority 처리 → AI Stop
-    if (Char->HasAuthority())
-    {
-        // AI 이동 멈춤
-        if (AAIController* AICon = Cast<AAIController>(Char->GetController()))
-        {
-            AICon->StopMovement();
-            UE_LOG(LogTemp, Warning, TEXT("[GA_Arrested] AI movement stopped (Server)"));
-        }
-
         // 캐릭터 이동 멈춤
-        if (UCharacterMovementComponent* MoveComp = Char->GetCharacterMovement())
+        if (UCharacterMovementComponent* MoveComp = PlayerChar->GetCharacterMovement())
         {
             MoveComp->StopMovementImmediately();
             MoveComp->DisableMovement();
@@ -53,6 +38,34 @@ void UTFDArrestedAbility::ActivateAbility(
             UE_LOG(LogTemp, Warning, TEXT("[GA_Arrested] Character movement stopped (Server)"));
         }
     }
+    else if (ATFDAICharacter* AIChar = Cast<ATFDAICharacter>(ActorInfo->AvatarActor.Get()))
+    {
+        // AI 이동 멈춤
+        if (AAIController* AICon = Cast<AAIController>(AIChar->GetController()))
+        {
+            AICon->StopMovement();
+            UE_LOG(LogTemp, Warning, TEXT("[GA_Arrested] AI movement stopped (Server)"));
+        }
+
+        if (UAbilitySystemComponent* ASC = AIChar->GetAbilitySystemComponent())
+        {
+            FGameplayTagContainer CancelTags;
+            CancelTags.AddTag(TAG_Ability_Neutral_RandomMove);
+
+            ASC->CancelAbilities(&CancelTags);
+            UE_LOG(LogTemp, Warning, TEXT("[GA_Arrested] AI RandomMove ability canceled"));
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[GA_Arrested] Unknown AvatarActor type"));
+        EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
+    }
+
+
+    
+
+    
 }
 
 void UTFDArrestedAbility::EndAbility(
