@@ -4,6 +4,9 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "Character/TFDPlayerDataAsset.h"
+#include "Controller/TFDPlayerController.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 
 ATFDPlayerCharacter::ATFDPlayerCharacter()
@@ -23,9 +26,12 @@ ATFDPlayerCharacter::ATFDPlayerCharacter()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	// Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
+
 }
 
 void ATFDPlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
 }
+

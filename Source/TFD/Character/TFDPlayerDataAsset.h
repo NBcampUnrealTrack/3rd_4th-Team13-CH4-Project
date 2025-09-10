@@ -4,9 +4,23 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
+#include "TFDNativeGameplayTags.h"
 #include "Abilities/GameplayAbility.h"
+#include "InputMappingContext.h"
 #include "TFDPlayerDataAsset.generated.h"
 
+
+USTRUCT(BlueprintType)
+struct FInputActionTagMapping
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UInputAction* InputAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FGameplayTag Tag;
+};
 
 /**
  * 
@@ -38,5 +52,11 @@ public:
 	// Ability 설정
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GAS")
 	TArray<TSubclassOf<UGameplayAbility>> StartupAbilities;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "TFD|Input|Job")
+	TObjectPtr<UInputMappingContext> JobMappingContext;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "TFD|Input|Job")
+	TArray<FInputActionTagMapping> Actions;
 
 };

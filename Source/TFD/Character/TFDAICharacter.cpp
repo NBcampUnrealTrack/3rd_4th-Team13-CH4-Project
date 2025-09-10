@@ -12,7 +12,10 @@ ATFDAICharacter::ATFDAICharacter()
 void ATFDAICharacter::BeginPlay()
 {
 	Super::BeginPlay();
+}
 
+void ATFDAICharacter::StartMovemnetWalking()
+{
 	if (!HasAuthority()) return;
 
 	if (AbilitySystemComponent)

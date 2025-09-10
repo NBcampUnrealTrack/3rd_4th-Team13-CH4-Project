@@ -1,5 +1,5 @@
 ﻿#include "GameAbilitySystem/Ability/TFDArrestedAbility.h"
-#include "Character/TFDCharacter.h"
+#include "Character/TFDPlayerCharacter.h"
 #include "Character/TFDAICharacter.h"
 #include "AbilitySystemComponent.h"
 #include "AIController.h"
@@ -27,7 +27,7 @@ void UTFDArrestedAbility::ActivateAbility(
         return;
     }
 
-    if (ATFDCharacter* PlayerChar = Cast<ATFDCharacter>(ActorInfo->AvatarActor.Get()))
+    if (ATFDPlayerCharacter* PlayerChar = Cast<ATFDPlayerCharacter>(ActorInfo->AvatarActor.Get()))
     {
         // 캐릭터 이동 멈춤
         if (UCharacterMovementComponent* MoveComp = PlayerChar->GetCharacterMovement())
@@ -77,7 +77,7 @@ void UTFDArrestedAbility::EndAbility(
 {
     if (ActorInfo && ActorInfo->AvatarActor.IsValid())
     {
-        ATFDCharacter* Char = Cast<ATFDCharacter>(ActorInfo->AvatarActor.Get());
+        ATFDPlayerCharacter* Char = Cast<ATFDPlayerCharacter>(ActorInfo->AvatarActor.Get());
         if (Char && ActorInfo->IsLocallyControlled())
         {
             if (ATFDPlayerController* PC = Cast<ATFDPlayerController>(Char->GetController()))

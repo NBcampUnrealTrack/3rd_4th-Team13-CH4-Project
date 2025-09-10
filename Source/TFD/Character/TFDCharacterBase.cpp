@@ -4,6 +4,7 @@
 #include "TFDPlayerDataAsset.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "PlayerState/TFDPlayerState.h"
 
 ATFDCharacterBase::ATFDCharacterBase()
 {
@@ -12,11 +13,12 @@ ATFDCharacterBase::ATFDCharacterBase()
 
 	// ASC 생성
 	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComp"));
+	AbilitySystemComponent->SetIsReplicated(true);
+	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed); // or Full
 
 	// AttributeSet 생성
 	AttributeSet = CreateDefaultSubobject<UTFDAttributeSet>(TEXT("AttributeSet"));
 
-	
 }
 
 // Called when the game starts or when spawned
@@ -25,6 +27,20 @@ void ATFDCharacterBase::BeginPlay()
 	Super::BeginPlay();
 
 	BaseSetting();
+}
+
+void ATFDCharacterBase::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+
+	if (APlayerState* PS = GetPlayerState())
+	{
+		if (AbilitySystemComponent)
+		{
+			// ASC의 Owner는 PlayerState, Avatar는 이 캐릭터(Pawn)
+			AbilitySystemComponent->InitAbilityActorInfo(PS, this);
+		}
+	}
 }
 
 UAbilitySystemComponent* ATFDCharacterBase::GetAbilitySystemComponent() const
@@ -41,26 +57,26 @@ void ATFDCharacterBase::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
 
-	
-
 	// 서버일 때만 실행
 	if (HasAuthority())
 	{
-
-		if (AbilitySystemComponent)
+		if (APlayerState* PS = GetPlayerState())
 		{
-			// ASC의 Owner는 PlayerState, Avatar는 이 캐릭터(Pawn)
-			AbilitySystemComponent->InitAbilityActorInfo(this, this);
+			if (AbilitySystemComponent)
+			{
+				AbilitySystemComponent->InitAbilityActorInfo(PS, this);
+			}
 		}
-	}
 
-	SetDAPlayerStat();
+		SetDAPlayerStat();
+
+	}
 
 }
 
 void ATFDCharacterBase::BaseSetting()
 {
-	UE_LOG(LogTemp, Warning, TEXT("BaseSetting"));;
+	UE_LOG(LogTemp, Warning, TEXT("BaseSetting"));
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 
@@ -76,10 +92,13 @@ void ATFDCharacterBase::BaseSetting()
 	GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
 	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
+
 }
 
 void ATFDCharacterBase::SetDAPlayerStat()
 {
+	if (!HasAuthority()) return;
+
 	if (CharacterData && AttributeSet)
 	{
 		// AttributeSet의 초기값을 데이터 에셋의 값으로 설정

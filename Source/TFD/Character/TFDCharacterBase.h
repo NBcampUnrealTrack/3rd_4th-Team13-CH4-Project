@@ -26,10 +26,10 @@ public:
 	// IAbilitySystemInterface
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
-
 	virtual void NotifyControllerChanged() override;
 	virtual void PossessedBy(AController* NewController) override;
 	virtual void BeginPlay() override;
+	virtual void OnRep_PlayerState() override;
 
 protected:
 	// GAS 기본 생성자
@@ -44,6 +44,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAS")
 	class UTFDAttributeSet* AttributeSet;
 
+public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GAS")
 	class UTFDPlayerDataAsset* CharacterData;
 

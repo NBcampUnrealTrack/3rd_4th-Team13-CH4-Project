@@ -16,6 +16,9 @@ class TFD_API ATFDAICharacter : public ATFDCharacterBase
 public:
 	ATFDAICharacter();
 
+	UFUNCTION(BlueprintCallable)
+	void StartMovemnetWalking();
+
 protected:
 	virtual void BeginPlay() override;
 };
