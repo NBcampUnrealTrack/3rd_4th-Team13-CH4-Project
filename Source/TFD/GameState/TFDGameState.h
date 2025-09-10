@@ -7,7 +7,6 @@
 #include "GameFramework/GameState.h"
 #include "TFDGameState.generated.h"
 
-enum class EGameState;
 /**
  * 
  */
@@ -17,7 +16,7 @@ class TFD_API ATFDGameState : public AGameState
 	GENERATED_BODY()
 
 protected:
-	UPROPERTY(BlueprintReadOnly);
+	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess));
 	FGameRuleData GameRuleData;		//TODO: DA 로 변경
 
 	float GameStartServerTime = 0.f;
@@ -30,7 +29,7 @@ protected:
 	// 경찰정보 Controller 리스트
 
 	UPROPERTY(Replicated)
-	TSet<ATFDPlayerState*> ReadyPlayers;
+	TArray<ATFDPlayerState*> ReadyPlayers;
 
 	UFUNCTION()
 	void MarkPlayerReady(ATFDPlayerState* PS);
@@ -38,8 +37,13 @@ protected:
 	// 게임 시작 알림용 Multicast
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_StartGame();
+
+	
 	
 public:
 	float GetCurrentGameTimeSec();		// 현재 서버시간 - 게임 시작 서버시간 
 	EGameState GetCurrentGameState();
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	const int MinimumPlayerNum = 2;
 };

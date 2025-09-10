@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerState.h"
+#include "GameData/EGameEnums.h"
 #include "TFDPlayerState.generated.h"
 
 /**

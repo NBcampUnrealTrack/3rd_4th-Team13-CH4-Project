@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameMode.h"
+#include "GameData/EGameEnums.h"
 #include "TFDGameMode.generated.h"
 
 /**

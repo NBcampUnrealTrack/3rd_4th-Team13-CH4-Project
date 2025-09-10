@@ -3,6 +3,8 @@
 
 #include "GameState/TFDGameState.h"
 
+#include "Net/UnrealNetwork.h"
+
 void ATFDGameState::MarkPlayerReady(ATFDPlayerState* PS)
 {
 	ReadyPlayers.Add(PS);
@@ -11,6 +13,14 @@ void ATFDGameState::MarkPlayerReady(ATFDPlayerState* PS)
 	{
 		Multicast_StartGame();
 	}
+}
+
+void ATFDGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ATFDGameState, GameState)
+	DOREPLIFETIME(ATFDGameState, ReadyPlayers)
 }
 
 void ATFDGameState::Multicast_StartGame_Implementation()
