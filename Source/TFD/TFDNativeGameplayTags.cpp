@@ -1,5 +1,6 @@
 // TFDNativeGameplayTags.cpp
 #include "TFDNativeGameplayTags.h"
+
 //1. 팀 구분 경찰/도둑/중립
 UE_DEFINE_GAMEPLAY_TAG(TAG_Team_Cop, "Team.Cop");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Team_Thief, "Team.Thief");
@@ -19,6 +20,7 @@ UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Thief_Steal, "Ability.Thief.Steal");
 //4. object
 UE_DEFINE_GAMEPLAY_TAG(TAG_Object_Door,"Object.Door"); //문
 UE_DEFINE_GAMEPLAY_TAG(TAG_Object_Money,"Object.Money"); //돈
+UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SpawnArea,"Object.SpawnArea"); //스폰
 
 //5.게임플레이큐 - 이펙트
 UE_DEFINE_GAMEPLAY_TAG(TAG_GameplayCue_Arrested, "GameplayCue.Arrested");
