@@ -158,8 +158,27 @@ void ATFDGameMode::MovePlayerToRandomSpawnPoint(APlayerController* PlayerControl
 	}
 }
 
-	// 레벨 로드 완료 대기
+void ATFDGameMode::SpawnAICrowd()
+{
 }
+
+void ATFDGameMode::SetPlayerPositions()
+{
+}
+
+void ATFDGameMode::OnCatchThief(APawn* APawn)
+{
+}
+
+void ATFDGameMode::GamePause()
+{
+}
+
+void ATFDGameMode::OnHandleGameEnd(EGameCompleteType CompleteType)
+{
+}
+
+
 
 void ATFDGameMode::Tick(float DeltaTime)
 {
