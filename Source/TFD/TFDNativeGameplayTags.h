@@ -1,4 +1,4 @@
-// TFDNativeGameplayTags.h
+﻿// TFDNativeGameplayTags.h
 #pragma once
 #include "GameplayTagContainer.h"
 #include "NativeGameplayTags.h"
@@ -21,6 +21,7 @@ UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Character_State_Detecting); //수색중
 //3.캐릭터 능력 
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ability_Cop_Handcuff); //경찰-포획
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ability_Thief_Steal); //도둑-훔치기
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ability_Neutral_RandomMove); //도둑-훔치기
 
 //4. object
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Object_Door); //문

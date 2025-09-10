@@ -1,4 +1,4 @@
-// TFDNativeGameplayTags.cpp
+﻿// TFDNativeGameplayTags.cpp
 #include "TFDNativeGameplayTags.h"
 
 //1. 팀 구분 경찰/도둑/중립
@@ -16,6 +16,7 @@ UE_DEFINE_GAMEPLAY_TAG(TAG_Character_State_Detecting, "Character.State.Detecting
 //3.캐릭터 능력 
 UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Cop_Handcuff, "Ability.Cop.Handcuff");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Thief_Steal, "Ability.Thief.Steal");
+UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Neutral_RandomMove, "Ability.Neutral.RandomMove");
 
 //4. object
 UE_DEFINE_GAMEPLAY_TAG(TAG_Object_Door,"Object.Door"); //문
