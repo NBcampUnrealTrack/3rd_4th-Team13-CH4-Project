@@ -7,9 +7,25 @@
 #include "EnhancedInputComponent.h"
 #include "Character/TFDCharacter.h"
 #include "GameFramework/Character.h"
+#include "Character/TFDCharacterBase.h"
+#include "AbilitySystemInterface.h"
+#include "AbilitySystemComponent.h"
+#include "TFDNativeGameplayTags.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 ATFDPlayerController::ATFDPlayerController()
 {
+}
+
+void ATFDPlayerController::SetMovemnetWalking()
+{
+	if (ATFDCharacterBase* CB = Cast<ATFDCharacterBase>(GetPawn()))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Movement None22"));
+
+		CB->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+		CB->GetCharacterMovement()->Activate();
+	}
 }
 
 void ATFDPlayerController::BeginPlay()
@@ -20,6 +36,7 @@ void ATFDPlayerController::BeginPlay()
 	{
 		check(DefaultMappingContext);
 		Subsystem->AddMappingContext(DefaultMappingContext, 0);
+
 	}
 }
 
@@ -45,9 +62,53 @@ void ATFDPlayerController::SetupInputComponent()
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ATFDPlayerController::Jump);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this,
 		                                   &ATFDPlayerController::StopJumping);
-
 		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Triggered, this,
 								   &ATFDPlayerController::Dash);
+	}
+}
+
+void ATFDPlayerController::OnPossess(APawn* InPawn)
+{
+	Super::OnPossess(InPawn);
+
+	if (ATFDCharacterBase* CB = Cast<ATFDCharacterBase>(InPawn))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Movement None22"));
+
+		CB->GetCharacterMovement()->DisableMovement();
+		CB->GetCharacterMovement()->SetMovementMode(MOVE_None);
+		CB->GetCharacterMovement()->StopMovementImmediately();
+	}
+}
+
+void ATFDPlayerController::AcknowledgePossession(APawn* InPawn)
+{
+	Super::AcknowledgePossession(InPawn);
+
+	if (IsLocalPlayerController())
+	{
+		if (ATFDCharacterBase* CB = Cast<ATFDCharacterBase>(InPawn))
+		{
+			if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
+				ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
+			{
+				if (CB->CharacterData->JobMappingContext)
+				{
+
+					Subsystem->AddMappingContext(CB->CharacterData->JobMappingContext, 0);
+				}
+			}
+
+			//********직업에 따른 능력 입력 바인딩************
+			if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
+			{
+				for (auto Action : CB->CharacterData->Actions)
+				{
+					EnhancedInputComponent->BindAction(Action.InputAction, ETriggerEvent::Started, this, &ATFDPlayerController::JobAbility, Action.Tag);
+				}
+				
+			}
+		}
 	}
 }
 
@@ -119,6 +180,24 @@ void ATFDPlayerController::StopJumping()
 	}
 }
 
+
+//DataAsset에서 추가한 액션과 태그로 자동 바인딩
+void ATFDPlayerController::JobAbility(const FInputActionValue& Value, FGameplayTag InputTag)
+{
+	ATFDCharacterBase* OwnerCharacter = Cast<ATFDCharacterBase>(GetPawn());
+	if (OwnerCharacter)
+	{
+		UAbilitySystemComponent* AbilitySystemComponent = OwnerCharacter->GetAbilitySystemComponent();
+		if (AbilitySystemComponent)
+		{
+			FGameplayTagContainer AbilityTags;
+			AbilityTags.AddTag(InputTag);
+			AbilitySystemComponent->TryActivateAbilitiesByTag(AbilityTags);
+		}
+	}
+}
+
+/*
 void ATFDPlayerController::Attack(const FInputActionValue& Value)
 {
 }
@@ -126,3 +205,5 @@ void ATFDPlayerController::Attack(const FInputActionValue& Value)
 void ATFDPlayerController::TogglePause(const FInputActionValue& Value)
 {
 }
+*/
+

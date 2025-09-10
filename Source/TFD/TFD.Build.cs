@@ -1,4 +1,4 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+﻿// Copyright Epic Games, Inc. All Rights Reserved.
 
 using UnrealBuildTool;
 
@@ -17,8 +17,11 @@ public class TFD : ModuleRules
 			    //GAS
 				"GameplayAbilities",      // 추가!
                 "GameplayTags",           // 추가!
-                "GameplayTasks"           // 추가!
-		});
+                "GameplayTasks",           // 추가!
+
+				"AIModule",
+				"NavigationSystem"
+        });
 		
 		//PublicIncludePaths.AddRange(new string[] { "TFD" });
 
