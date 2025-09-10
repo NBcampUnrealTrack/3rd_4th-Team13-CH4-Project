@@ -41,6 +41,8 @@ protected:
 	TObjectPtr<UInputAction> LookAction;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="TFD|Input|Default")
 	TObjectPtr<UInputAction> JumpAction;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="TFD|Input")
+	TObjectPtr<UInputAction> DashAction;
 	
 	/*
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "TFD|Input")
@@ -50,6 +52,7 @@ protected:
 	*/
 
 private:
+	void Dash(const FInputActionValue& Value);
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
 	void Jump(const FInputActionValue& Value);

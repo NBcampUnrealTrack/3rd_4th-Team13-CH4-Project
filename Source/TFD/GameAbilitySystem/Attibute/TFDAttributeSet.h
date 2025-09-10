@@ -49,9 +49,15 @@ public:
 	FGameplayAttributeData MaxStamina;
 	ATTRIBUTE_ACCESSORS(UTFDAttributeSet, MaxStamina)
 
-	UPROPERTY(BlueprintReadOnly, Category = "Speed", ReplicatedUsing = OnRep_MaxStamina)
+	UPROPERTY(BlueprintReadOnly, Category = "Speed", ReplicatedUsing = OnRep_Speed)
 	FGameplayAttributeData Speed;
 	ATTRIBUTE_ACCESSORS(UTFDAttributeSet, Speed)
+
+	UPROPERTY(BlueprintReadOnly, Category = "Gold", ReplicatedUsing = OnRep_Gold)
+	FGameplayAttributeData Gold;
+	ATTRIBUTE_ACCESSORS(UTFDAttributeSet, Gold)
+
+	
 
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -76,5 +82,10 @@ protected:
 
 	UFUNCTION()
 	virtual void OnRep_Speed(const FGameplayAttributeData& OldSpeed);
-	
+
+	UFUNCTION()
+	virtual void OnRep_Gold(const FGameplayAttributeData& OldGold);
+
+protected:
+
 };

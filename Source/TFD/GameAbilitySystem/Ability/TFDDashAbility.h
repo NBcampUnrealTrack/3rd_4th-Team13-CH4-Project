@@ -46,6 +46,9 @@ private:
 
 	FTimerHandle DashTimerHandle;
 
+	// 이전 속도(복원용, 필요하면 사용)
+	float PrevMaxWalkSpeed = 0.f;
+	
 	UPROPERTY()
 	ACharacter* DashingCharacter;
 	

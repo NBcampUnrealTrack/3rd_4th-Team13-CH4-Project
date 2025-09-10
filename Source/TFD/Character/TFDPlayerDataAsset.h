@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 #include "Engine/DataAsset.h"
 #include "TFDNativeGameplayTags.h"
 #include "Abilities/GameplayAbility.h"
@@ -58,5 +59,16 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "TFD|Input|Job")
 	TArray<FInputActionTagMapping> Actions;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item")
+	float Gold;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Tags")
+	FGameplayTag TeamTag;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Tags")
+	FGameplayTagContainer AbilityTags;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Tags")
+	FGameplayTagContainer InitialStateTags;
 
 };
