@@ -34,14 +34,18 @@ private:
 public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	// HUD 레이아웃 변경 (예: MainHUD → SpectatorHUD)
+	UFUNCTION(BlueprintCallable)
 	void PushLayout(EHUDLayout LayoutType);
 
 	// HUD 레이아웃 제거 (뒤로가기)
+	UFUNCTION(BlueprintCallable)
 	void PopLayout();
 
 
 	// Layer에 Widget 추가
+	UFUNCTION(BlueprintCallable)
 	UUserWidget* AddWidgetToLayer(EUILayer Layer, TSubclassOf<UUserWidget> WidgetClass);
 	// Layer에서 Widget 제거
+	UFUNCTION(BlueprintCallable)
 	void RemoveWidgetFromLayer(EUILayer Layer, UUserWidget* Widget);
 };
