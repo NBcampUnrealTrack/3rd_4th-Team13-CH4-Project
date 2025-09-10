@@ -15,7 +15,7 @@
 #include "TFDPlayerDataAsset.h"
 #include "PlayerState/TFDPlayerState.h"
 
-DEFINE_LOG_CATEGORY(LogTemplateCharacter);
+//DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
 //////////////////////////////////////////////////////////////////////////
 // ATFDCharacter

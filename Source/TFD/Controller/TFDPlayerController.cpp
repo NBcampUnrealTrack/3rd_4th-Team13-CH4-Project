@@ -108,6 +108,7 @@ void ATFDPlayerController::AcknowledgePossession(APawn* InPawn)
 				}
 				
 			}
+		}
 	}
 }
 
