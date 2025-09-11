@@ -40,6 +40,7 @@ void UUW_EnterServerIP::NativeConstruct()
 	if (EditIP)
 	{
 		EditIP->SetText(FText::FromString(TEXT("127.0.0.1")));
+		EditIP->OnTextChanged.AddDynamic(this, &UUW_EnterServerIP::OnEditIPTextChanged);
 	}
 
 	if (Btn_ConnectServer)
@@ -57,6 +58,11 @@ void UUW_EnterServerIP::NativeDestruct()
 {
 	Super::NativeDestruct();
 
+	if (EditIP)
+	{
+		EditIP->OnTextChanged.RemoveDynamic(this, &UUW_EnterServerIP::OnEditIPTextChanged);
+	}
+
 	if (Btn_ConnectServer)
 	{
 		Btn_ConnectServer->OnClicked.RemoveDynamic(this, &UUW_EnterServerIP::OnConnectClicked);
@@ -65,5 +71,19 @@ void UUW_EnterServerIP::NativeDestruct()
 	if (Btn_Back)
 	{
 		Btn_Back->OnClicked.RemoveDynamic(this, &UUW_EnterServerIP::OnBackClicked);
+	}
+}
+
+void UUW_EnterServerIP::OnEditIPTextChanged(const FText& Text)
+{
+	if (bIsFirstEdit)
+	{
+		bIsFirstEdit = false;
+
+		if (EditIP)
+		{
+			// 무조건 텍스트 비우기
+			EditIP->SetText(FText::GetEmpty());
+		}
 	}
 }

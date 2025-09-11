@@ -49,5 +49,12 @@ protected:
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UEditableTextBox> EditIP;
+
+private:
+	// 처음 편집했는지 체크하는 변수
+	bool bIsFirstEdit = true;
+
+	UFUNCTION()
+	void OnEditIPTextChanged(const FText& Text);
 };
 
