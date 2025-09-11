@@ -18,6 +18,7 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void StartMovemnetWalking();
+	void StopMovemnetWalking();
 
 protected:
 	virtual void BeginPlay() override;

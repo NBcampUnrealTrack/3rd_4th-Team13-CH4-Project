@@ -18,14 +18,29 @@ ATFDPlayerController::ATFDPlayerController()
 {
 }
 
-void ATFDPlayerController::SetMovemnetWalking()
+void ATFDPlayerController::SetMovemnetWalking(bool bMovement)
 {
+
 	if (ATFDCharacterBase* CB = Cast<ATFDCharacterBase>(GetPawn()))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Movement Waling"));
+		if (bMovement)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Movement Walking"));
 
-		CB->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
-		CB->GetCharacterMovement()->Activate();
+			CB->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+			CB->GetCharacterMovement()->Activate();
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Movement None"));
+
+			CB->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+			CB->GetCharacterMovement()->Activate();
+			CB->GetCharacterMovement()->DisableMovement();
+			CB->GetCharacterMovement()->SetMovementMode(MOVE_None);
+			CB->GetCharacterMovement()->StopMovementImmediately();
+		}
 	}
 }
 
@@ -72,14 +87,7 @@ void ATFDPlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
 
-	if (ATFDCharacterBase* CB = Cast<ATFDCharacterBase>(InPawn))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Movement None22"));
-
-		CB->GetCharacterMovement()->DisableMovement();
-		CB->GetCharacterMovement()->SetMovementMode(MOVE_None);
-		CB->GetCharacterMovement()->StopMovementImmediately();
-	}
+	SetMovemnetWalking(false);
 }
 
 

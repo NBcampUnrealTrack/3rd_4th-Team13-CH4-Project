@@ -2,6 +2,7 @@
 
 #include "TFDAICharacter.h"
 #include "TFDNativeGameplayTags.h"
+#include "Controller/TFDAIController.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 ATFDAICharacter::ATFDAICharacter()
@@ -33,5 +34,21 @@ void ATFDAICharacter::StartMovemnetWalking()
 				AbilitySystemComponent->TryActivateAbility(Spec->Handle);
 			}
 		}
+	}
+}
+
+void ATFDAICharacter::StopMovemnetWalking()
+{
+	if (AAIController* AICon = Cast<AAIController>(GetController()))
+	{
+		AICon->StopMovement();
+	}
+
+	if (UAbilitySystemComponent* ASC = GetAbilitySystemComponent())
+	{
+		FGameplayTagContainer CancelTags;
+		CancelTags.AddTag(TAG_Ability_Neutral_RandomMove);
+
+		ASC->CancelAbilities(&CancelTags);
 	}
 }
