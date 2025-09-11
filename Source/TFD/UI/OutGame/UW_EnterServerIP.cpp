@@ -36,6 +36,12 @@ void UUW_EnterServerIP::NativeConstruct()
 {
 	Super::NativeConstruct();
 
+	// 기본 IP 값 설정
+	if (EditIP)
+	{
+		EditIP->SetText(FText::FromString(TEXT("127.0.0.1")));
+	}
+
 	if (Btn_ConnectServer)
 	{
 		Btn_ConnectServer->OnClicked.AddDynamic(this, &UUW_EnterServerIP::OnConnectClicked);
