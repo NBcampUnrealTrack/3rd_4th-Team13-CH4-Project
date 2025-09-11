@@ -72,6 +72,7 @@ public:
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
+	class UTFDPlayerDataAsset* GetCharacterDataAsset() const { return CharacterDataAsset; }
 private:
 	// GAS 기본 생성자
 	void BaseSetting();

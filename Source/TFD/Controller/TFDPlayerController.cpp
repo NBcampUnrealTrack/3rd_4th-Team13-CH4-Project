@@ -22,7 +22,7 @@ void ATFDPlayerController::SetMovemnetWalking()
 {
 	if (ATFDCharacterBase* CB = Cast<ATFDCharacterBase>(GetPawn()))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Movement None22"));
+		UE_LOG(LogTemp, Warning, TEXT("Movement Waling"));
 
 		CB->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 		CB->GetCharacterMovement()->Activate();
@@ -83,6 +83,39 @@ void ATFDPlayerController::OnPossess(APawn* InPawn)
 }
 
 
+
+void ATFDPlayerController::OnUnPossess()
+{
+	if (IsLocalPlayerController())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("UnBind : Job IMC, Job InputAction (Client)"));
+
+		//Job InputAction 초기화
+		if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
+		{
+			for (int32 Handle : JobBindingHandles)
+			{
+				EnhancedInputComponent->RemoveBindingByHandle(Handle);
+			}
+
+			JobBindingHandles.Reset();
+		}
+
+		//Job IMC 초기화
+		if (ActiveJobIMC.IsValid())
+		{
+			if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
+				ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
+			{
+				Subsystem->RemoveMappingContext(ActiveJobIMC.Get());
+			}
+
+			ActiveJobIMC = nullptr;
+		}
+	}
+
+	Super::OnUnPossess();
+}
 
 void ATFDPlayerController::AcknowledgePossession(APawn* InPawn)
 {

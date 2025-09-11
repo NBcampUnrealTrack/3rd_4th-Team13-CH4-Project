@@ -111,8 +111,12 @@ void ATFDCharacterBase::SetDAPlayerStat()
 		if (GetCharacterMovement() && AttributeSet)
 		{
 			GetCharacterMovement()->MaxWalkSpeed = AttributeSet->GetSpeed();
+
+			AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(
+				UTFDAttributeSet::GetSpeedAttribute()).AddUObject(this, &ATFDCharacterBase::OnSpeedAttributeChanged);
 		}
 
+		//JobDataAsset - Give Ability
 		for (const auto& AbilityClass : CharacterData->StartupAbilities)
 		{
 			if (AbilityClass)
@@ -120,5 +124,19 @@ void ATFDCharacterBase::SetDAPlayerStat()
 				AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(AbilityClass, 1, 0, this));
 			}
 		}
+
+		//JobDataAsset - 팀태그 넘겨주는 코드
+		if (AbilitySystemComponent && CharacterData)
+		{
+			AbilitySystemComponent->AddLooseGameplayTag(CharacterData->TeamTag);
+		}
+	}
+}
+
+void ATFDCharacterBase::OnSpeedAttributeChanged(const FOnAttributeChangeData& Data)
+{
+	if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
+	{
+		MoveComp->MaxWalkSpeed = Data.NewValue;
 	}
 }

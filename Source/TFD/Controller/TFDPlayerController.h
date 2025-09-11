@@ -25,6 +25,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetMovemnetWalking();
 
+	UFUNCTION(Server, Reliable)
+	void Server_NotifyPlayerIsReady();
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -62,9 +65,6 @@ private:
 	void TogglePause(const FInputActionValue& Value);
 	*/
 
-	void JobAbility(const FInputActionValue& Value, FGameplayTag InputTag);
-
-public:
-	UFUNCTION(Server, Reliable)
-	void Server_NotifyPlayerIsReady();
+	TWeakObjectPtr<UInputMappingContext> ActiveJobIMC; //OnUnPossess시 삭제할 직업 IMC 저장공간
+	TArray<int32> JobBindingHandles; //OnUnPossess시 삭제할 직업 InputAction 리스트 저장공간
 };

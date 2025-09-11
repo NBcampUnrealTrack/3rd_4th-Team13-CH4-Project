@@ -24,14 +24,25 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Spawning")
 	UBoxComponent* SpawningBox;
 
+
+	UPROPERTY(EditDefaultsOnly, Category="GAS")
+	FGameplayTag ObjectTag;
+	
 	UPROPERTY(EditDefaultsOnly, Category="GAS")
 	FGameplayTag AllowedTeamTag;
 	
 	
 public:
+	UFUNCTION()
+	bool CheckTeamTag(FGameplayTag InTag);
+	
 	// 스폰 볼륨 내부에서 무작위 좌표를 얻어오는 함수
 	UFUNCTION(BlueprintCallable, Category="Spawning")
 	FVector GetRandomPointInVolume() const;
+
+	// 스폰 볼륨 내부에서 무작위 좌표를 얻어오는 함수
+	UFUNCTION(BlueprintCallable, Category="Spawning")
+	FVector GetRandomPointInVolumeLineTrace() const;
 	
 protected:
 	// Called when the game starts or when spawned

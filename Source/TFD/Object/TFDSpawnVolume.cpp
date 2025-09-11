@@ -23,45 +23,17 @@ ATFDSpawnVolume::ATFDSpawnVolume()
 
 }
 
+bool ATFDSpawnVolume::CheckTeamTag(FGameplayTag InTag)
+{
+	bool result = false;
+	if (InTag == AllowedTeamTag)
+		result = true;
+	return result;
+}
+
 FVector ATFDSpawnVolume::GetRandomPointInVolume() const
 {
-	// FVector BoxExtent = SpawningBox->GetScaledBoxExtent();
-	// FVector BoxOrigin = SpawningBox->GetComponentLocation();
- //    
-	// // 박스 범위 내에서 랜덤 포인트 생성
-	// FVector RandomPoint = BoxOrigin + FVector(
-	// 	FMath::FRandRange(-BoxExtent.X, BoxExtent.X),
-	// 	FMath::FRandRange(-BoxExtent.Y, BoxExtent.Y),
-	// 	FMath::FRandRange(-BoxExtent.Z, BoxExtent.Z)
-	// );
- //    
-	// // 라인트레이스를 위한 설정
-	// FHitResult HitResult;
-	// FVector TraceStart = FVector(RandomPoint.X, RandomPoint.Y, BoxOrigin.Z + BoxExtent.Z); // 박스 상단에서 시작
-	// FVector TraceEnd = FVector(RandomPoint.X, RandomPoint.Y, BoxOrigin.Z - BoxExtent.Z);   // 박스 하단까지
- //    
-	// // 라인트레이스 파라미터 설정
-	// FCollisionQueryParams CollisionParams;
-	// CollisionParams.bTraceComplex = true;
-	// CollisionParams.AddIgnoredActor(GetOwner()); // 자신은 무시
- //    
-	// // 월드에서 라인트레이스 실행
-	// UWorld* World = GetWorld();
-	// if (World && World->LineTraceSingleByChannel(
-	// 	HitResult,
-	// 	TraceStart,
-	// 	TraceEnd,
-	// 	ECollisionChannel::ECC_WorldStatic, // 또는 ECC_Visibility 사용 가능
-	// 	CollisionParams))
-	// {
-	// 	// 바닥에 히트했을 경우 해당 위치 반환
-	// 	return HitResult.Location;
-	// }
- //    
-	// // 바닥을 찾지 못했을 경우 박스 하단 중앙 반환 (fallback)
-	// return FVector(RandomPoint.X, RandomPoint.Y, BoxOrigin.Z - BoxExtent.Z);
 
-	//
 	FVector BoxExtent = SpawningBox->GetScaledBoxExtent();
 	// 2) 박스 중심 위치
 	FVector BoxOrigin = SpawningBox->GetComponentLocation();
@@ -72,6 +44,47 @@ FVector ATFDSpawnVolume::GetRandomPointInVolume() const
 		FMath::FRandRange(-BoxExtent.Y, BoxExtent.Y),
 		FMath::FRandRange(-BoxExtent.Z, BoxExtent.Z)
 	);
+}
+
+FVector ATFDSpawnVolume::GetRandomPointInVolumeLineTrace() const
+{
+	FVector BoxExtent = SpawningBox->GetScaledBoxExtent();
+	FVector BoxOrigin = SpawningBox->GetComponentLocation();
+	   
+	// 박스 범위 내에서 랜덤 포인트 생성
+	FVector RandomPoint = BoxOrigin + FVector(
+		FMath::FRandRange(-BoxExtent.X, BoxExtent.X),
+		FMath::FRandRange(-BoxExtent.Y, BoxExtent.Y),
+		FMath::FRandRange(-BoxExtent.Z, BoxExtent.Z)
+	);
+	   
+	// 라인트레이스를 위한 설정
+	FHitResult HitResult;
+	FVector TraceStart = FVector(RandomPoint.X, RandomPoint.Y, BoxOrigin.Z + BoxExtent.Z); // 박스 상단에서 시작
+	FVector TraceEnd = FVector(RandomPoint.X, RandomPoint.Y, BoxOrigin.Z - BoxExtent.Z);   // 박스 하단까지
+	   
+	// 라인트레이스 파라미터 설정
+	FCollisionQueryParams CollisionParams;
+	CollisionParams.bTraceComplex = true;
+	CollisionParams.AddIgnoredActor(GetOwner()); // 자신은 무시
+	   
+	// 월드에서 라인트레이스 실행
+	UWorld* World = GetWorld();
+	if (World && World->LineTraceSingleByChannel(
+		HitResult,
+		TraceStart,
+		TraceEnd,
+		ECollisionChannel::ECC_WorldStatic, // 또는 ECC_Visibility 사용 가능
+		CollisionParams))
+	{
+		// 바닥에 히트했을 경우 해당 위치 반환
+		return HitResult.Location;
+	}
+	   
+	// 바닥을 찾지 못했을 경우 박스 하단 중앙 반환 (fallback)
+	return FVector(RandomPoint.X, RandomPoint.Y, BoxOrigin.Z - BoxExtent.Z);
+
+	
 }
 
 // Called when the game starts or when spawned

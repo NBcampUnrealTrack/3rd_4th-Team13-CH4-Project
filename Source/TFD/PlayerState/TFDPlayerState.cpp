@@ -3,3 +3,12 @@
 
 #include "TFDPlayerState.h"
 
+void ATFDPlayerState::SetTemaTag(FGameplayTag Tag)
+{
+	this->TeamTag = Tag;
+}
+
+FGameplayTag ATFDPlayerState::GetTemaTag() const
+{
+	return this->TeamTag;
+}
