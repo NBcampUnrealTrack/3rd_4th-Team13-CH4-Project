@@ -28,6 +28,11 @@
 #pragma comment(lib, "iphlpapi.lib")
 #pragma comment(lib, "ws2_32.lib")
 
+#include "HttpModule.h"
+#include "Interfaces/IHttpRequest.h"
+#include "Interfaces/IHttpResponse.h"
+#include "Http.h"
+
 ATFDPlayerController::ATFDPlayerController()
 {
 }
@@ -75,6 +80,11 @@ void ATFDPlayerController::BeginPlay()
 	if (IsLocalController() == false)
 	{
 		return;
+	}
+
+	if (IsHostPlayer())
+	{
+		RequestPublicIP();
 	}
 
 	UWorld* World = GetWorld();
@@ -424,4 +434,37 @@ FString ATFDPlayerController::GetLocalIP() const
 	WSACleanup();
 
 	return LocalIP;
+}
+
+void ATFDPlayerController::RequestPublicIP()
+{
+	TSharedRef<IHttpRequest> Request = FHttpModule::Get().CreateRequest();
+	Request->SetURL(TEXT("https://api.ipify.org"));
+	Request->SetVerb("GET");
+
+	Request->OnProcessRequestComplete().BindLambda([this](FHttpRequestPtr Req, FHttpResponsePtr Resp, bool bSuccess)
+		{
+			if (bSuccess && Resp.IsValid())
+			{
+				CachedPublicIP = Resp->GetContentAsString().TrimStartAndEnd();
+				UE_LOG(LogTemp, Log, TEXT("[ATFDPlayerController][RequestPublicIP] 공인 IP 주소: %s"), *CachedPublicIP);
+
+				// Delegate 호출
+				OnPublicIPReady.Broadcast(CachedPublicIP);
+			}
+			else
+			{
+				CachedPublicIP = TEXT("Unavailable");
+				UE_LOG(LogTemp, Error, TEXT("[ATFDPlayerController][RequestPublicIP] 공인 IP 가져오기 실패"));
+
+				OnPublicIPReady.Broadcast(CachedPublicIP); // 실패 시에도 브로드캐스트 가능
+			}
+		});
+
+	Request->ProcessRequest();
+}
+
+FString ATFDPlayerController::GetPublicIP() const
+{
+	return CachedPublicIP.IsEmpty() ? TEXT("Fetching...") : CachedPublicIP;
 }

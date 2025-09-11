@@ -20,7 +20,12 @@ public class TFD : ModuleRules
                 "GameplayTasks",           // 추가!
 
 				"AIModule",
-				"NavigationSystem"
+				"NavigationSystem",
+
+				// IP 관련 내용
+				"Http",
+                "Json",			// (선택적 - JSON 파싱 시 필요)
+                "JsonUtilities"	// (선택적 - JSON 구조체 바인딩 시 필요)
         });
 		
 		//PublicIncludePaths.AddRange(new string[] { "TFD" });

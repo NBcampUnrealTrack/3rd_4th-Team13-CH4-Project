@@ -15,6 +15,9 @@ struct FInputActionValue;
 class UInputAction;
 class UInputMappingContext;
 
+// Delegate 선언: 공인 IP가 준비되었을 때 알려주는 이벤트
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPublicIPReady, const FString&, PublicIP);
+
 /**
  * 
  */
@@ -80,9 +83,6 @@ private:
 public:
 	//virtual void BeginPlay() override;
 
-	UFUNCTION()
-	FString GetLocalIP() const;
-
 	// 이 플레이어가 호스트인지 확인
 	UFUNCTION(BlueprintCallable, Category = "Lobby")
 	bool IsHostPlayer() const;
@@ -94,6 +94,27 @@ public:
 	void StartGame();
 
 	void RemoveLobbyUI();
+
+public:
+	UFUNCTION()
+	FString GetLocalIP() const;
+
+	// 요청 시도 함수
+	UFUNCTION(BlueprintCallable, Category = "Network")
+	void RequestPublicIP();
+
+	// 저장된 IP를 반환하는 getter
+	UFUNCTION(BlueprintCallable, Category = "Network")
+	FString GetPublicIP() const;
+
+public:
+	// 공인 IP 저장용
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Network")
+	FString CachedPublicIP;
+
+	// Delegate 인스턴스
+	UPROPERTY(BlueprintAssignable, Category = "Network")
+	FOnPublicIPReady OnPublicIPReady;
 
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "UI")

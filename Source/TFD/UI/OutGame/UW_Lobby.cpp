@@ -54,7 +54,10 @@ void UUW_Lobby::InitHostIP()
 		{// Host일 때만 IP 표시
 
 			// 로컬 IP 가져오기
-			FString LocalIP = PC->GetLocalIP();
+			//FString LocalIP = PC->GetLocalIP();
+
+			// 공인
+			FString LocalIP = PC->GetPublicIP();
 
 			if (!LocalIP.IsEmpty())
 			{// 성공
@@ -102,6 +105,18 @@ void UUW_Lobby::NativeConstruct()
 		Btn_Play->OnClicked.AddDynamic(this, &UUW_Lobby::OnPlayClicked);
 	}
 
+
+	// IP관련: Delegate 바인딩
+	if (ATFDPlayerController* PC = Cast<ATFDPlayerController>(GetOwningPlayer()))
+	{
+		if (PC->IsHostPlayer())
+		{
+			PC->OnPublicIPReady.AddDynamic(this, &UUW_Lobby::OnPublicIPReceived);
+		}
+	}
+
+
+
 	// Host 여부에 따른 UI 제어
 	InitHostIP();
 	UpdateUIByRole();
@@ -134,6 +149,23 @@ void UUW_Lobby::NativeDestruct()
 	if (ATFDGameStateBase_Lobby* GS = GetWorld()->GetGameState<ATFDGameStateBase_Lobby>())
 	{
 		GS->OnPlayerListChanged.RemoveDynamic(this, &UUW_Lobby::HandlePlayerListChanged);
+	}
+}
+
+void UUW_Lobby::OnPublicIPReceived(const FString& PublicIP)
+{
+	if (PublicIP == TEXT("Unavailable"))
+	{
+		HostIP = FString("Host IP: Not Available");
+	}
+	else
+	{
+		HostIP = FString::Printf(TEXT("Host IP: %s"), *PublicIP);
+	}
+
+	if (Txt_HostIP)
+	{
+		Txt_HostIP->SetText(FText::FromString(HostIP));
 	}
 }
 
@@ -182,7 +214,7 @@ void UUW_Lobby::UpdatePlayerList(const TArray<APlayerState*>& PlayerStates)
 		// 이름이 비어있으면 건너뜀
 		if (PlayerName.IsEmpty())
 		{
-			UE_LOG(LogTemp, Warning, TEXT("[UUW_Lobby][UpdatePlayerList] Skipping player with empty name"));
+			UE_LOG(LogTemp, Warning, TEXT("[UpdatePlayerList][UUW_Lobby] Skipping player with empty name"));
 			continue;
 		}
 
@@ -192,7 +224,7 @@ void UUW_Lobby::UpdatePlayerList(const TArray<APlayerState*>& PlayerStates)
 			PlayerNameText->SetText(FText::FromString(PS->GetPlayerName()));
 			SB_PlayerList->AddChild(PlayerNameText);
 
-			UE_LOG(LogTemp, Warning, TEXT("[UUW_Lobby][UpdatePlayerList] Player in list: %s"), *PlayerName);
+			UE_LOG(LogTemp, Warning, TEXT("[UpdatePlayerList][UUW_Lobby] Player in list: %s"), *PlayerName);
 		}
 	}
 }

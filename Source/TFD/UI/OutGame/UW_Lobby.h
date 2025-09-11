@@ -13,7 +13,7 @@ UCLASS()
 class TFD_API UUW_Lobby : public UUserWidget
 {
 	GENERATED_BODY()
-	
+
 public:
 	void UpdatePlayerList(const TArray<class APlayerState*>& PlayerStates);
 
@@ -23,6 +23,10 @@ protected:
 	//===================================================
 	virtual void NativeConstruct() override;	// 버튼 바인딩 + 델리게이트 바인딩
 	virtual void NativeDestruct() override;		// 버튼 언바인딩 + 델리게이트 언바인딩
+
+	// Delegate 콜백 함수
+	UFUNCTION()
+	void OnPublicIPReceived(const FString& PublicIP);
 
 private:
 	// 버튼 이벤트 처리 함수
@@ -63,4 +67,3 @@ private:
 	// Host IP 문자열 저장용
 	FString HostIP;
 };
-
