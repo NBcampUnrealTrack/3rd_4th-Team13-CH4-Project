@@ -6,107 +6,110 @@
 
 #include "EngineUtils.h"
 #include "TFDNativeGameplayTags.h"
-#include "Character/TFDCharacter.h"
-#include "Kismet/GameplayStatics.h"
+#include "Character/TFDAICharacter.h"
 #include "GameplayTagContainer.h"
 #include "GameFramework/PlayerStart.h"
 #include "Object/TFDSpawnVolume.h"
-
-
+#include "PlayerState/TFDPlayerState.h"
 
 
 void ATFDGameMode::BeginPlay()
 {
 	Super::BeginPlay();
-
+	bUseSeamlessTravel = true;
 
 	InitializeSpawnVolumes();
-	SpawnPlayer(3);
-}
-
-
-void ATFDGameMode::PostLogin(APlayerController* NewPlayer)
-{
-	Super::PostLogin(NewPlayer);
-
-	// InitializeSpawnVolumes();
-	//
-	// // 폰이 아직 안생긴 경우가 있을수있어 지연처리
-	// if (APawn* ExistingPawn = NewPlayer->GetPawn())
-	// {
-	// 	FVector SpawnLocation = GetRandomPointInSpawnArea();
-	// 	ExistingPawn->SetActorLocation(SpawnLocation);
-	// 	UE_LOG(LogTemp, Display, TEXT("Pawn moved immediately"));
-	// }
-	// else
-	// {
-	// 	// Pawn이 없으면 기다렸다가 처리
-	// 	UE_LOG(LogTemp, Warning, TEXT("Pawn not ready, waiting..."));
-	//
-	// 	GetWorldTimerManager().SetTimer(PlayerSpawnTimerHandle, [this, NewPlayer]()
-	// 	{
-	// 		MovePlayerToRandomSpawnPoint(NewPlayer);
-	// 	}, 1.0f, false);
-	// }
+	SpawnAI();
 }
 
 AActor* ATFDGameMode::ChoosePlayerStart_Implementation(AController* Player)
 {
-	// 스폰 볼륨이 초기화되지 않았다면 초기화
+	// // 스폰 볼륨이 초기화되지 않았다면 초기화
 	if (SpawnVolumes.Num() == 0)
 	{
 		InitializeSpawnVolumes();
 		UE_LOG(LogTemp, Display, TEXT("CPS_1"));
 	}
+	
 
-	// 랜덤 위치를 얻어서 임시 액터 생성
-	FVector RandomLocation = GetRandomPointInSpawnArea();
+	ATFDPlayerState* PS = Player ? Player->GetPlayerState<ATFDPlayerState>() : nullptr;
+	if (!PS)
+		return Super::ChoosePlayerStart_Implementation(Player);
 
-
+	FGameplayTag PlayerTag = PS->GetTemaTag();
+	
+	// 랜덤 위치를 얻어서 임시 액터 생성A
+	FVector RandomLocation = GetRandomPointInSpawnAreaTag(PlayerTag);
+	if (RandomLocation == FVector::ZeroVector)
+		return nullptr;
+	
 	// 2. 엔진이 스폰 위치를 인식할 수 있도록 임시 APlayerStart 액터를 생성합니다.
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
+	
 	APlayerStart* PlayerStartActor = GetWorld()->SpawnActor<APlayerStart>(RandomLocation, FRotator::ZeroRotator, SpawnParams);
-
+	
 	// 3. 찾은 위치가 유효한지 확인 후 반환합니다.
 	if (PlayerStartActor)
 	{
 		// 로그로 확인
 		UE_LOG(LogTemp, Display, TEXT("CPS: Player will spawn at a new location: %s"), *RandomLocation.ToString());
-       
+	      
 		return PlayerStartActor;
 	}
-    
-	// 유효한 위치를 찾지 못했다면 부모 클래스의 기본 함수를 호출
-	
-	return Super::ChoosePlayerStart_Implementation(Player);
-	
 
+	// 유효한 위치를 찾지 못했다면 부모 클래스의 기본 함수를 호출
+
+	return Super::ChoosePlayerStart_Implementation(Player);
 }
 
-void ATFDGameMode::SpawnAI(int32 NumberOfPeople)
+void ATFDGameMode::SpawnAI()
 {
 	FVector SpawnLoc = GetRandomPointInSpawnArea();
 	FRotator SpawnRot = FRotator::ZeroRotator;
 
-	// GetWorld()->SpawnActor<ATFDCharacter>(, SpawnLoc, SpawnRot);
-}
-
-void ATFDGameMode::SpawnPlayer(int32 NumberOfPeople)
-{
-	FVector SpawnLoc = FVector(0.f, 0.f, 0.f);
-	FRotator SpawnRot = FRotator::ZeroRotator;
-
-	for (int32 i = 0; i < NumberOfPeople; ++i)
+	FGameplayTag AITag =TAG_Team_Neutral;
+	for (int32 i = 0; i < NumberOfAI; ++i)
 	{
-		SpawnLoc = GetRandomPointInSpawnArea();
+		SpawnLoc = GetRandomPointInSpawnAreaTag(AITag);
 		UE_LOG(LogTemp, Display, TEXT("Spawning Player X:%.f,Y:%.f,Z:%.f"), SpawnLoc.X, SpawnLoc.Y, SpawnLoc.Z);
-		GetWorld()->SpawnActor<ATFDCharacter>(CorpCharacterClass, SpawnLoc, SpawnRot);
+		GetWorld()->SpawnActor<ATFDAICharacter>(AICharacter, SpawnLoc, SpawnRot);
 	}
 }
 
+
 FVector ATFDGameMode::GetRandomPointInSpawnArea()
+{
+	FVector RandomPoint = FVector::ZeroVector;
+	if (SpawnVolumes.Num() == 0)
+		return RandomPoint;
+
+	if (SpawnVolumes.Num() >= 1)
+	{
+		int32 RandomIndex = FMath::RandRange(0, SpawnVolumes.Num() - 1);
+		RandomPoint = SpawnVolumes[RandomIndex]->GetRandomPointInVolume();
+	}
+
+	return RandomPoint;
+}
+
+FVector ATFDGameMode::GetRandomPointInSpawnAreaTag(FGameplayTag InTag)
+{
+	FVector RandomPoint = FVector::ZeroVector;
+	if (SpawnVolumes.Num() == 0)
+		return RandomPoint;
+
+	if (SpawnVolumes.Num() >= 1)
+	{
+		ATFDSpawnVolume* SpawnVolume = GetRandomSpawnVolumeTag(InTag);
+		if (SpawnVolume)
+			RandomPoint = SpawnVolume->GetRandomPointInVolume();
+	}
+
+	return RandomPoint;
+}
+
+FVector ATFDGameMode::GetRandomPointInSpawnAreaAI()
 {
 	FVector RandomPoint = FVector::ZeroVector;
 	if (SpawnVolumes.Num() == 0)
@@ -119,6 +122,53 @@ FVector ATFDGameMode::GetRandomPointInSpawnArea()
 	}
 
 	return RandomPoint;
+}
+
+ATFDSpawnVolume* ATFDGameMode::GetRandomSpawnVolume()
+{
+	if (SpawnVolumes.Num() == 0)
+		return nullptr;
+
+	ATFDSpawnVolume* pSpawnVolume = SpawnVolumes[FMath::RandRange(0, SpawnVolumes.Num() - 1)];
+
+	return pSpawnVolume;
+}
+
+ATFDSpawnVolume* ATFDGameMode::GetRandomSpawnVolumeTag(FGameplayTag InTag)
+{
+	if (SpawnVolumes.Num() == 0)
+		return nullptr;
+
+	int32 ValidCount = 0;
+	for (ATFDSpawnVolume* SpawnVolume : SpawnVolumes)
+	{
+		if (SpawnVolume && SpawnVolume->CheckTeamTag(InTag))
+		{
+			ValidCount++;
+		}
+	}
+
+	if (ValidCount == 0)
+		return nullptr;
+
+	// 랜덤 인덱스를 생성 (0부터 ValidCount-1까지)
+	int32 RandomIndex = FMath::RandRange(0, ValidCount - 1);
+
+	// 유효한 것들 중에서 RandomIndex번째 것을 찾는다
+	int32 CurrentValidIndex = 0;
+	for (ATFDSpawnVolume* SpawnVolume : SpawnVolumes)
+	{
+		if (SpawnVolume && SpawnVolume->CheckTeamTag(InTag))
+		{
+			if (CurrentValidIndex == RandomIndex)
+			{
+				return SpawnVolume;
+			}
+			CurrentValidIndex++;
+		}
+	}
+
+	return nullptr;
 }
 
 
@@ -179,7 +229,6 @@ void ATFDGameMode::OnHandleGameEnd(EGameCompleteType CompleteType)
 }
 
 
-
 void ATFDGameMode::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -193,6 +242,8 @@ void ATFDGameMode::PostSeamlessTravel()
 {
 	Super::PostSeamlessTravel();
 	// PlayerController 배열 가져오기
+
+	UE_LOG(LogTemp, Display, TEXT("ATFDGameMode::PST1"));
 	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
 	{
 		if (APlayerController* PC = It->Get())
@@ -200,6 +251,7 @@ void ATFDGameMode::PostSeamlessTravel()
 			// 원하는 Pawn 스폰
 			FActorSpawnParameters SpawnParams;
 			SpawnParams.Owner = PC;
+
 			// APawn* NewPawn = GetWorld()->
 			// 	SpawnActor<APawn>(DefaultPawnClass, SpawnLocation, SpawnRotation, SpawnParams);
 
@@ -211,4 +263,3 @@ void ATFDGameMode::PostSeamlessTravel()
 		}
 	}
 }
-
