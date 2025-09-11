@@ -29,13 +29,21 @@ void UTFDArrestedAbility::ActivateAbility(
 
     if (ATFDPlayerCharacter* PlayerChar = Cast<ATFDPlayerCharacter>(ActorInfo->AvatarActor.Get()))
     {
-        // 캐릭터 이동 멈춤
-        if (UCharacterMovementComponent* MoveComp = PlayerChar->GetCharacterMovement())
+        if (UAbilitySystemComponent* ASC = PlayerChar->GetAbilitySystemComponent())
         {
-            MoveComp->StopMovementImmediately();
-            MoveComp->DisableMovement();
-            MoveComp->SetMovementMode(MOVE_None);
-            UE_LOG(LogTemp, Warning, TEXT("[GA_Arrested] Character movement stopped (Server)"));
+            // TAG_Team_Thief 태그를 가진 경우만 실행
+            if (ASC->HasMatchingGameplayTag(TAG_Team_Thief))
+            {
+                // 캐릭터 이동 멈춤
+                if (UCharacterMovementComponent* MoveComp = PlayerChar->GetCharacterMovement())
+                {
+                    MoveComp->StopMovementImmediately();
+                    MoveComp->DisableMovement();
+                    MoveComp->SetMovementMode(MOVE_None);
+
+                    UE_LOG(LogTemp, Warning, TEXT("[GA_Arrested] Thief character movement stopped (Server)"));
+                }
+            }
         }
     }
     else if (ATFDAICharacter* AIChar = Cast<ATFDAICharacter>(ActorInfo->AvatarActor.Get()))
