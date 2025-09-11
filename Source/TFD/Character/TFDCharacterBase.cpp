@@ -25,7 +25,6 @@ ATFDCharacterBase::ATFDCharacterBase()
 void ATFDCharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
-
 	BaseSetting();
 }
 

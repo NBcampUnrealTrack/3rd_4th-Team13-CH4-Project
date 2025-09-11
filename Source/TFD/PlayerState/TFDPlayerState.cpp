@@ -5,12 +5,12 @@
 
 #include "Net/UnrealNetwork.h"
 
-void ATFDPlayerState::SetTemaTag(FGameplayTag Tag)
+void ATFDPlayerState::SetTeamTag(FGameplayTag Tag)
 {
 	this->TeamTag = Tag;
 }
 
-FGameplayTag ATFDPlayerState::GetTemaTag() const
+FGameplayTag ATFDPlayerState::GetTeamTag() const
 {
 	return this->TeamTag;
 }

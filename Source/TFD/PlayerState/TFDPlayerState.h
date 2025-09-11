@@ -24,9 +24,8 @@ protected:
 	FGameplayTag TeamTag;
 
 public:
-	void SetTemaTag(FGameplayTag Tag);
-	FGameplayTag GetTemaTag() const;
-
+	void SetTeamTag(FGameplayTag Tag);
+	FGameplayTag GetTeamTag() const;
 //===================================================
 // 이하 OutGame 관련 - Lobby
 // 플레이어 이름 복제, 변경시 델리게이트 호출

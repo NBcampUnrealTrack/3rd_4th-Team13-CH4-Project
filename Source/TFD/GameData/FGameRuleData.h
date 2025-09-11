@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameData/EGameEnums.h"
+#include "Character/TFDCharacterBase.h"
 #include "FGameRuleData.generated.h"
 
 
@@ -12,14 +12,9 @@ struct FGameRuleData
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float PlayTimeSec = 90.f;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float PoliceRatio = 0.33f;		//경찰 비율 올림으로 계산 최소 1명 최대 2명
 	
-	//TSubclassOf
-	
-	// 캐릭터 액터 에셋
-	// 군중
-	// 도둑
-	// 경찰 액터
-	
+	// 캐릭터 액터 클래스
+	TSubclassOf<ATFDCharacterBase> PawnClassPolice;
+	TSubclassOf<ATFDCharacterBase> PawnClassThief;
+	TSubclassOf<ATFDCharacterBase> PawnClassAI;
 };

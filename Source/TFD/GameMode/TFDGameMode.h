@@ -19,19 +19,22 @@ class TFD_API ATFDGameMode : public AGameMode
 	GENERATED_BODY()
 
 public:
-	
-	void OnCatchThief(APawn* APawn);
+	ATFDGameMode();
+
+	void OnCatchThief(APawn* Pawn);
 	// 게임 종료시 처리될 내용이 담김.
-	void OnHandleGameEnd(EGameCompleteType CompleteType);
+	void GameEnd(EGameCompleteType CompleteType);
 	void PlayerIsReady(AController* PlayerController);
 	void GamePause(bool bIsPaused);
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
-	virtual void PostSeamlessTravel() override;
-
+	
+	virtual void OnPostLogin(AController* NewPlayer) override;
 	//스폰위치 결정짓는 함수
 	virtual AActor* ChoosePlayerStart_Implementation(AController* Player) override;
+	virtual UClass* GetDefaultPawnClassForController_Implementation(AController* InController) override;
+	virtual void PostSeamlessTravel() override;
 
 protected:
 	UPROPERTY()
@@ -45,15 +48,8 @@ protected:
 	
 public:
 	void SpawnAI();
-	void SpawnPlayer(int32 NumberOfPeople = 1);
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Spawn")
-	TSubclassOf<ATFDAICharacter> AICharacter;
-	
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Spawn")
 	int32 NumberOfAI;
-	
-
 private:
 	FVector GetRandomPointInSpawnArea();
 	FVector GetRandomPointInSpawnAreaTag(FGameplayTag InTag);
@@ -64,8 +60,5 @@ private:
 	
 	void InitializeSpawnVolumes();
 	void MovePlayerToRandomSpawnPoint(APlayerController* PlayerController);
-
-private:
-	FTimerHandle PlayerSpawnTimerHandle;
 	
 };

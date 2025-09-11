@@ -15,9 +15,13 @@
 #include "GameplayTagContainer.h"
 #include "GameFramework/PlayerStart.h"
 #include "Object/TFDSpawnVolume.h"
+#include "Utility/InGameUtility.h"
 
 
-
+ATFDGameMode::ATFDGameMode()
+{
+	DefaultPawnClass = nullptr;
+}
 
 void ATFDGameMode::BeginPlay()
 {
@@ -25,6 +29,11 @@ void ATFDGameMode::BeginPlay()
 	bUseSeamlessTravel = true;
 
 	InitializeSpawnVolumes();
+}
+
+void ATFDGameMode::OnPostLogin(AController* NewPlayer)
+{
+	Super::OnPostLogin(NewPlayer);
 }
 
 AActor* ATFDGameMode::ChoosePlayerStart_Implementation(AController* Player)
@@ -36,13 +45,13 @@ AActor* ATFDGameMode::ChoosePlayerStart_Implementation(AController* Player)
 		UE_LOG(LogTemp, Display, TEXT("CPS_1"));
 	}
 	
-
+	
 	ATFDPlayerState* PS = Player ? Player->GetPlayerState<ATFDPlayerState>() : nullptr;
 	if (!PS)
 		return Super::ChoosePlayerStart_Implementation(Player);
 
-	FGameplayTag PlayerTag = PS->GetTemaTag();
-	
+	FGameplayTag PlayerTag = PS->GetTeamTag();
+    	
 	// 랜덤 위치를 얻어서 임시 액터 생성A
 	FVector RandomLocation = GetRandomPointInSpawnAreaTag(PlayerTag);
 	if (RandomLocation == FVector::ZeroVector)
@@ -66,8 +75,75 @@ AActor* ATFDGameMode::ChoosePlayerStart_Implementation(AController* Player)
 	// 유효한 위치를 찾지 못했다면 부모 클래스의 기본 함수를 호출
 	
 	return Super::ChoosePlayerStart_Implementation(Player);
-	
+}
 
+UClass* ATFDGameMode::GetDefaultPawnClassForController_Implementation(AController* InController)
+{
+	const FGameRuleData& RuleData = GetGameState<ATFDGameState>()->GetRuleData();
+	UClass* RolePawnClass = nullptr;
+
+	if (ATFDPlayerState* PState = Cast<ATFDPlayerState>(InController->PlayerState))
+	{
+		FGameplayTag Tag = PState->GetTeamTag();
+
+		if (Tag == TAG_Team_Thief)
+		{
+			RolePawnClass = RuleData.PawnClassThief;
+		}
+		else if (Tag == TAG_Team_Cop)
+		{
+			RolePawnClass = RuleData.PawnClassPolice;
+		}
+	}
+	return RolePawnClass;
+	//return Super::GetDefaultPawnClassForController_Implementation(InController);
+}
+
+
+void ATFDGameMode::PostSeamlessTravel()
+{
+	Super::PostSeamlessTravel();
+	// AI스폰
+	SpawnAI();
+	// 팀 비율 결정
+	TArray<APlayerState*> PlayerArray = GameState->PlayerArray;
+	int32 PlayerCnt = PlayerArray.Num();
+	int32 PoliceCnt = UInGameUtility::GetPoliceRoleCount(PlayerCnt);
+
+	// 배열을 랜덤으로 섞기
+	for (int32 i = PlayerArray.Num() - 1; i > 0; --i)
+	{
+		int32 SwapIndex = FMath::RandRange(0, i);
+		PlayerArray.Swap(i, SwapIndex);
+	}
+
+	int32 AssignedPolice = 0;
+
+	for (APlayerState* PState : PlayerArray)
+	{
+		if (!PState) continue;
+
+		ATFDPlayerState* State = Cast<ATFDPlayerState>(PState);
+		if (!State) continue;
+
+		// 랜덤으로 경찰 역할 부여
+		if (AssignedPolice < PoliceCnt)
+		{
+			State->SetTeamTag(TAG_Team_Cop);
+			AssignedPolice++;
+		}
+		else
+		{
+			State->SetTeamTag(TAG_Team_Thief);
+		}
+
+		// 역할 배정 후 Pawn 스폰
+		if (APlayerController* PC = Cast<APlayerController>(State->GetOwner()))
+		{
+			RestartPlayer(PC);
+		}
+	}
+	
 }
 
 void ATFDGameMode::SpawnAI()
@@ -76,11 +152,12 @@ void ATFDGameMode::SpawnAI()
 	FRotator SpawnRot = FRotator::ZeroRotator;
 
 	FGameplayTag AITag =TAG_Team_Neutral;
+	TSubclassOf<ATFDCharacterBase> AIClass = GameState->GetRuleData().PawnClassAI;
 	for (int32 i = 0; i < NumberOfAI; ++i)
 	{
 		SpawnLoc = GetRandomPointInSpawnAreaTag(AITag);
 		UE_LOG(LogTemp, Display, TEXT("Spawning Player X:%.f,Y:%.f,Z:%.f"), SpawnLoc.X, SpawnLoc.Y, SpawnLoc.Z);
-		GetWorld()->SpawnActor<ATFDAICharacter>(AICharacter, SpawnLoc, SpawnRot);
+		GetWorld()->SpawnActor(AIClass, &SpawnLoc, &SpawnRot);
 	}
 }
 
@@ -216,12 +293,34 @@ void ATFDGameMode::MovePlayerToRandomSpawnPoint(APlayerController* PlayerControl
 }
 
 
-void ATFDGameMode::OnCatchThief(APawn* APawn)
+
+
+void ATFDGameMode::OnCatchThief(APawn* Pawn)
 {
+	APlayerState* CatchPlayerState = Pawn->GetPlayerState();
+
+	if (CatchPlayerState == nullptr)
+		return;
+	
+	if (ATFDPlayerState* PS = Cast<ATFDPlayerState>(CatchPlayerState))
+	{
+		// ATFDPlayerState*로 WeakPtr 생성
+		TWeakObjectPtr<ATFDPlayerState> WeakPS = MakeWeakObjectPtr<ATFDPlayerState>(PS);
+
+		// 배열에 저장 가능
+		GameState->CaughtThiefPlayerStateArray.Add(WeakPS);
+	}
+	
+
+	if (GameState->CaughtThiefPlayerStateArray.Num() == GameState->ThiefPlayerStateArray.Num())
+	{
+		GameEnd(EGameCompleteType::CatchAllThief);
+	}
 }
 
-void ATFDGameMode::OnHandleGameEnd(EGameCompleteType CompleteType)
+void ATFDGameMode::GameEnd(EGameCompleteType CompleteType)
 {
+	GameState->SetGameState(EGameState::Result);
 }
 
 void ATFDGameMode::GamePause(bool bIsPaused)
@@ -267,19 +366,18 @@ void ATFDGameMode::PlayerIsReady(AController* PlayerController)
 {
 	// 모든 플레이어가 준비되었는지 확인하는 등의 로직
 	UE_LOG(LogTemp, Warning, TEXT("Player is ready: %s"), *PlayerController->GetName());
-
-	ATFDGameState* TFDGameState = GetGameState<ATFDGameState>();
 	ATFDPlayerState* TFDPlayerState = PlayerController->GetPlayerState<ATFDPlayerState>();
 
-	if(TFDGameState && TFDPlayerState)
+	if(GameState && TFDPlayerState)
 	{
-		TFDGameState->MarkPlayerReady(TFDPlayerState);
+		GameState->MarkPlayerReady(TFDPlayerState);
 
 		// 모든 플레이어가 접속했는지 확인 (GameState의 PlayerArray 사용)
-		if(TFDGameState->GetReadyPlayerCount() >= TFDGameState->PlayerArray.Num() && TFDGameState->PlayerArray.Num() > 0)
+		if(GameState->GetReadyPlayerCount() >= GameState->PlayerArray.Num() && GameState->PlayerArray.Num() > 0)
 		{
 			UE_LOG(LogTemp, Log, TEXT("All players are ready. Starting the game."));
 			GamePause(false);
+			GameState->SetGameState(EGameState::Playing);
 		}
 	}
 }
@@ -290,20 +388,13 @@ void ATFDGameMode::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-
-	// 남은 시간 업데이트 처리
+	float GameTime = GameState->GetCurrentGameTimeSec();
 	// 시간이 종료될 시 게임 종료 로직
+	if (GameTime > GameState->GetRuleData().PlayTimeSec)
+	{
+		GameEnd(EGameCompleteType::TimeLimit);
+	}
 }
 
-void ATFDGameMode::PostSeamlessTravel()
-{
-	Super::PostSeamlessTravel();
-	// AI스폰
-	
-	// 팀 비율 결정
-	
-	// 결정된 수에 따라 플레이어 character 스폰
-	// PlayerController 배열 가져오기
-	
-}
+
 

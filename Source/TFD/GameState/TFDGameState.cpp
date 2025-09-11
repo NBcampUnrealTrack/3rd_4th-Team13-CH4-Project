@@ -18,6 +18,11 @@ int32 ATFDGameState::GetReadyPlayerCount() const
 	return ReadyPlayers.Num();
 }
 
+const FGameRuleData& ATFDGameState::GetRuleData() const
+{
+	return GameRuleData;
+}
+
 // Client 전용 처리 UI 표시 등에 사용.
 void ATFDGameState::OnRep_GameStateChange()
 {
@@ -43,15 +48,38 @@ void ATFDGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(ATFDGameState, GameState)
-	DOREPLIFETIME(ATFDGameState, ReadyPlayers)
+	DOREPLIFETIME(ATFDGameState, GameStartServerTime)
 }
 
-float ATFDGameState::GetCurrentGameTimeSec()
+float ATFDGameState::GetCurrentGameTimeSec() const
 {
-	return 0.f;
+	return GetServerWorldTimeSeconds() - GameStartServerTime;
 }
 
-EGameState ATFDGameState::GetCurrentGameState()
+EGameState ATFDGameState::GetCurrentGameState() const
 {
-	return EGameState::WaitingToPlay;
+	return GameState;
+}
+
+void ATFDGameState::SetGameState(EGameState NewState)
+{
+	if (HasAuthority() == false)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("SetGameState 호출 실패: 클라이언트에서 호출됨"));
+		return;
+	}
+	GameState = NewState;
+
+	switch (GameState)
+	{
+	case EGameState::WaitingToPlay:
+		break;
+	case EGameState::Result:
+		break;
+	case EGameState::Playing:
+		GameStartServerTime = GetServerWorldTimeSeconds();
+		break;
+	default:
+		break;
+	}
 }
