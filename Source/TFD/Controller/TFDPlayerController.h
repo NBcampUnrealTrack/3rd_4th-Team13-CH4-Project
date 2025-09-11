@@ -30,8 +30,24 @@ protected:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual void SetupInputComponent() override;
 	virtual void OnPossess(APawn* InPawn) override;
+	virtual void OnUnPossess() override;
 	virtual void AcknowledgePossession(APawn* InPawn) override;
 
+private:
+	void Dash(const FInputActionValue& Value);
+	void Move(const FInputActionValue& Value);
+	void Look(const FInputActionValue& Value);
+	void Jump(const FInputActionValue& Value);
+	void StopJumping();
+	/*
+	void Attack(const FInputActionValue& Value);
+	void TogglePause(const FInputActionValue& Value);
+	*/
+
+	
+	void JobAbility(const FInputActionValue& Value, FGameplayTag InputTag); //DataAsset에서 추가한 액션과 태그로 자동 바인딩
+
+protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "TFD|Input|Default")
 	TObjectPtr<UInputMappingContext> DefaultMappingContext;
 
@@ -51,16 +67,9 @@ protected:
 	TObjectPtr<UInputAction> PauseAction;
 	*/
 
-private:
-	void Dash(const FInputActionValue& Value);
-	void Move(const FInputActionValue& Value);
-	void Look(const FInputActionValue& Value);
-	void Jump(const FInputActionValue& Value);
-	void StopJumping();
-	/*
-	void Attack(const FInputActionValue& Value);
-	void TogglePause(const FInputActionValue& Value);
-	*/
 
-	void JobAbility(const FInputActionValue& Value, FGameplayTag InputTag);
+private:
+
+	TWeakObjectPtr<UInputMappingContext> ActiveJobIMC; //OnUnPossess시 삭제할 직업 IMC 저장공간
+	TArray<int32> JobBindingHandles; //OnUnPossess시 삭제할 직업 InputAction 리스트 저장공간
 };

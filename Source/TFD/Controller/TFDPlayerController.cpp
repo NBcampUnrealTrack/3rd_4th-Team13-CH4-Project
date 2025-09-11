@@ -21,7 +21,7 @@ void ATFDPlayerController::SetMovemnetWalking()
 {
 	if (ATFDCharacterBase* CB = Cast<ATFDCharacterBase>(GetPawn()))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Movement None22"));
+		UE_LOG(LogTemp, Warning, TEXT("Movement Waling"));
 
 		CB->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 		CB->GetCharacterMovement()->Activate();
@@ -73,7 +73,7 @@ void ATFDPlayerController::OnPossess(APawn* InPawn)
 
 	if (ATFDCharacterBase* CB = Cast<ATFDCharacterBase>(InPawn))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Movement None22"));
+		UE_LOG(LogTemp, Warning, TEXT("Movement None"));
 
 		CB->GetCharacterMovement()->DisableMovement();
 		CB->GetCharacterMovement()->SetMovementMode(MOVE_None);
@@ -81,9 +81,43 @@ void ATFDPlayerController::OnPossess(APawn* InPawn)
 	}
 }
 
+void ATFDPlayerController::OnUnPossess()
+{
+	if (IsLocalPlayerController())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("UnBind : Job IMC, Job InputAction (Client)"));
+
+		//Job InputAction 초기화
+		if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
+		{
+			for (int32 Handle : JobBindingHandles)
+			{
+				EnhancedInputComponent->RemoveBindingByHandle(Handle);
+			}
+
+			JobBindingHandles.Reset();
+		}
+
+		//Job IMC 초기화
+		if (ActiveJobIMC.IsValid())
+		{
+			if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
+				ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
+			{
+				Subsystem->RemoveMappingContext(ActiveJobIMC.Get());
+			}
+
+			ActiveJobIMC = nullptr;
+		}
+	}
+
+	Super::OnUnPossess();
+}
+
 void ATFDPlayerController::AcknowledgePossession(APawn* InPawn)
 {
 	Super::AcknowledgePossession(InPawn);
+	UE_LOG(LogTemp, Warning, TEXT("Bind : Job IMC, Job InputAction"));
 
 	if (IsLocalPlayerController())
 	{
@@ -95,16 +129,20 @@ void ATFDPlayerController::AcknowledgePossession(APawn* InPawn)
 				if (CB->CharacterData->JobMappingContext)
 				{
 
-					Subsystem->AddMappingContext(CB->CharacterData->JobMappingContext, 0);
+					Subsystem->AddMappingContext(CB->CharacterData->JobMappingContext, 1);
+					ActiveJobIMC = CB->CharacterData->JobMappingContext;
 				}
 			}
 
 			//********직업에 따른 능력 입력 바인딩************
 			if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
 			{
-				for (auto Action : CB->CharacterData->Actions)
+				for (const auto& Action : CB->CharacterData->Actions)
 				{
-					EnhancedInputComponent->BindAction(Action.InputAction, ETriggerEvent::Started, this, &ATFDPlayerController::JobAbility, Action.Tag);
+					FEnhancedInputActionEventBinding& Bind = 
+						EnhancedInputComponent->BindAction(Action.InputAction, ETriggerEvent::Started, this, &ATFDPlayerController::JobAbility, Action.Tag);
+
+					JobBindingHandles.Add(Bind.GetHandle());
 				}
 				
 			}

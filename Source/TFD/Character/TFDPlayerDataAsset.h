@@ -59,6 +59,7 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "TFD|Input|Job")
 	TArray<FInputActionTagMapping> Actions;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item")
 	float Gold;
 
