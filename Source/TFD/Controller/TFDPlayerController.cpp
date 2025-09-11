@@ -77,31 +77,34 @@ void ATFDPlayerController::BeginPlay()
 		return;
 	}
 
-	// 로비에서만 마우스 커서 보이게 설정
 	UWorld* World = GetWorld();
 	if (World)
 	{
+		// 현재 로드된 레벨 이름 가져오기
 		FString CurrentLevelName = World->GetMapName();
-		CurrentLevelName.RemoveFromStart(World->StreamingLevelsPrefix); // 레벨 프리픽스 제거
+		CurrentLevelName.RemoveFromStart(World->StreamingLevelsPrefix); // 접두어 제거
 
-		if (CurrentLevelName.Equals(TEXT("L_Lobby")))
-		{
-			bShowMouseCursor = true;
+		// "L_Lobby" 문자열만 추출
+		FString LobbyLevelName = FPaths::GetBaseFilename(TFDGameConstants::LobbyLevel);
+
+		if (!CurrentLevelName.Equals(LobbyLevelName))
+		{// 로비가 아닐 경우
+			bShowMouseCursor = false;
+			RemoveLobbyUI();
 		}
 		else
-		{
-			bShowMouseCursor = false;
-		}
-	}
+		{// 로비인 경우
+			// 로비에서만 마우스 커서 보이게 설정
+			bShowMouseCursor = true;
 
-	// 로비일 때만 로비 위젯 띄움
-	if (LobbyWidgetClass && LobbyWidgetInstance == nullptr)
-	{
-		LobbyWidgetInstance = CreateWidget<UUserWidget>(this, LobbyWidgetClass);
-
-		if (LobbyWidgetInstance)
-		{
-			LobbyWidgetInstance->AddToViewport();
+			if (LobbyWidgetClass && LobbyWidgetInstance == nullptr)
+			{
+				LobbyWidgetInstance = CreateWidget<UUserWidget>(this, LobbyWidgetClass);
+				if (LobbyWidgetInstance)
+				{
+					LobbyWidgetInstance->AddToViewport();
+				}
+			}
 		}
 	}
 }
