@@ -51,6 +51,8 @@ AActor* ATFDGameMode::ChoosePlayerStart_Implementation(AController* Player)
 	ATFDPlayerState* PS = Player ? Player->GetPlayerState<ATFDPlayerState>() : nullptr;
 	if (!PS)
 		return Super::ChoosePlayerStart_Implementation(Player);
+	// if (!PS && PS->GetTeamTag() == FGameplayTag::EmptyTag)
+	// 	return nullptr;
 
 	FGameplayTag PlayerTag = PS->GetTeamTag();
     	
@@ -79,26 +81,45 @@ AActor* ATFDGameMode::ChoosePlayerStart_Implementation(AController* Player)
 	return Super::ChoosePlayerStart_Implementation(Player);
 }
 
-UClass* ATFDGameMode::GetDefaultPawnClassForController_Implementation(AController* InController)
+APawn* ATFDGameMode::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, AActor* StartSpot)
 {
-	const FGameRuleData& RuleData = GetGameState<ATFDGameState>()->GetRuleData();
-	UClass* RolePawnClass = nullptr;
+	if (!NewPlayer || !StartSpot) return nullptr;
 
-	if (ATFDPlayerState* PState = Cast<ATFDPlayerState>(InController->PlayerState))
+	ATFDPlayerState* PS = NewPlayer->GetPlayerState<ATFDPlayerState>();
+
+	if (!PS && PS->GetTeamTag().IsValid() == false)
+		return nullptr;
+	
+	// Pawn 클래스 가져오기
+	TSubclassOf<APawn> PawnClass = GetDefaultPawnClassForController(NewPlayer);
+	if (!PawnClass) return nullptr;
+
+	// SpawnTransform 설정
+	FTransform SpawnTransform = StartSpot->GetActorTransform();
+
+	// SpawnActorDeferred로 Pawn 생성
+	ATFDCharacterBase* Pawn = GetWorld()->SpawnActorDeferred<ATFDCharacterBase>(PawnClass, SpawnTransform, NewPlayer,
+		nullptr, ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn);
+	if (!Pawn) return nullptr;
+	
+	const FGameRuleData& RuleData = GetGameState<ATFDGameState>()->GetRuleData();
+	ATFDPlayerState* PState = Cast<ATFDPlayerState>(NewPlayer->PlayerState);
+	ATFDCharacterBase*  TFDPawn = Cast<ATFDCharacterBase>(Pawn);
+	if (PState && TFDPawn)
 	{
 		FGameplayTag Tag = PState->GetTeamTag();
-
 		if (Tag == TAG_Team_Thief)
 		{
-			RolePawnClass = RuleData.PawnClassThief;
+			TFDPawn->CharacterData = RuleData.ThiefDataAsset;
 		}
 		else if (Tag == TAG_Team_Cop)
 		{
-			RolePawnClass = RuleData.PawnClassPolice;
+			TFDPawn->CharacterData = RuleData.PoliceDataAsset;
 		}
 	}
-	return RolePawnClass;
-	//return Super::GetDefaultPawnClassForController_Implementation(InController);
+	// FinishSpawningActor 호출 (BeginPlay 직전)
+	UGameplayStatics::FinishSpawningActor(TFDPawn, SpawnTransform);
+	return Pawn;
 }
 
 

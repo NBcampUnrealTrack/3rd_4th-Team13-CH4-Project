@@ -33,16 +33,13 @@ protected:
 	virtual void OnPostLogin(AController* NewPlayer) override;
 	//스폰위치 결정짓는 함수
 	virtual AActor* ChoosePlayerStart_Implementation(AController* Player) override;
-	virtual UClass* GetDefaultPawnClassForController_Implementation(AController* InController) override;
+	//virtual UClass* GetDefaultPawnClassForController_Implementation(AController* InController) override;
+	virtual APawn* SpawnDefaultPawnFor_Implementation(AController* NewPlayer, AActor* StartSpot) override;
 	virtual void PostSeamlessTravel() override;
 
 protected:
 	UPROPERTY()
 	TArray<ATFDSpawnVolume*> SpawnVolumes;
-
-	// 헤더 파일(.h)에 추가
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Spawn")
-	TSubclassOf<ATFDCharacter> CorpCharacterClass;
 
 	ATFDGameState* GameState;
 	

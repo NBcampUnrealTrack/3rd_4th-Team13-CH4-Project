@@ -14,7 +14,11 @@ struct FGameRuleData
 	float PlayTimeSec = 90.f;
 	
 	// 캐릭터 액터 클래스
-	TSubclassOf<ATFDCharacterBase> PawnClassPolice;
-	TSubclassOf<ATFDCharacterBase> PawnClassThief;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TSubclassOf<ATFDCharacterBase> PawnClassAI;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UTFDPlayerDataAsset* PoliceDataAsset;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UTFDPlayerDataAsset* ThiefDataAsset;
 };
