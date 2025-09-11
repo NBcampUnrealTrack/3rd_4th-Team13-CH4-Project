@@ -19,17 +19,14 @@ class TFD_API ATFDGameMode : public AGameMode
 	GENERATED_BODY()
 
 public:
-	void SpawnAI();
-
 	
 	void OnCatchThief(APawn* APawn);
 	// 게임 종료시 처리될 내용이 담김.
 	void OnHandleGameEnd(EGameCompleteType CompleteType);
 	void PlayerIsReady(AController* PlayerController);
-
+	void GamePause(bool bIsPaused);
 protected:
 	virtual void BeginPlay() override;
-	virtual void PostLogin(APlayerController* NewPlayer) override;
 	virtual void Tick(float DeltaTime) override;
 	virtual void PostSeamlessTravel() override;
 
@@ -47,7 +44,7 @@ protected:
 	ATFDGameState* GameState;
 	
 public:
-	void SpawnAI(int32 NumberOfPeople = 1);
+	void SpawnAI();
 	void SpawnPlayer(int32 NumberOfPeople = 1);
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Spawn")
 	TSubclassOf<ATFDAICharacter> AICharacter;

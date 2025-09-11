@@ -13,7 +13,7 @@
 #include "GameState/TFDGameState.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameplayTagContainer.h"
-#include "GameFramework/PlayerState.h"
+#include "GameFramework/PlayerStart.h"
 #include "Object/TFDSpawnVolume.h"
 
 
@@ -25,7 +25,6 @@ void ATFDGameMode::BeginPlay()
 	bUseSeamlessTravel = true;
 
 	InitializeSpawnVolumes();
-	SpawnAI();
 }
 
 AActor* ATFDGameMode::ChoosePlayerStart_Implementation(AController* Player)
@@ -216,13 +215,6 @@ void ATFDGameMode::MovePlayerToRandomSpawnPoint(APlayerController* PlayerControl
 	}
 }
 
-void ATFDGameMode::SpawnAICrowd()
-{
-}
-
-void ATFDGameMode::SetPlayerPositions()
-{
-}
 
 void ATFDGameMode::OnCatchThief(APawn* APawn)
 {
@@ -258,9 +250,9 @@ void ATFDGameMode::GamePause(bool bIsPaused)
 	for (TActorIterator<AAIController> It(World); It; ++It)
 	{
 		AAIController* AI = *It;
-		if (ATFDAICharacter* AICharacter = Cast<ATFDAICharacter> (AI->GetCharacter()))
+		if (ATFDAICharacter* WorldAICharacter = Cast<ATFDAICharacter> (AI->GetCharacter()))
 		{
-			AICharacter->StartMovemnetWalking();
+			WorldAICharacter->StartMovemnetWalking();
 		}
 	}
 	
