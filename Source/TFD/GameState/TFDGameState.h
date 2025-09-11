@@ -16,7 +16,7 @@ class TFD_API ATFDGameState : public AGameState
 	GENERATED_BODY()
 
 protected:
-	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess));
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (AllowPrivateAccess));
 	FGameRuleData GameRuleData;		//TODO: DA 로 변경
 
 	float GameStartServerTime = 0.f;
