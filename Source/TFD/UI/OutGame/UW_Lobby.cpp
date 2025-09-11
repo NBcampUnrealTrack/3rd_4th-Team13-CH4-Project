@@ -54,18 +54,26 @@ void UUW_Lobby::InitHostIP()
 		{// Host일 때만 IP 표시
 
 			// 로컬 IP 가져오기
-			//FString LocalIP = PC->GetLocalIP();
+			FString LocalIP = PC->GetLocalIP();
 
-			// 공인
-			FString LocalIP = PC->GetPublicIP();
+			// 공인 IP 가져오기
+			FString PublicIP = PC->GetPublicIP();
 
-			if (!LocalIP.IsEmpty())
-			{// 성공
-				HostIP = FString::Printf(TEXT("Host IP: %s"), *LocalIP);
+			if (LocalIP.IsEmpty())
+			{
+				LocalIP = TEXT("Unavailable");
 			}
-			else
-			{// 실패 fallback
-				HostIP = FString("Host IP: Not Available");
+			if (PublicIP.IsEmpty())
+			{
+				PublicIP = TEXT("Fetching..."); // 요청 전이거나 실패 시
+			}
+
+			// 두 IP를 모두 표시
+			HostIP = FString::Printf(TEXT("Local IP: %s\nPublic IP: %s"), *LocalIP, *PublicIP);
+
+			if (Txt_HostIP)
+			{
+				Txt_HostIP->SetText(FText::FromString(HostIP));
 			}
 		}
 	}
@@ -154,14 +162,20 @@ void UUW_Lobby::NativeDestruct()
 
 void UUW_Lobby::OnPublicIPReceived(const FString& PublicIP)
 {
-	if (PublicIP == TEXT("Unavailable"))
+	FString LocalIP = TEXT("Unavailable");
+
+	if (ATFDPlayerController* PC = Cast<ATFDPlayerController>(GetOwningPlayer()))
 	{
-		HostIP = FString("Host IP: Not Available");
+		LocalIP = PC->GetLocalIP();
+		if (LocalIP.IsEmpty())
+		{
+			LocalIP = TEXT("Unavailable");
+		}
 	}
-	else
-	{
-		HostIP = FString::Printf(TEXT("Host IP: %s"), *PublicIP);
-	}
+
+	FString PublicText = (PublicIP == TEXT("Unavailable")) ? TEXT("Not Available") : *PublicIP;
+
+	HostIP = FString::Printf(TEXT("Local IP: %s\nPublic IP: %s"), *LocalIP, *PublicText);
 
 	if (Txt_HostIP)
 	{
