@@ -47,6 +47,12 @@ public:
 	void ShowTitleUI();
 	void ShowEnterIPUI();
 
+	//===================================================
+	// 서버에서 호출할 클라이언트용 함수
+	//===================================================
+	UFUNCTION(Client, Reliable)
+	void ClientNotifyMaxPlayerReached();
+
 private:
 	//===================================================
 	// Title UI
@@ -65,5 +71,11 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<UUserWidget> EnterIPWidgetInstance;
+
+	//===================================================
+	// 팝업
+	//===================================================
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UUserWidget> MaxPlayerPopupClass;
 
 };

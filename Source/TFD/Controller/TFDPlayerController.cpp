@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "Controller/TFDPlayerController.h"
@@ -13,6 +13,20 @@
 #include "TFDNativeGameplayTags.h"
 #include "GameMode/TFDGameMode.h"
 #include "GameFramework/CharacterMovementComponent.h"
+
+// 이하 OutGame 관련 - Lobby
+#include "Constants/TFDGameConstants.h"
+#include "TimerManager.h"	// 타이머 매니저 관련
+#include "Engine/World.h"	// GetWorld() 사용을 위해
+
+// GetLocalIP() 구현을 위함
+#include "Windows/AllowWindowsPlatformTypes.h"
+#include <winsock2.h>
+#include <iphlpapi.h>
+#include <ws2tcpip.h>
+#include "Windows/HideWindowsPlatformTypes.h"
+#pragma comment(lib, "iphlpapi.lib")
+#pragma comment(lib, "ws2_32.lib")
 
 ATFDPlayerController::ATFDPlayerController()
 {
@@ -53,6 +67,42 @@ void ATFDPlayerController::BeginPlay()
 		check(DefaultMappingContext);
 		Subsystem->AddMappingContext(DefaultMappingContext, 0);
 
+	}
+
+	//===================================================
+	// 이하 OutGame 관련 - Lobby
+	//===================================================
+	if (IsLocalController() == false)
+	{
+		return;
+	}
+
+	// 로비에서만 마우스 커서 보이게 설정
+	UWorld* World = GetWorld();
+	if (World)
+	{
+		FString CurrentLevelName = World->GetMapName();
+		CurrentLevelName.RemoveFromStart(World->StreamingLevelsPrefix); // 레벨 프리픽스 제거
+
+		if (CurrentLevelName.Equals(TEXT("L_Lobby")))
+		{
+			bShowMouseCursor = true;
+		}
+		else
+		{
+			bShowMouseCursor = false;
+		}
+	}
+
+	// 로비일 때만 로비 위젯 띄움
+	if (LobbyWidgetClass && LobbyWidgetInstance == nullptr)
+	{
+		LobbyWidgetInstance = CreateWidget<UUserWidget>(this, LobbyWidgetClass);
+
+		if (LobbyWidgetInstance)
+		{
+			LobbyWidgetInstance->AddToViewport();
+		}
 	}
 }
 
@@ -262,3 +312,108 @@ void ATFDPlayerController::Server_NotifyPlayerIsReady_Implementation()
 	}
 }
 
+//===================================================
+// 이하 OutGame 관련 - Lobby
+//===================================================
+bool ATFDPlayerController::IsHostPlayer() const
+{
+	return IsLocalController() && HasAuthority();
+}
+
+void ATFDPlayerController::LeaveLobby()
+{
+	// 클라이언트는 타이틀로 돌아감 (절대 경로로 ClientTravel)
+	ClientTravel(TFDGameConstants::TitleLevel, ETravelType::TRAVEL_Absolute);
+}
+
+void ATFDPlayerController::StartGame()
+{
+	if (!IsLocalController() || !HasAuthority())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[ATFDPlayerController][StartGame] Not authorized to start the game"));
+		return;
+	}
+
+	// UI 제거
+	RemoveLobbyUI();
+
+	FString TravelCommand = FString::Printf(TEXT("%s?listen"), TFDGameConstants::GameLevel);
+	UE_LOG(LogTemp, Log, TEXT("[ATFDPlayerController][StartGame] ServerTravel to: %s"), *TravelCommand);
+
+	GetWorld()->ServerTravel(TravelCommand, true); // true: seamless travel
+}
+
+void ATFDPlayerController::RemoveLobbyUI()
+{
+	if (LobbyWidgetInstance)
+	{
+		LobbyWidgetInstance->RemoveFromParent();
+		LobbyWidgetInstance = nullptr;
+	}
+}
+
+FString ATFDPlayerController::GetLocalIP() const
+{// 내 컴퓨터의 로컬 IP 주소(127.0.0.1 제외)를 문자열로 가져오는 함수
+
+	// Winsock(윈속)이라는 시스템 API를 초기화
+	WSADATA wsaData;
+
+	// WSAStartup : 네트워크 기능 사용 초기화
+	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
+	{// 윈도우에서 소켓 API를 쓰기 위한 초기화
+	// 실패 시 기본값 반환
+		return TEXT("0.0.0.0");
+	}
+
+	// 내 컴퓨터의 이름(호스트네임)을 얻음
+	// "내가 누군지"를 알아야 내 IP 주소를 알 수 있음
+	// gethostname : 내 컴퓨터 이름 알아내기
+	char hostname[256];
+	if (gethostname(hostname, sizeof(hostname)) == SOCKET_ERROR)
+	{
+		WSACleanup(); // Winsock(윈속)이라는 시스템 API를 초기화
+		return TEXT("0.0.0.0");
+	}
+
+	// 호스트 이름으로 IP 주소 목록 얻기
+	// (여러 개일 수도 있음 -> 그래서 리스트처럼 받아옴)
+	// getaddrinfo : 도메인 이름으로 IP 목록 얻기
+	struct addrinfo hints = { 0 };
+	hints.ai_family = AF_INET; // IPv4 주소만 (IPv6은 제외)
+
+	struct addrinfo* info = nullptr;
+	if (getaddrinfo(hostname, nullptr, &hints, &info) != 0)
+	{
+		WSACleanup();
+		return TEXT("0.0.0.0");
+	}
+
+	// 얻은 주소들 중 루프백(127.x.x.x)은 제외하고 실제 IP만 가져오기
+	FString LocalIP = TEXT("0.0.0.0");
+
+	for (struct addrinfo* ptr = info; ptr != nullptr; ptr = ptr->ai_next)
+	{// 여러 IP가 있을 수 있어서 반복하면서 검사
+
+		sockaddr_in* sockaddr_ipv4 = (sockaddr_in*)ptr->ai_addr;
+		char ipStr[INET_ADDRSTRLEN] = { 0 };
+
+		// inet_ntop : 바이너리 IP를 문자열로 변환
+		inet_ntop(AF_INET, &(sockaddr_ipv4->sin_addr), ipStr, INET_ADDRSTRLEN);
+
+		FString CandidateIP = FString(ipStr);
+
+		// 루프백 주소 거르기
+		// 127.x.x.x는 자기 자신(localhost)이므로 제외
+		if (!CandidateIP.StartsWith(TEXT("127.")))
+		{// 첫 번째로 나오는 "정상적인 IP"를 리턴
+			LocalIP = CandidateIP;
+			break;
+		}
+	}
+
+	// 마무리 정리 (메모리 해제 & 소켓 정리)
+	freeaddrinfo(info);
+	WSACleanup();
+
+	return LocalIP;
+}

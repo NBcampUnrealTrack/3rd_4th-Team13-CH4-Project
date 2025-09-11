@@ -2,7 +2,7 @@
 #include "Controller/TFDPlayerController_Title.h"
 
 #include "Kismet/GameplayStatics.h"
-//#include "Constants/LevelPathConstants.h"
+#include "Constants/TFDGameConstants.h"
 
 void ATFDPlayerController_Title::BeginPlay()
 {
@@ -23,7 +23,7 @@ void ATFDPlayerController_Title::CreateServer()
 	UE_LOG(LogTemp, Log, TEXT("[ATFDPlayerController_Title][CreateServer] called"));
 
 	// 리슨 서버 시작 + 로비 레벨로 전환
-	//UGameplayStatics::OpenLevel(GetWorld(), FName(LevelPathConstants::LobbyLevel), true, "listen");
+	UGameplayStatics::OpenLevel(GetWorld(), FName(TFDGameConstants::LobbyLevel), true, "listen");
 }
 
 void ATFDPlayerController_Title::JoinServer(const FString& ServerIP)
@@ -91,4 +91,29 @@ void ATFDPlayerController_Title::ShowEnterIPUI()
 			EnterIPWidgetInstance->AddToViewport();
 		}
 	}
+}
+
+void ATFDPlayerController_Title::ClientNotifyMaxPlayerReached_Implementation()
+{
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("접속 인원이 가득 찼습니다."));
+
+	if (MaxPlayerPopupClass)
+	{
+		UUserWidget* PopupWidget = CreateWidget<UUserWidget>(this, MaxPlayerPopupClass);
+		if (PopupWidget)
+		{
+			PopupWidget->AddToViewport();
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[ATFDPlayerController_Title] MaxPlayerPopupClass is not set!"));
+	}
+
+	// 일정 시간 뒤 자동 복귀 처리
+	FTimerHandle TimerHandle;
+	GetWorld()->GetTimerManager().SetTimer(TimerHandle, [this]()
+		{
+			ClientTravel(TFDGameConstants::TitleLevel, ETravelType::TRAVEL_Absolute);
+		}, 3.0f, false); // 3초 후 이동
 }
