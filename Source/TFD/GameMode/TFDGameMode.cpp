@@ -4,12 +4,17 @@
 #include "GameMode/TFDGameMode.h"
 
 
+#include "AIController.h"
 #include "EngineUtils.h"
 #include "TFDNativeGameplayTags.h"
 #include "Character/TFDCharacter.h"
+#include "Controller/TFDPlayerController.h"
+#include "GameState/TFDGameState.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameplayTagContainer.h"
+#include "Character/TFDAICharacter.h"
 #include "GameFramework/PlayerStart.h"
+#include "GameFramework/PlayerState.h"
 #include "Object/TFDSpawnVolume.h"
 
 
@@ -18,7 +23,7 @@
 void ATFDGameMode::BeginPlay()
 {
 	Super::BeginPlay();
-
+	GameState = GetGameState<ATFDGameState>();
 
 	InitializeSpawnVolumes();
 	SpawnPlayer(3);
@@ -170,12 +175,64 @@ void ATFDGameMode::OnCatchThief(APawn* APawn)
 {
 }
 
-void ATFDGameMode::GamePause()
+void ATFDGameMode::OnHandleGameEnd(EGameCompleteType CompleteType)
 {
 }
 
-void ATFDGameMode::OnHandleGameEnd(EGameCompleteType CompleteType)
+void ATFDGameMode::GamePause(bool bIsPaused)
 {
+	UWorld* World = GetWorld();
+
+	if (!World)
+	{
+		return;
+	}
+	// TODO: 중지 함수 생기고 나면 bPaused 인자값에 맞춰서 호출 변경
+	//			PC->SetMovemnetWalking();
+	//			AICharacter->StartMovemnetWalking();
+	
+	// bIsPaused 에 따라서 플레이어, AI 활성 비활성화 하고 있습니다.
+	// 모든 플레이어의 이동을 활성화합니다.
+	for (FConstPlayerControllerIterator It = World->GetPlayerControllerIterator(); It; ++It)
+	{
+		if (ATFDPlayerController* PC = Cast<ATFDPlayerController>(It->Get()))
+		{
+			PC->SetMovemnetWalking();
+		}
+	}
+	
+	// 모든 AI
+	for (TActorIterator<AAIController> It(World); It; ++It)
+	{
+		AAIController* AI = *It;
+		if (ATFDAICharacter* AICharacter = Cast<ATFDAICharacter> (AI->GetCharacter()))
+		{
+			AICharacter->StartMovemnetWalking();
+		}
+	}
+	
+	UE_LOG(LogTemp, Log, TEXT("Game Start! All players movement enabled."));
+}
+
+void ATFDGameMode::PlayerIsReady(AController* PlayerController)
+{
+	// 모든 플레이어가 준비되었는지 확인하는 등의 로직
+	UE_LOG(LogTemp, Warning, TEXT("Player is ready: %s"), *PlayerController->GetName());
+
+	ATFDGameState* TFDGameState = GetGameState<ATFDGameState>();
+	ATFDPlayerState* TFDPlayerState = PlayerController->GetPlayerState<ATFDPlayerState>();
+
+	if(TFDGameState && TFDPlayerState)
+	{
+		TFDGameState->MarkPlayerReady(TFDPlayerState);
+
+		// 모든 플레이어가 접속했는지 확인 (GameState의 PlayerArray 사용)
+		if(TFDGameState->GetReadyPlayerCount() >= TFDGameState->PlayerArray.Num() && TFDGameState->PlayerArray.Num() > 0)
+		{
+			UE_LOG(LogTemp, Log, TEXT("All players are ready. Starting the game."));
+			GamePause(false);
+		}
+	}
 }
 
 
@@ -183,8 +240,7 @@ void ATFDGameMode::OnHandleGameEnd(EGameCompleteType CompleteType)
 void ATFDGameMode::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-
+	
 	// 남은 시간 업데이트 처리
 	// 시간이 종료될 시 게임 종료 로직
 }
@@ -192,23 +248,15 @@ void ATFDGameMode::Tick(float DeltaTime)
 void ATFDGameMode::PostSeamlessTravel()
 {
 	Super::PostSeamlessTravel();
-	// PlayerController 배열 가져오기
-	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
-	{
-		if (APlayerController* PC = It->Get())
-		{
-			// 원하는 Pawn 스폰
-			FActorSpawnParameters SpawnParams;
-			SpawnParams.Owner = PC;
-			// APawn* NewPawn = GetWorld()->
-			// 	SpawnActor<APawn>(DefaultPawnClass, SpawnLocation, SpawnRotation, SpawnParams);
+	// AI스폰
+	
+	// 팀 비율 결정
+	
+	// 결정된 수에 따라 플레이어 character 스폰
 
-			// Possess
-			// if (NewPawn)
-			// {
-			// 	PC->Possess(NewPawn);
-			// }
-		}
-	}
+	// 플레이어 빙의 처리
+
+	// 게임 정지
+	GamePause(true);
 }
 

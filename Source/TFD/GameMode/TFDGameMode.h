@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameMode.h"
+#include "GameState/TFDGameState.h"
 #include "GameData/EGameEnums.h"
 #include "TFDGameMode.generated.h"
 
@@ -23,8 +24,7 @@ protected:
 
 	//스폰위치 결정짓는 함수
 	virtual AActor* ChoosePlayerStart_Implementation(AController* Player) override;
-
-protected:
+	
 	UPROPERTY()
 	TArray<ATFDSpawnVolume*> SpawnVolumes;
 
@@ -32,6 +32,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Spawn")
 	TSubclassOf<ATFDCharacter> CorpCharacterClass;
 
+	ATFDGameState* GameState;
+	
 public:
 	void SpawnAI(int32 NumberOfPeople = 1);
 	void SpawnPlayer(int32 NumberOfPeople = 1);
@@ -45,6 +47,7 @@ private:
 	FTimerHandle PlayerSpawnTimerHandle;
 
 public:
+	void PlayerIsReady(AController* PlayerController);
 	// AI 군중 배치 및 리플리케이트 
 	void SpawnAICrowd();
 	// 플레이어들 위치 배치와 연결
@@ -52,7 +55,7 @@ public:
 	void OnCatchThief(APawn* APawn);
 	// TODO: 도둑 폰으로 클래스 교체
 	//  게임 시작 전, 결과 표시중 플레이어 조종 방지처리
-	void GamePause();
+	void GamePause(bool bIsPaused);
 	// 게임 종료시 처리될 내용이 담김.
 	void OnHandleGameEnd(EGameCompleteType CompleteType);
 };

@@ -63,4 +63,8 @@ private:
 	*/
 
 	void JobAbility(const FInputActionValue& Value, FGameplayTag InputTag);
+
+public:
+	UFUNCTION(Server, Reliable)
+	void Server_NotifyPlayerIsReady();
 };

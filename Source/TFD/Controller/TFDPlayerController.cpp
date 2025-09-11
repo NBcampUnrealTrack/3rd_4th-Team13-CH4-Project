@@ -11,6 +11,7 @@
 #include "AbilitySystemInterface.h"
 #include "AbilitySystemComponent.h"
 #include "TFDNativeGameplayTags.h"
+#include "GameMode/TFDGameMode.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 ATFDPlayerController::ATFDPlayerController()
@@ -81,6 +82,8 @@ void ATFDPlayerController::OnPossess(APawn* InPawn)
 	}
 }
 
+
+
 void ATFDPlayerController::AcknowledgePossession(APawn* InPawn)
 {
 	Super::AcknowledgePossession(InPawn);
@@ -110,6 +113,8 @@ void ATFDPlayerController::AcknowledgePossession(APawn* InPawn)
 			}
 		}
 	}
+
+	Server_NotifyPlayerIsReady();
 }
 
 void ATFDPlayerController::Dash(const FInputActionValue& Value)
@@ -206,4 +211,13 @@ void ATFDPlayerController::TogglePause(const FInputActionValue& Value)
 {
 }
 */
+
+void ATFDPlayerController::Server_NotifyPlayerIsReady_Implementation()
+{
+	// 서버에서 실행되는 로직
+	if (ATFDGameMode* TFDGameMode = GetWorld()->GetAuthGameMode<ATFDGameMode>())
+	{
+		TFDGameMode->PlayerIsReady(this);
+	}
+}
 
