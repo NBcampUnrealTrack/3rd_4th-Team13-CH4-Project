@@ -21,64 +21,12 @@
 ATFDGameMode::ATFDGameMode()
 {
 	DefaultPawnClass = nullptr;
+	bUseSeamlessTravel = true;
 }
 
 void ATFDGameMode::BeginPlay()
 {
 	Super::BeginPlay();
-	bUseSeamlessTravel = true;
-
-	GameState = GetGameState<ATFDGameState>();
-
-	InitializeSpawnVolumes();
-}
-
-void ATFDGameMode::OnPostLogin(AController* NewPlayer)
-{
-	Super::OnPostLogin(NewPlayer);
-}
-
-AActor* ATFDGameMode::ChoosePlayerStart_Implementation(AController* Player)
-{
-	// 스폰 볼륨이 초기화되지 않았다면 초기화
-	if (SpawnVolumes.Num() == 0)
-	{
-		InitializeSpawnVolumes();
-		UE_LOG(LogTemp, Display, TEXT("CPS_1"));
-	}
-	
-	
-	ATFDPlayerState* PS = Player ? Player->GetPlayerState<ATFDPlayerState>() : nullptr;
-	if (!PS)
-		return Super::ChoosePlayerStart_Implementation(Player);
-	// if (!PS && PS->GetTeamTag() == FGameplayTag::EmptyTag)
-	// 	return nullptr;
-
-	FGameplayTag PlayerTag = PS->GetTeamTag();
-    	
-	// 랜덤 위치를 얻어서 임시 액터 생성A
-	FVector RandomLocation = GetRandomPointInSpawnAreaTag(PlayerTag);
-	if (RandomLocation == FVector::ZeroVector)
-		return nullptr;
-	
-	// 2. 엔진이 스폰 위치를 인식할 수 있도록 임시 APlayerStart 액터를 생성합니다.
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	
-	APlayerStart* PlayerStartActor = GetWorld()->SpawnActor<APlayerStart>(RandomLocation, FRotator::ZeroRotator, SpawnParams);
-	
-	// 3. 찾은 위치가 유효한지 확인 후 반환합니다.
-	if (PlayerStartActor)
-	{
-		// 로그로 확인
-		UE_LOG(LogTemp, Display, TEXT("CPS: Player will spawn at a new location: %s"), *RandomLocation.ToString());
-	      
-		return PlayerStartActor;
-	}
-    
-	// 유효한 위치를 찾지 못했다면 부모 클래스의 기본 함수를 호출
-	
-	return Super::ChoosePlayerStart_Implementation(Player);
 }
 
 APawn* ATFDGameMode::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, AActor* StartSpot)
@@ -96,13 +44,15 @@ APawn* ATFDGameMode::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, 
 
 	// SpawnTransform 설정
 	FTransform SpawnTransform = StartSpot->GetActorTransform();
+	FVector SpawnLocation = GetRandomPointInSpawnAreaTag(PS->GetTeamTag());
+	SpawnTransform.SetLocation( SpawnLocation);
 
 	// SpawnActorDeferred로 Pawn 생성
 	ATFDCharacterBase* Pawn = GetWorld()->SpawnActorDeferred<ATFDCharacterBase>(PawnClass, SpawnTransform, NewPlayer,
 		nullptr, ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn);
 	if (!Pawn) return nullptr;
 	
-	const FGameRuleData& RuleData = GetGameState<ATFDGameState>()->GetRuleData();
+	const FGameRuleData& RuleData = GetGameState()->GetRuleData();
 	ATFDPlayerState* PState = Cast<ATFDPlayerState>(NewPlayer->PlayerState);
 	ATFDCharacterBase*  TFDPawn = Cast<ATFDCharacterBase>(Pawn);
 	if (PState && TFDPawn)
@@ -126,15 +76,14 @@ APawn* ATFDGameMode::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, 
 void ATFDGameMode::PostSeamlessTravel()
 {
 	Super::PostSeamlessTravel();
-	// AI스폰
-	SpawnAI();
+	InitializeSpawnVolumes();
 	// 팀 비율 결정
-	TArray<APlayerState*> PlayerArray = GameState->PlayerArray;
+	TArray<APlayerState*> PlayerArray = GetGameState()->PlayerArray;
 	int32 PlayerCnt = PlayerArray.Num();
 	int32 PoliceCnt = UInGameUtility::GetPoliceRoleCount(PlayerCnt);
 
 	// 배열을 랜덤으로 섞기
-	for (int32 i = PlayerArray.Num() - 1; i > 0; --i)
+	for (int32 i = PlayerArray.Num() - 1; i >= 0; --i)
 	{
 		int32 SwapIndex = FMath::RandRange(0, i);
 		PlayerArray.Swap(i, SwapIndex);
@@ -166,7 +115,8 @@ void ATFDGameMode::PostSeamlessTravel()
 			RestartPlayer(PC);
 		}
 	}
-	
+	// AI스폰
+	SpawnAI();
 }
 
 void ATFDGameMode::SpawnAI()
@@ -175,7 +125,7 @@ void ATFDGameMode::SpawnAI()
 	FRotator SpawnRot = FRotator::ZeroRotator;
 
 	FGameplayTag AITag =TAG_Team_Neutral;
-	TSubclassOf<ATFDCharacterBase> AIClass = GameState->GetRuleData().PawnClassAI;
+	TSubclassOf<ATFDCharacterBase> AIClass = GetGameState()->GetRuleData().PawnClassAI;
 	for (int32 i = 0; i < NumberOfAI; ++i)
 	{
 		SpawnLoc = GetRandomPointInSpawnAreaTag(AITag);
@@ -331,11 +281,11 @@ void ATFDGameMode::OnCatchThief(APawn* Pawn)
 		TWeakObjectPtr<ATFDPlayerState> WeakPS = MakeWeakObjectPtr<ATFDPlayerState>(PS);
 
 		// 배열에 저장 가능
-		GameState->CaughtThiefPlayerStateArray.Add(WeakPS);
+		GetGameState()->CaughtThiefPlayerStateArray.Add(WeakPS);
 	}
 	
 
-	if (GameState->CaughtThiefPlayerStateArray.Num() == GameState->ThiefPlayerStateArray.Num())
+	if (GetGameState()->CaughtThiefPlayerStateArray.Num() == GetGameState()->ThiefPlayerStateArray.Num())
 	{
 		GameEnd(EGameCompleteType::CatchAllThief);
 	}
@@ -343,7 +293,7 @@ void ATFDGameMode::OnCatchThief(APawn* Pawn)
 
 void ATFDGameMode::GameEnd(EGameCompleteType CompleteType)
 {
-	GameState->SetGameState(EGameState::Result);
+	GetGameState()->SetGameState(EGameState::Result);
 }
 
 void ATFDGameMode::GamePause(bool bIsPaused)
@@ -385,22 +335,31 @@ void ATFDGameMode::GamePause(bool bIsPaused)
 	UE_LOG(LogTemp, Log, TEXT("Game Start! All players movement enabled."));
 }
 
+ATFDGameState* ATFDGameMode::GetGameState()
+{
+	if (GameState == nullptr)
+	{
+		GameState = Super::GetGameState<ATFDGameState>();
+	}
+	return GameState;
+}
+
 void ATFDGameMode::PlayerIsReady(AController* PlayerController)
 {
 	// 모든 플레이어가 준비되었는지 확인하는 등의 로직
 	UE_LOG(LogTemp, Warning, TEXT("Player is ready: %s"), *PlayerController->GetName());
 	ATFDPlayerState* TFDPlayerState = PlayerController->GetPlayerState<ATFDPlayerState>();
 
-	if(GameState && TFDPlayerState)
+	if(GetGameState() && TFDPlayerState)
 	{
-		GameState->MarkPlayerReady(TFDPlayerState);
+		GetGameState()->MarkPlayerReady(TFDPlayerState);
 
 		// 모든 플레이어가 접속했는지 확인 (GameState의 PlayerArray 사용)
-		if(GameState->GetReadyPlayerCount() >= GameState->PlayerArray.Num() && GameState->PlayerArray.Num() > 0)
+		if(GetGameState()->GetReadyPlayerCount() >= GetGameState()->PlayerArray.Num() && GetGameState()->PlayerArray.Num() > 0)
 		{
 			UE_LOG(LogTemp, Log, TEXT("All players are ready. Starting the game."));
 			GamePause(false);
-			GameState->SetGameState(EGameState::Playing);
+			GetGameState()->SetGameState(EGameState::Playing);
 		}
 	}
 }
@@ -411,9 +370,9 @@ void ATFDGameMode::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	float GameTime = GameState->GetCurrentGameTimeSec();
+	float GameTime = GetGameState()->GetCurrentGameTimeSec();
 	// 시간이 종료될 시 게임 종료 로직
-	if (GameTime > GameState->GetRuleData().PlayTimeSec)
+	if (GameTime > GetGameState()->GetRuleData().PlayTimeSec)
 	{
 		GameEnd(EGameCompleteType::TimeLimit);
 	}

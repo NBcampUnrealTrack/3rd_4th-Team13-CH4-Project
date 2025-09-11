@@ -26,18 +26,16 @@ public:
 	void GameEnd(EGameCompleteType CompleteType);
 	void PlayerIsReady(AController* PlayerController);
 	void GamePause(bool bIsPaused);
+	
+	ATFDGameState* GetGameState();
+	
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 	
-	virtual void OnPostLogin(AController* NewPlayer) override;
-	//스폰위치 결정짓는 함수
-	virtual AActor* ChoosePlayerStart_Implementation(AController* Player) override;
 	//virtual UClass* GetDefaultPawnClassForController_Implementation(AController* InController) override;
 	virtual APawn* SpawnDefaultPawnFor_Implementation(AController* NewPlayer, AActor* StartSpot) override;
 	virtual void PostSeamlessTravel() override;
-
-protected:
 	UPROPERTY()
 	TArray<ATFDSpawnVolume*> SpawnVolumes;
 

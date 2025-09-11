@@ -9,7 +9,7 @@ void ATFDGameState::MarkPlayerReady(ATFDPlayerState* PS)
 {
 	if (PS)
 	{
-		ReadyPlayers.AddUnique(PS);
+		ReadyPlayers.Add(PS);
 	}
 }
 

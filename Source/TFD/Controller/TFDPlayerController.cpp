@@ -207,8 +207,13 @@ void ATFDPlayerController::AcknowledgePossession(APawn* InPawn)
 			}
 		}
 	}
+}
 
-	Server_NotifyPlayerIsReady();
+void ATFDPlayerController::NotifyLoadedWorld(FName WorldPackageName, bool bFinalDest)
+{
+	Super::NotifyLoadedWorld(WorldPackageName, bFinalDest);
+	if (bFinalDest)
+		Server_NotifyPlayerIsReady();
 }
 
 void ATFDPlayerController::Dash(const FInputActionValue& Value)
