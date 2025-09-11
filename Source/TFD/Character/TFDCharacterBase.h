@@ -35,6 +35,7 @@ protected:
 	// GAS 기본 생성자
 	void BaseSetting();
 	void SetDAPlayerStat();
+	void OnSpeedAttributeChanged(const FOnAttributeChangeData& Data);
 
 protected:
 	// GAS 핵심 컴포넌트들

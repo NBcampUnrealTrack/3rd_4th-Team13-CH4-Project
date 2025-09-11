@@ -140,7 +140,7 @@ void ATFDPlayerController::AcknowledgePossession(APawn* InPawn)
 				for (const auto& Action : CB->CharacterData->Actions)
 				{
 					FEnhancedInputActionEventBinding& Bind = 
-						EnhancedInputComponent->BindAction(Action.InputAction, ETriggerEvent::Started, this, &ATFDPlayerController::JobAbility, Action.Tag);
+						EnhancedInputComponent->BindAction(Action.InputAction, Action.TriggerEvent, this, &ATFDPlayerController::JobAbility, Action.Tag);
 
 					JobBindingHandles.Add(Bind.GetHandle());
 				}

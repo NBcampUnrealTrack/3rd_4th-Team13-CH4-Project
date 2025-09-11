@@ -8,6 +8,7 @@
 #include "TFDNativeGameplayTags.h"
 #include "Abilities/GameplayAbility.h"
 #include "InputMappingContext.h"
+#include "InputTriggers.h"
 #include "TFDPlayerDataAsset.generated.h"
 
 
@@ -16,11 +17,21 @@ struct FInputActionTagMapping
 {
 	GENERATED_BODY()
 
+	FInputActionTagMapping()
+		: InputAction(nullptr)
+		, Tag(FGameplayTag::EmptyTag)
+		, TriggerEvent(ETriggerEvent::Started)
+	{
+	}
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UInputAction* InputAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FGameplayTag Tag;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	ETriggerEvent TriggerEvent;
 };
 
 /**
