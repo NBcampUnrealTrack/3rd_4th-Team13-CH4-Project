@@ -23,7 +23,7 @@ public:
 	ATFDPlayerController();
 
 	UFUNCTION(BlueprintCallable)
-	void SetMovemnetWalking();
+	void SetMovemnetWalking(bool bMovement);
 
 	UFUNCTION(Server, Reliable)
 	void Server_NotifyPlayerIsReady();

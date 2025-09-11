@@ -232,17 +232,13 @@ void ATFDGameMode::GamePause(bool bIsPaused)
 	{
 		return;
 	}
-	// TODO: 중지 함수 생기고 나면 bPaused 인자값에 맞춰서 호출 변경
-	//			PC->SetMovemnetWalking();
-	//			AICharacter->StartMovemnetWalking();
 	
 	// bIsPaused 에 따라서 플레이어, AI 활성 비활성화 하고 있습니다.
-	// 모든 플레이어의 이동을 활성화합니다.
 	for (FConstPlayerControllerIterator It = World->GetPlayerControllerIterator(); It; ++It)
 	{
 		if (ATFDPlayerController* PC = Cast<ATFDPlayerController>(It->Get()))
 		{
-			PC->SetMovemnetWalking();
+			PC->SetMovemnetWalking(!bIsPaused);
 		}
 	}
 	
@@ -252,7 +248,15 @@ void ATFDGameMode::GamePause(bool bIsPaused)
 		AAIController* AI = *It;
 		if (ATFDAICharacter* WorldAICharacter = Cast<ATFDAICharacter> (AI->GetCharacter()))
 		{
-			WorldAICharacter->StartMovemnetWalking();
+			if (!bIsPaused)
+			{
+				WorldAICharacter->StartMovemnetWalking(); //움직임 활성화
+			}
+			else
+			{
+				WorldAICharacter->StopMovemnetWalking(); //움직임 비활성화
+			}
+			
 		}
 	}
 	
