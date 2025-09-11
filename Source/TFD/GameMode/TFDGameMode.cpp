@@ -87,7 +87,7 @@ APawn* ATFDGameMode::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, 
 
 	ATFDPlayerState* PS = NewPlayer->GetPlayerState<ATFDPlayerState>();
 
-	if (!PS && PS->GetTeamTag().IsValid() == false)
+	if (!PS || PS->GetTeamTag() == FGameplayTag::EmptyTag)
 		return nullptr;
 	
 	// Pawn 클래스 가져오기
