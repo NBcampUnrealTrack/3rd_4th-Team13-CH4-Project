@@ -35,7 +35,9 @@ protected:
 	
 	// 현재 게임 상태필요
 	// 도둑정보 Controller 리스트
+	TArray<TSoftObjectPtr< ATFDPlayerState>> PolicePlayerStateArray;
 	// 경찰정보 Controller 리스트
+	TArray<TSoftObjectPtr< ATFDPlayerState>> ThiefPlayerStateArray;
 
 	UPROPERTY(Replicated)
 	TArray<ATFDPlayerState*> ReadyPlayers;
