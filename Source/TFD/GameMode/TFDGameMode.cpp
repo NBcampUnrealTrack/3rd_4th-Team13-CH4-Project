@@ -28,6 +28,8 @@ void ATFDGameMode::BeginPlay()
 	Super::BeginPlay();
 	bUseSeamlessTravel = true;
 
+	GameState = GetGameState<ATFDGameState>();
+
 	InitializeSpawnVolumes();
 }
 
