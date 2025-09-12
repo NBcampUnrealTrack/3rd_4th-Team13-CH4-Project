@@ -26,6 +26,7 @@ protected:
 public:
 	void SetTeamTag(FGameplayTag Tag);
 	FGameplayTag GetTeamTag() const;
+	virtual void CopyProperties(APlayerState* NewPlayerState) override;
 //===================================================
 // 이하 OutGame 관련 - Lobby
 // 플레이어 이름 복제, 변경시 델리게이트 호출

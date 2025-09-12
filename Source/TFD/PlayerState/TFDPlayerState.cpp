@@ -15,6 +15,15 @@ FGameplayTag ATFDPlayerState::GetTeamTag() const
 	return this->TeamTag;
 }
 
+void ATFDPlayerState::CopyProperties(APlayerState* NewPlayerState)
+{
+	Super::CopyProperties(NewPlayerState);
+	if (ATFDPlayerState* NewPS = Cast<ATFDPlayerState>(NewPlayerState))
+	{
+		NewPS->TeamTag = TeamTag;
+	}
+}
+
 //===================================================
 // 이하 OutGame 관련 - Lobby
 //===================================================
