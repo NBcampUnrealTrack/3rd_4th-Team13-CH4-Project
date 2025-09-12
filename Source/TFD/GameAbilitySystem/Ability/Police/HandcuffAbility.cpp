@@ -171,31 +171,30 @@ void UHandcuffAbility::HandcuffToTarget(AActor* TargetActor, const FGameplayAbil
 
 				if (!CB->GetAbilitySystemComponent()->HasMatchingGameplayTag(TAG_Team_Cop))
 				{
-					// ✅ 이미 Arrested 상태면 스킵
+					// 이미 Arrested 상태면 스킵
 					if (!CB->GetAbilitySystemComponent()->HasMatchingGameplayTag(TAG_Character_State_Arrested))
 					{
-						// 경찰이 아니고, Arrested 태그도 없는 경우 → 이펙트 적용
+						// 경찰이 아니고, Arrested 태그도 없는 경우 이펙트 적용
 						ActorInfo->AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(
 							*SpecHandle.Data.Get(),
 							CB->GetAbilitySystemComponent()
 						);
-
-						// GameMode 호출
-						if (UWorld* World = GetWorld())
+						if (CB->GetAbilitySystemComponent()->HasMatchingGameplayTag(TAG_Team_Thief))
 						{
-							if (ATFDGameMode* GM = World->GetAuthGameMode<ATFDGameMode>())
+							// 도둑인 경우 GameMode 호출
+							if (UWorld* World = GetWorld())
 							{
-								if (APawn* TargetPawn = Cast<APawn>(TargetActor))
+								if (ATFDGameMode* GM = World->GetAuthGameMode<ATFDGameMode>())
 								{
-									GM->OnCatchThief(TargetPawn);
-									UE_LOG(LogTemp, Warning, TEXT("OnCatchThief called for %s"), *TargetPawn->GetName());
+									if (APawn* TargetPawn = Cast<APawn>(TargetActor))
+									{
+										GM->OnCatchThief(TargetPawn);
+										UE_LOG(LogTemp, Warning, TEXT("OnCatchThief called for %s"), *TargetPawn->GetName());
+									}
 								}
 							}
 						}
-					}
-					else
-					{
-						UE_LOG(LogTemp, Warning, TEXT("Target already arrested, skip effect"));
+						
 					}
 				}
 			}
