@@ -5,3 +5,8 @@
 
 IMPLEMENT_PRIMARY_GAME_MODULE( FDefaultGameModuleImpl, TFD, "TFD" );
  
+#pragma region NetLogging
+
+DEFINE_LOG_CATEGORY(LogTFDNet);
+
+#pragma endregion
