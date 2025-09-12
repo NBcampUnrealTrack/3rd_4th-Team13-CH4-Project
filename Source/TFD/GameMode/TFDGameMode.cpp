@@ -140,9 +140,9 @@ void ATFDGameMode::HandleSeamlessTravelPlayer(AController*& C)
 		if(NumTravellingPlayers == 0 && NumPlayers == GetGameState()->PlayerArray.Num())
 		{
 			UE_LOG(LogTemp, Log, TEXT("All players are ready. Starting the game."));
-			GamePause(false);
 			GetGameState()->SetGameState(EGameState::Playing);
 			StartPlay();
+			GamePause(false);
 		}
 	}
 }
