@@ -23,7 +23,7 @@ public class TFD : ModuleRules
 				"NavigationSystem",
 
 				// IP 관련 내용
-				"Http",
+				"HTTP",			// 대문자로 수정! ("Http") // Module 'Http' (referenced via Target -> TFD.Build.cs) has incorrect text case. Did you mean 'HTTP'?
                 "Json",			// (선택적 - JSON 파싱 시 필요)
                 "JsonUtilities"	// (선택적 - JSON 구조체 바인딩 시 필요)
         });

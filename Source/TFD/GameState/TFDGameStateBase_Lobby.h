@@ -6,14 +6,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/GameStateBase.h"
+#include "GameFramework/GameState.h"
 #include "TFDGameStateBase_Lobby.generated.h"
 
 // 델리게이트 선언
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerListChanged);
 
 UCLASS()
-class TFD_API ATFDGameStateBase_Lobby : public AGameStateBase
+class TFD_API ATFDGameStateBase_Lobby : public AGameState
 {
 	GENERATED_BODY()
 	
