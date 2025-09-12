@@ -1,4 +1,4 @@
-#include "GameAbilitySystem/Ability/Police/HandcuffAbility.h"
+﻿#include "GameAbilitySystem/Ability/Police/HandcuffAbility.h"
 #include "TFDNativeGameplayTags.h"
 #include "AbilitySystemComponent.h"
 #include "GameFramework/Character.h"
@@ -6,7 +6,7 @@
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 #include "Character/TFDCharacterBase.h"
-
+#include "GameMode/TFDGameMode.h"
 
 //디버그용
 #include "DrawDebugHelpers.h"
@@ -148,7 +148,6 @@ AActor* UHandcuffAbility::FindTarget(const FGameplayAbilityActorInfo* ActorInfo)
 void UHandcuffAbility::HandcuffToTarget(AActor* TargetActor, const FGameplayAbilityActorInfo* ActorInfo)
 {
 	//잡힌 대상에게 상태부여
-
 	if (GetCurrentActorInfo()->IsNetAuthority())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Handcuff To Target"));
@@ -169,10 +168,40 @@ void UHandcuffAbility::HandcuffToTarget(AActor* TargetActor, const FGameplayAbil
 					UE_LOG(LogTemp, Warning, TEXT("ATFDCharacterBase null"));
 					return;
 				}
-				ActorInfo->AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), CB->GetAbilitySystemComponent());
+
+				if (!CB->GetAbilitySystemComponent()->HasMatchingGameplayTag(TAG_Team_Cop))
+				{
+					// ✅ 이미 Arrested 상태면 스킵
+					if (!CB->GetAbilitySystemComponent()->HasMatchingGameplayTag(TAG_Character_State_Arrested))
+					{
+						// 경찰이 아니고, Arrested 태그도 없는 경우 → 이펙트 적용
+						ActorInfo->AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(
+							*SpecHandle.Data.Get(),
+							CB->GetAbilitySystemComponent()
+						);
+
+						// GameMode 호출
+						if (UWorld* World = GetWorld())
+						{
+							if (ATFDGameMode* GM = World->GetAuthGameMode<ATFDGameMode>())
+							{
+								if (APawn* TargetPawn = Cast<APawn>(TargetActor))
+								{
+									GM->OnCatchThief(TargetPawn);
+									UE_LOG(LogTemp, Warning, TEXT("OnCatchThief called for %s"), *TargetPawn->GetName());
+								}
+							}
+						}
+					}
+					else
+					{
+						UE_LOG(LogTemp, Warning, TEXT("Target already arrested, skip effect"));
+					}
+				}
 			}
 		}
 	}
+
 	/*
 	UE_LOG(LogTemp, Warning, TEXT("Handcuff To Target"));
 
