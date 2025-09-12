@@ -6,12 +6,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/GameModeBase.h"
 #include "Blueprint/UserWidget.h"  // UI 위젯 관련 헤더
+#include "GameFramework/GameMode.h"
 #include "TFDGameModeBase_Lobby.generated.h"
 
 UCLASS()
-class TFD_API ATFDGameModeBase_Lobby : public AGameModeBase
+class TFD_API ATFDGameModeBase_Lobby : public AGameMode
 {
 	GENERATED_BODY()
 	

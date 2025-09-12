@@ -31,9 +31,6 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetMovemnetWalking(bool bMovement);
 
-	UFUNCTION(Server, Reliable)
-	void Server_NotifyPlayerIsReady();
-
 protected:
 	virtual void BeginPlay() override; // OutGame 관련 추가
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -41,7 +38,6 @@ protected:
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void OnUnPossess() override;
 	virtual void AcknowledgePossession(APawn* InPawn) override;
-	virtual void NotifyLoadedWorld(FName WorldPackageName, bool bFinalDest) override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "TFD|Input|Default")
 	TObjectPtr<UInputMappingContext> DefaultMappingContext;

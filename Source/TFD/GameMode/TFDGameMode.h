@@ -24,18 +24,24 @@ public:
 	void OnCatchThief(APawn* Pawn);
 	// 게임 종료시 처리될 내용이 담김.
 	void GameEnd(EGameCompleteType CompleteType);
-	void PlayerIsReady(AController* PlayerController);
-	void GamePause(bool bIsPaused);
-	
 	ATFDGameState* GetGameState();
-	
+	void GamePause(bool bIsPaused);
+
+
+	//pre start match 
+	virtual bool ReadyToStartMatch_Implementation() override;
+	virtual void HandleMatchIsWaitingToStart() override;
+	// SeamlessTravel 관련
+	virtual void PostSeamlessTravel() override;
+	virtual void HandleSeamlessTravelPlayer(AController*& C) override;
+    
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 	
 	//virtual UClass* GetDefaultPawnClassForController_Implementation(AController* InController) override;
 	virtual APawn* SpawnDefaultPawnFor_Implementation(AController* NewPlayer, AActor* StartSpot) override;
-	virtual void PostSeamlessTravel() override;
+	
 	UPROPERTY()
 	TArray<ATFDSpawnVolume*> SpawnVolumes;
 

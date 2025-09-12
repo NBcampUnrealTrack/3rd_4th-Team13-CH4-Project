@@ -73,10 +73,21 @@ APawn* ATFDGameMode::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, 
 }
 
 
+bool ATFDGameMode::ReadyToStartMatch_Implementation()
+{
+	return GetGameState()->GetCurrentGameState() == EGameState::Playing;
+}
+
+void ATFDGameMode::HandleMatchIsWaitingToStart()
+{
+	Super::HandleMatchIsWaitingToStart();
+	InitializeSpawnVolumes();
+	SpawnAI();
+}
+
 void ATFDGameMode::PostSeamlessTravel()
 {
 	Super::PostSeamlessTravel();
-	InitializeSpawnVolumes();
 	// 팀 비율 결정
 	TArray<APlayerState*> PlayerArray = GetGameState()->PlayerArray;
 	int32 PlayerCnt = PlayerArray.Num();
@@ -108,15 +119,32 @@ void ATFDGameMode::PostSeamlessTravel()
 		{
 			State->SetTeamTag(TAG_Team_Thief);
 		}
+	}
+	GamePause(true);
+}
 
-		// 역할 배정 후 Pawn 스폰
-		if (APlayerController* PC = Cast<APlayerController>(State->GetOwner()))
+void ATFDGameMode::HandleSeamlessTravelPlayer(AController*& C)
+{
+	Super::HandleSeamlessTravelPlayer(C);
+	APlayerController* PC = Cast<APlayerController>(C);
+	if (!PC || !PC->Player)
+	{
+		return ;
+	}
+	ATFDPlayerState* PlayerState = PC->GetPlayerState<ATFDPlayerState>(); 
+	if(GetGameState() && PlayerState)
+	{
+		GetGameState()->MarkPlayerReady(PlayerState);
+
+		// 모든 플레이어가 접속했는지 확인 (GameState의 PlayerArray 사용)
+		if(NumTravellingPlayers == 0 && NumPlayers == GetGameState()->PlayerArray.Num())
 		{
-			RestartPlayer(PC);
+			UE_LOG(LogTemp, Log, TEXT("All players are ready. Starting the game."));
+			GamePause(false);
+			GetGameState()->SetGameState(EGameState::Playing);
+			StartPlay();
 		}
 	}
-	// AI스폰
-	SpawnAI();
 }
 
 void ATFDGameMode::SpawnAI()
@@ -343,27 +371,6 @@ ATFDGameState* ATFDGameMode::GetGameState()
 	}
 	return GameState;
 }
-
-void ATFDGameMode::PlayerIsReady(AController* PlayerController)
-{
-	// 모든 플레이어가 준비되었는지 확인하는 등의 로직
-	UE_LOG(LogTemp, Warning, TEXT("Player is ready: %s"), *PlayerController->GetName());
-	ATFDPlayerState* TFDPlayerState = PlayerController->GetPlayerState<ATFDPlayerState>();
-
-	if(GetGameState() && TFDPlayerState)
-	{
-		GetGameState()->MarkPlayerReady(TFDPlayerState);
-
-		// 모든 플레이어가 접속했는지 확인 (GameState의 PlayerArray 사용)
-		if(GetGameState()->GetReadyPlayerCount() >= GetGameState()->PlayerArray.Num() && GetGameState()->PlayerArray.Num() > 0)
-		{
-			UE_LOG(LogTemp, Log, TEXT("All players are ready. Starting the game."));
-			GamePause(false);
-			GetGameState()->SetGameState(EGameState::Playing);
-		}
-	}
-}
-
 
 
 void ATFDGameMode::Tick(float DeltaTime)

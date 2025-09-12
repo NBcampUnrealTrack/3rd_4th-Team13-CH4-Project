@@ -219,13 +219,6 @@ void ATFDPlayerController::AcknowledgePossession(APawn* InPawn)
 	}
 }
 
-void ATFDPlayerController::NotifyLoadedWorld(FName WorldPackageName, bool bFinalDest)
-{
-	Super::NotifyLoadedWorld(WorldPackageName, bFinalDest);
-	if (bFinalDest)
-		Server_NotifyPlayerIsReady();
-}
-
 void ATFDPlayerController::Dash(const FInputActionValue& Value)
 {
 	if (APawn* ControlledPawn = GetPawn())
@@ -320,15 +313,6 @@ void ATFDPlayerController::TogglePause(const FInputActionValue& Value)
 {
 }
 */
-
-void ATFDPlayerController::Server_NotifyPlayerIsReady_Implementation()
-{
-	// 서버에서 실행되는 로직
-	if (ATFDGameMode* TFDGameMode = GetWorld()->GetAuthGameMode<ATFDGameMode>())
-	{
-		TFDGameMode->PlayerIsReady(this);
-	}
-}
 
 //===================================================
 // 이하 OutGame 관련 - Lobby
