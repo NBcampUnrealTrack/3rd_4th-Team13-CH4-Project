@@ -1,10 +1,14 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "GameState/TFDGameState.h"
 
 #include "Net/UnrealNetwork.h"
 #include "GameFramework/GameMode.h"
+
+#include "UI/GameUIRouterSubsystem.h"
+#include "UI/InGame/PlayingWidget.h"
+#include "UI/Widget/UHUDLayoutWidget.h"
 
 ATFDGameState::ATFDGameState()
 {
@@ -35,6 +39,7 @@ void ATFDGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 
 	DOREPLIFETIME(ATFDGameState, GameRemainServerTime);
 	DOREPLIFETIME(ATFDGameState, ThiefTotalScore);
+	DOREPLIFETIME(ATFDGameState, CaughtThiefPlayerStateArray);
 }
 
 float ATFDGameState::GetCurrentGameTimeSec() const
@@ -67,8 +72,23 @@ void ATFDGameState::OnRep_MatchState()
 	else if (MatchState == MatchState::InProgress) //실제 게임 시작 상태
 	{
 		UE_LOG(LogTemp, Warning, TEXT("MatchState: InProgress"));
-		GameRemainServerTime = GetServerWorldTimeSeconds();
+		PC->bShowMouseCursor = false;
 		// 게임 시작 UI 처리
+		if (UGameUIRouterSubsystem* UISub = PC->GetLocalPlayer()->GetSubsystem<UGameUIRouterSubsystem>())
+		{
+			if (HUDWidgetClass)
+			{
+				// HUDLayoutClass 세팅 후 생성
+				UISub->SetHUDLayoutClass(HUDWidgetClass);
+				UISub->CreateHUD();
+
+				// PlayingWidgetClass 추가
+				if (PlayingWidgetClass)
+				{
+					UISub->AddWidgetToLayer(EUILayer::GameLayer, PlayingWidgetClass);
+				}
+			}
+		}
 	}
 	else if (MatchState == MatchState::WaitingPostMatch) // 게임 결과 후 상태
 	{
@@ -89,7 +109,9 @@ void ATFDGameState::OnRep_MatchState()
 
 void ATFDGameState::OnRep_CaughtThiefPlayerStateArray()
 {
-	
+	UE_LOG(LogTemp, Warning, TEXT("[ATFDGameState] OnRep_CaughtThiefPlayerStateArray 호출됨, CaughtThiefPlayerStateArray.Num(): %d"), CaughtThiefPlayerStateArray.Num());
+	// 클라에서 델리게이트 발행
+	OnThievesChanged.Broadcast();
 }
 
 
@@ -113,3 +135,9 @@ void ATFDGameState::OnRep_ThiefScore()
 		OnThiefScoreChanged.Broadcast(ThiefTotalScore);
 	}
 }
+
+void ATFDGameState::OnRep_GameRemainTime()
+{
+	OnGameTimeChanged.Broadcast(GameRemainServerTime);
+}
+
