@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "GameUIRouterSubsystem.h"
@@ -18,6 +18,24 @@ void UGameUIRouterSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 		HUDLayout->AddToViewport();
 		CurrentLayout = EHUDLayout::InGame; // 기본 Layout
 	}
+}
+
+void UGameUIRouterSubsystem::CreateHUD()
+{
+	// LocalPlayer 전용이라 서버에서는 절대 실행되지 않음
+	if (!HUDLayoutClass) return;
+
+	HUDLayout = CreateWidget<UHUDLayoutWidget>(GetWorld(), HUDLayoutClass);
+	if (HUDLayout)
+	{
+		HUDLayout->AddToViewport();
+		CurrentLayout = EHUDLayout::InGame; // 기본 Layout
+	}
+}
+
+void UGameUIRouterSubsystem::SetHUDLayoutClass(TSubclassOf<UHUDLayoutWidget> InClass)
+{
+	HUDLayoutClass = InClass;
 }
 
 void UGameUIRouterSubsystem::PushLayout(EHUDLayout LayoutType)
