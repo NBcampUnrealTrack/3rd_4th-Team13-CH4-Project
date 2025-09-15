@@ -75,7 +75,7 @@ APawn* ATFDGameMode::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, 
 
 bool ATFDGameMode::ReadyToStartMatch_Implementation()
 {
-	return GetGameState()->GetCurrentGameState() == EGameState::Playing;
+	return MatchState == MatchState::InProgress;
 }
 
 void ATFDGameMode::HandleMatchIsWaitingToStart()
@@ -83,6 +83,22 @@ void ATFDGameMode::HandleMatchIsWaitingToStart()
 	Super::HandleMatchIsWaitingToStart();
 	InitializeSpawnVolumes();
 	SpawnAI();
+}
+
+void ATFDGameMode::HandleMatchHasStarted()
+{
+	Super::HandleMatchHasStarted();
+	UE_LOG(LogTemp, Warning, TEXT("HandleMatchHasStarted"));
+	//게임 시작 처리
+
+	GamePause(false);
+}
+
+void ATFDGameMode::HandleMatchHasEnded()
+{
+	Super::HandleMatchHasEnded();
+	UE_LOG(LogTemp, Warning, TEXT("HandleMatchHasEnded"));
+	//게임 종료 처리
 }
 
 void ATFDGameMode::PostSeamlessTravel()
@@ -126,6 +142,8 @@ void ATFDGameMode::PostSeamlessTravel()
 void ATFDGameMode::HandleSeamlessTravelPlayer(AController*& C)
 {
 	Super::HandleSeamlessTravelPlayer(C);
+
+	UE_LOG(LogTemp, Warning, TEXT("HandleSeamlessTravelPlayer"));
 	APlayerController* PC = Cast<APlayerController>(C);
 	if (!PC || !PC->Player)
 	{
@@ -139,10 +157,10 @@ void ATFDGameMode::HandleSeamlessTravelPlayer(AController*& C)
 		// 모든 플레이어가 접속했는지 확인 (GameState의 PlayerArray 사용)
 		if(NumTravellingPlayers == 0 && NumPlayers == GetGameState()->PlayerArray.Num())
 		{
-			UE_LOG(LogTemp, Log, TEXT("All players are ready. Starting the game."));
-			GetGameState()->SetGameState(EGameState::Playing);
-			StartPlay();
-			GamePause(false);
+			UE_LOG(LogTemp, Warning, TEXT("All players are ready. Starting the game."));
+
+			StartMatch(); //InProgress 상태로 전환
+
 		}
 	}
 }
@@ -321,7 +339,8 @@ void ATFDGameMode::OnCatchThief(APawn* Pawn)
 
 void ATFDGameMode::GameEnd(EGameCompleteType CompleteType)
 {
-	GetGameState()->SetGameState(EGameState::Result);
+	UE_LOG(LogTemp, Log, TEXT("Game End!!!!!!"));
+	EndMatch();
 }
 
 void ATFDGameMode::GamePause(bool bIsPaused)
