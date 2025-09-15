@@ -20,6 +20,9 @@
 
 ATFDGameMode::ATFDGameMode()
 {
+	PrimaryActorTick.bCanEverTick = true;
+	SetActorTickEnabled(false);
+
 	DefaultPawnClass = nullptr;
 	bUseSeamlessTravel = true;
 }
@@ -67,10 +70,12 @@ APawn* ATFDGameMode::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, 
 		if (Tag == TAG_Team_Thief)
 		{
 			TFDPawn->CharacterData = RuleData.ThiefDataAsset;
+			GetGameState()->ThiefPlayerStateArray.Add(PState);
 		}
 		else if (Tag == TAG_Team_Cop)
 		{
 			TFDPawn->CharacterData = RuleData.PoliceDataAsset;
+			GetGameState()->PolicePlayerStateArray.Add(PState);
 		}
 	}
 	// FinishSpawningActor 호출 (BeginPlay 직전)
@@ -97,6 +102,7 @@ void ATFDGameMode::HandleMatchHasStarted()
 	UE_LOG(LogTemp, Warning, TEXT("HandleMatchHasStarted"));
 	//게임 시작 처리
 	GetGameState()->GameRemainServerTime = GetGameState()->GetRuleData().PlayTimeSec;
+	SetActorTickEnabled(true);
 	GamePause(false);
 }
 
@@ -105,6 +111,9 @@ void ATFDGameMode::HandleMatchHasEnded()
 	Super::HandleMatchHasEnded();
 	UE_LOG(LogTemp, Warning, TEXT("HandleMatchHasEnded"));
 	//게임 종료 처리
+
+
+	SetActorTickEnabled(false);
 }
 
 void ATFDGameMode::PostSeamlessTravel()
@@ -361,7 +370,19 @@ void ATFDGameMode::GameEnd(EGameCompleteType CompleteType)
 {
 	UE_LOG(LogTemp, Log, TEXT("Game End!!!!!!"));
 	//어떻게 게임이 끝났는지 로직이 필요한가?
-	//Tick 꺼주기
+
+	if (CompleteType == EGameCompleteType::TimeLimit)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Police Win (TimeLimit)"));
+	}
+	else if (CompleteType == EGameCompleteType::CatchAllThief)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Police Win (CatchAllThief)"));
+	}
+	else if (CompleteType == EGameCompleteType::ThiefWinByScore)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Thief Win (ThiefWinByScore)"));
+	}
 
 	EndMatch();
 }
@@ -398,7 +419,6 @@ void ATFDGameMode::GamePause(bool bIsPaused)
 			{
 				WorldAICharacter->StopMovemnetWalking(); //움직임 비활성화
 			}
-			
 		}
 	}
 	

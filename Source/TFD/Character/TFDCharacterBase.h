@@ -36,6 +36,7 @@ protected:
 	void BaseSetting();
 	void SetDAPlayerStat();
 	void OnSpeedAttributeChanged(const FOnAttributeChangeData& Data);
+	void OnGoldAttributeChanged(const FOnAttributeChangeData& Data);
 
 protected:
 	// GAS 핵심 컴포넌트들
