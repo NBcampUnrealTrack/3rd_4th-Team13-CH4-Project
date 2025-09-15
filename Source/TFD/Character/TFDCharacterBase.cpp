@@ -5,6 +5,7 @@
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "PlayerState/TFDPlayerState.h"
+#include "GameState/TFDGameState.h"
 
 ATFDCharacterBase::ATFDCharacterBase()
 {
@@ -129,6 +130,13 @@ void ATFDCharacterBase::SetDAPlayerStat()
 		{
 			AbilitySystemComponent->AddLooseGameplayTag(CharacterData->TeamTag);
 		}
+
+		//도둑일 경우 골드 습득 시 OnGoldAttributeChanged 연결
+		if (AbilitySystemComponent && CharacterData && CharacterData->TeamTag == TAG_Team_Thief)
+		{
+			AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(
+				UTFDAttributeSet::GetGoldAttribute()).AddUObject(this, &ATFDCharacterBase::OnGoldAttributeChanged);
+		}
 	}
 }
 
@@ -139,3 +147,16 @@ void ATFDCharacterBase::OnSpeedAttributeChanged(const FOnAttributeChangeData& Da
 		MoveComp->MaxWalkSpeed = Data.NewValue;
 	}
 }
+
+void ATFDCharacterBase::OnGoldAttributeChanged(const FOnAttributeChangeData& Data)
+{
+	if (HasAuthority())
+	{
+		ATFDGameState* GS = Cast<ATFDGameState>(GetWorld()->GetGameState());
+		if(!GS) return;
+		
+		float AddScore = Data.NewValue - Data.OldValue;
+		GS->AddThiefScore(AddScore);
+	}
+}
+
