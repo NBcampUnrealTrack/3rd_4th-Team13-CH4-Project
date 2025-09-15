@@ -4,6 +4,12 @@
 #include "GameState/TFDGameState.h"
 
 #include "Net/UnrealNetwork.h"
+#include "GameFramework/GameMode.h"
+
+ATFDGameState::ATFDGameState()
+{
+	bReplicates = true;
+}
 
 void ATFDGameState::MarkPlayerReady(ATFDPlayerState* PS)
 {
@@ -23,31 +29,10 @@ const FGameRuleData& ATFDGameState::GetRuleData() const
 	return GameRuleData;
 }
 
-// Client 전용 처리 UI 표시 등에 사용.
-void ATFDGameState::OnRep_GameStateChange()
-{
-	// 클라이언트에서 실행되는 후처리
-	switch (GameState)
-	{
-	case EGameState::WaitingToPlay:
-		// 대기 UI 표시, 입력 비활성화 등
-		break;
-	case EGameState::Result:
-		// 로딩 UI 표시
-		break;
-	case EGameState::Playing:
-		// 게임 시작 처리: 이동 허용, AI 시작, UI 닫기 등
-		break;
-	default:
-		break;
-	}
-}
-
 void ATFDGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(ATFDGameState, GameState)
 	DOREPLIFETIME(ATFDGameState, GameStartServerTime)
 }
 
@@ -56,30 +41,46 @@ float ATFDGameState::GetCurrentGameTimeSec() const
 	return GetServerWorldTimeSeconds() - GameStartServerTime;
 }
 
-EGameState ATFDGameState::GetCurrentGameState() const
+// Client 전용 처리 UI 표시 등에 사용.
+void ATFDGameState::OnRep_MatchState()
 {
-	return GameState;
-}
+	Super::OnRep_MatchState();
 
-void ATFDGameState::SetGameState(EGameState NewState)
-{
 	if (HasAuthority() == false)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("SetGameState 호출 실패: 클라이언트에서 호출됨"));
+		UE_LOG(LogTemp, Error, TEXT("OnRep_MatchState 호출 실패: 클라이언트의 호출은 막음"));
 		return;
 	}
-	GameState = NewState;
 
-	switch (GameState)
+	if (MatchState == MatchState::EnteringMap) // 맵 진입 상태
 	{
-	case EGameState::WaitingToPlay:
-		break;
-	case EGameState::Result:
-		break;
-	case EGameState::Playing:
+		UE_LOG(LogTemp, Warning, TEXT("MatchState: EnteringMap"));
+		//EnteringMap는 OnRep_MatchState를 호출할수없음... 그냥 초기상태임
+	}
+	else if (MatchState == MatchState::WaitingToStart) // 게임 시작 전 대기 상태
+	{
+		UE_LOG(LogTemp, Warning, TEXT("MatchState: WaitingToStart"));
+		// 대기 UI 표시, 입력 비활성화 등
+	}
+	else if (MatchState == MatchState::InProgress) //실제 게임 시작 상태
+	{
+		UE_LOG(LogTemp, Warning, TEXT("MatchState: InProgress"));
 		GameStartServerTime = GetServerWorldTimeSeconds();
-		break;
-	default:
-		break;
+		// 게임 시작 UI 처리
+	}
+	else if (MatchState == MatchState::WaitingPostMatch) // 게임 결과 후 상태
+	{
+		UE_LOG(LogTemp, Warning, TEXT("MatchState: WaitingPostMatch"));
+		// 결과 UI 처리
+	}
+	else if (MatchState == MatchState::LeavingMap) // 맵을 떠나는 상태
+	{
+		UE_LOG(LogTemp, Warning, TEXT("MatchState: LeavingMap"));
+		// 세션종료, 레벨 전환 준비 UI 처리
+	}
+	else if (MatchState == MatchState::Aborted) // 강제 종료 상태
+	{
+		UE_LOG(LogTemp, Warning, TEXT("MatchState: Aborted"));
+		// 정상적인 종료가 아닌, 강제로 경기가 중단된 상태일때 UI 처리
 	}
 }
