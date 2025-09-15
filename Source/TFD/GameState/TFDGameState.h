@@ -71,7 +71,7 @@ public:
 	FOnGameTimeChanged OnGameTimeChanged;
 
 	UPROPERTY(ReplicatedUsing = OnRep_GameRemainTime, BlueprintReadOnly, Category = "Time")
-	float GameRemainServerTime = 0.f;
+	float GameRemainServerTime = 5.f;
 
 protected:
 
