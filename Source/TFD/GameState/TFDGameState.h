@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "CoreMinimal.h"                                                                           
 #include "PlayerState/TFDPlayerState.h"
@@ -6,9 +6,15 @@
 #include "GameData/FGameRuleData.h"   
 #include "TFDGameState.generated.h"
 
+class UPlayingWidget;
+class UHUDLayoutWidget;
 
 // 도둑 전체 점수 변경 이벤트 (UI나 GameMode에서 구독 가능)
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnThiefScoreChanged, int32, NewScore);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnThievesChanged);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGameTimeChanged, float, RemainingTimeSec);
+
+
 
 UCLASS()
 class TFD_API ATFDGameState : public AGameState
@@ -40,7 +46,8 @@ protected:
 	UFUNCTION()
 	void OnRep_ThiefScore();
 
-
+	UFUNCTION()
+	void OnRep_GameRemainTime();
 public:
 
 	const int MinimumPlayerNum = 2;
@@ -57,7 +64,13 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FOnThiefScoreChanged OnThiefScoreChanged;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FOnThievesChanged OnThievesChanged;
+
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FOnGameTimeChanged OnGameTimeChanged;
+
+	UPROPERTY(ReplicatedUsing = OnRep_GameRemainTime, BlueprintReadOnly, Category = "Time")
 	float GameRemainServerTime = 0.f;
 
 protected:
@@ -71,4 +84,9 @@ protected:
 	UPROPERTY(ReplicatedUsing = OnRep_ThiefScore, BlueprintReadOnly, Category = "Score")
 	int32 ThiefTotalScore = 0;
 
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UHUDLayoutWidget> HUDWidgetClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UPlayingWidget> PlayingWidgetClass;
 };

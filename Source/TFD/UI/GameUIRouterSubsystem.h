@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -33,6 +33,10 @@ private:
 	UHUDLayoutWidget* HUDLayout;
 public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+
+	void CreateHUD();
+	void SetHUDLayoutClass(TSubclassOf<UHUDLayoutWidget> InClass);
+
 	// HUD 레이아웃 변경 (예: MainHUD → SpectatorHUD)
 	UFUNCTION(BlueprintCallable)
 	void PushLayout(EHUDLayout LayoutType);
