@@ -14,4 +14,5 @@ enum class EGameCompleteType : uint8
 {
 	CatchAllThief,
 	TimeLimit,
+	ThiefWinByScore,
 };

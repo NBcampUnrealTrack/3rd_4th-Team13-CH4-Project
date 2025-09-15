@@ -33,12 +33,13 @@ void ATFDGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(ATFDGameState, GameStartServerTime)
+	DOREPLIFETIME(ATFDGameState, GameRemainServerTime);
+	DOREPLIFETIME(ATFDGameState, ThiefTotalScore);
 }
 
 float ATFDGameState::GetCurrentGameTimeSec() const
 {
-	return GetServerWorldTimeSeconds() - GameStartServerTime;
+	return GetServerWorldTimeSeconds() - GameRemainServerTime;
 }
 
 // Client 전용 처리 UI 표시 등에 사용.
@@ -46,10 +47,11 @@ void ATFDGameState::OnRep_MatchState()
 {
 	Super::OnRep_MatchState();
 
-	if (HasAuthority() == false)
+	APlayerController* PC = GetWorld()->GetFirstLocalPlayerFromController()->GetPlayerController(GetWorld());
+	if (!PC || !PC->IsLocalController())
 	{
-		UE_LOG(LogTemp, Error, TEXT("OnRep_MatchState 호출 실패: 클라이언트의 호출은 막음"));
-		return;
+		UE_LOG(LogTemp, Warning, TEXT("[OnRep_MatchState] Not local controller, returning."));
+		return; // 로컬 클라이언트가 아니면 더 이상 진행하지 않음
 	}
 
 	if (MatchState == MatchState::EnteringMap) // 맵 진입 상태
@@ -65,7 +67,7 @@ void ATFDGameState::OnRep_MatchState()
 	else if (MatchState == MatchState::InProgress) //실제 게임 시작 상태
 	{
 		UE_LOG(LogTemp, Warning, TEXT("MatchState: InProgress"));
-		GameStartServerTime = GetServerWorldTimeSeconds();
+		GameRemainServerTime = GetServerWorldTimeSeconds();
 		// 게임 시작 UI 처리
 	}
 	else if (MatchState == MatchState::WaitingPostMatch) // 게임 결과 후 상태
@@ -82,5 +84,32 @@ void ATFDGameState::OnRep_MatchState()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("MatchState: Aborted"));
 		// 정상적인 종료가 아닌, 강제로 경기가 중단된 상태일때 UI 처리
+	}
+}
+
+void ATFDGameState::OnRep_CaughtThiefPlayerStateArray()
+{
+	
+}
+
+
+void ATFDGameState::AddThiefScore(int32 Points)
+{
+	if (HasAuthority())
+	{
+		//서버에서만 점수 관리, 네트워크가 자동으로 클라이언트에게 ThiefTotalScore를 복제
+		ThiefTotalScore += Points;
+
+		// 서버에서 점수 변경 이벤트 발행
+		OnThiefScoreChanged.Broadcast(ThiefTotalScore);
+	}
+}
+
+void ATFDGameState::OnRep_ThiefScore()
+{
+	if (!HasAuthority())
+	{
+		// 클라에서도 점수 변경 이벤트 발행 (UI 갱신 가능)
+		OnThiefScoreChanged.Broadcast(ThiefTotalScore);
 	}
 }
