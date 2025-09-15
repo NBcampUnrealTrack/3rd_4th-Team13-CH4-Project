@@ -6,9 +6,10 @@
 #include "GameData/FGameRuleData.h"   
 #include "TFDGameState.generated.h"
 
-/**
- * 
- */
+
+// 도둑 전체 점수 변경 이벤트 (UI나 GameMode에서 구독 가능)
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnThiefScoreChanged, int32, NewScore);
+
 UCLASS()
 class TFD_API ATFDGameState : public AGameState
 {
@@ -26,6 +27,21 @@ public:
 
 	const FGameRuleData& GetRuleData() const;
 
+	UFUNCTION(BlueprintCallable, Category = "Score")
+	void AddThiefScore(int32 Points);
+
+protected:
+
+	virtual void OnRep_MatchState() override;
+
+	UFUNCTION()
+	void OnRep_CaughtThiefPlayerStateArray();
+
+	UFUNCTION()
+	void OnRep_ThiefScore();
+
+
+public:
 
 	const int MinimumPlayerNum = 2;
 
@@ -34,18 +50,25 @@ public:
 	TArray<TWeakObjectPtr< ATFDPlayerState>> PolicePlayerStateArray;
 	// 경찰정보 Controller 리스트
 	TArray<TWeakObjectPtr< ATFDPlayerState>> ThiefPlayerStateArray;
-
+	// 잡힌 도둑 Controller 리스트
+	UPROPERTY(ReplicatedUsing = OnRep_CaughtThiefPlayerStateArray)
 	TArray<TWeakObjectPtr<ATFDPlayerState>> CaughtThiefPlayerStateArray;
 
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FOnThiefScoreChanged OnThiefScoreChanged;
+
+	UPROPERTY(Replicated)
+	float GameRemainServerTime = 0.f;
+
 protected:
+
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (AllowPrivateAccess));
 	FGameRuleData GameRuleData;		//TODO: DA 로 변경
 
-	UPROPERTY(Replicated)
-	float GameStartServerTime = 0.f;
-
 	TArray<ATFDPlayerState*> ReadyPlayers;
 
-	virtual void OnRep_MatchState() override;
+	// 현재 도둑 팀 점수 합계
+	UPROPERTY(ReplicatedUsing = OnRep_ThiefScore, BlueprintReadOnly, Category = "Score")
+	int32 ThiefTotalScore = 0;
 
 };

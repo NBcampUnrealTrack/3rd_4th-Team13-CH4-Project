@@ -27,6 +27,12 @@ ATFDGameMode::ATFDGameMode()
 void ATFDGameMode::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (GetGameState())
+	{
+		// 점수 변경 이벤트 구독
+		GetGameState()->OnThiefScoreChanged.AddDynamic(this, &ATFDGameMode::HandleThiefScoreChanged);
+	}
 }
 
 APawn* ATFDGameMode::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, AActor* StartSpot)
@@ -90,7 +96,7 @@ void ATFDGameMode::HandleMatchHasStarted()
 	Super::HandleMatchHasStarted();
 	UE_LOG(LogTemp, Warning, TEXT("HandleMatchHasStarted"));
 	//게임 시작 처리
-
+	GetGameState()->GameRemainServerTime = GetGameState()->GetRuleData().PlayTimeSec;
 	GamePause(false);
 }
 
@@ -337,9 +343,24 @@ void ATFDGameMode::OnCatchThief(APawn* Pawn)
 	}
 }
 
+void ATFDGameMode::HandleThiefScoreChanged(int32 NewScore)
+{
+	UE_LOG(LogTemp, Log, TEXT("Thief Score Changed: %d"), NewScore);
+
+	//도둑 승리 점수 체크
+	if (NewScore >= GetGameState()->GetRuleData().ThiefScoreForWin)
+	{
+		//일단은 게임 종료, 이후 점수 달성하면 특정 장소를 스폰할지 뭘할지 생각해보기
+		GameEnd(EGameCompleteType::ThiefWinByScore);
+	}
+}
+
 void ATFDGameMode::GameEnd(EGameCompleteType CompleteType)
 {
 	UE_LOG(LogTemp, Log, TEXT("Game End!!!!!!"));
+	//어떻게 게임이 끝났는지 로직이 필요한가?
+	//Tick 꺼주기
+
 	EndMatch();
 }
 
@@ -396,9 +417,9 @@ void ATFDGameMode::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	float GameTime = GetGameState()->GetCurrentGameTimeSec();
+	GetGameState()->GameRemainServerTime -= DeltaTime;
 	// 시간이 종료될 시 게임 종료 로직
-	if (GameTime > GetGameState()->GetRuleData().PlayTimeSec)
+	if (GetGameState()->GameRemainServerTime < 0)
 	{
 		GameEnd(EGameCompleteType::TimeLimit);
 	}
