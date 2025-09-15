@@ -57,6 +57,9 @@ protected:
 	TArray<ATFDSpawnVolume*> SpawnVolumes;
 
 	ATFDGameState* GameState;
+
+	UFUNCTION()
+	void HandleThiefScoreChanged(int32 NewScore);
 	
 public:
 	void SpawnAI();
