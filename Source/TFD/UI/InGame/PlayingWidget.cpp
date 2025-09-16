@@ -27,20 +27,12 @@ void UPlayingWidget::NativeConstruct()
             // HUD 초기화
             UpdateFromGameState();
         }
-        else
-        {
-            UE_LOG(LogTemp, Warning, TEXT("[UPlayingWidget] CachedGameState is null!"));
-        }
-    }
-    else
-    {
-        UE_LOG(LogTemp, Warning, TEXT("[UPlayingWidget] OwningPlayer is null!"));
     }
 }
 
+
 void UPlayingWidget::UpdateFromGameState()
 {
-    UE_LOG(LogTemp, Log, TEXT("[UPlayingWidget] UpdateFromGameState called."));
 
     if (!CachedGameState)
     {
@@ -53,8 +45,6 @@ void UPlayingWidget::UpdateFromGameState()
 
 void UPlayingWidget::UpdateThiefScore(int32 NewScore)
 {
-    UE_LOG(LogTemp, Warning, TEXT("[UPlayingWidget] UpdateThiefScore 호출됨, NewScore: %d"), NewScore);
-
     int32 TotalScoreGoal = CachedGameState->GetRuleData().ThiefScoreForWin;
 
     ThiefGoalText->SetText(FText::FromString(
@@ -73,8 +63,6 @@ void UPlayingWidget::UpdateThiefCount()
     int32 RemainingThieves = CachedGameState->ThiefPlayerStateArray.Num();
     int32 CaughtThieves = CachedGameState->CaughtThiefPlayerStateArray.Num();
 
-    UE_LOG(LogTemp, Warning, TEXT("[UPlayingWidget] UpdateThiefCount 호출됨, Remaining: %d / Caught: %d"), RemainingThieves, CaughtThieves);
-
     if (ThiefCountText)
         ThiefCountText->SetText(FText::FromString(FString::Printf(TEXT("총 도둑 수: %d / 잡힌 도둑 수: %d"), RemainingThieves, CaughtThieves)));
 }
@@ -83,8 +71,6 @@ void UPlayingWidget::UpdateRemainingTime(float RemainingTimeSec)
 {
     int32 Minutes = FMath::FloorToInt(RemainingTimeSec / 60.f);
     int32 Seconds = FMath::FloorToInt(RemainingTimeSec) % 60;
-
-    UE_LOG(LogTemp, Warning, TEXT("[UPlayingWidget] UpdateRemainingTime 호출됨, RemainingTime: %02d:%02d"), Minutes, Seconds);
 
     if (RemainingTimeText)
     {

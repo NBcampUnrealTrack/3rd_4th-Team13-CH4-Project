@@ -20,7 +20,7 @@ class TFD_API ATFDPlayerState : public APlayerState
 
 protected:
 	// DataAsset 설정 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GAS")
+	UPROPERTY(EditDefaultsOnly, Replicated, BlueprintReadOnly, Category = "GAS")
 	FGameplayTag TeamTag;
 
 public:

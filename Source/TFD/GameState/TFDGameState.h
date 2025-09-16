@@ -7,14 +7,14 @@
 #include "GameData/EGameEnums.h"
 #include "TFDGameState.generated.h"
 
-class UPlayingWidget;
-class UHUDLayoutWidget;
+
 
 // 도둑 전체 점수 변경 이벤트 (UI나 GameMode에서 구독 가능)
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnThiefScoreChanged, int32, NewScore);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnThievesChanged);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGameTimeChanged, float, RemainingTimeSec);
-
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnMachInProgress);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnMatchWaitingPostMatch, FGameplayTag, WinTeamTag, EGameCompleteType, CompleteType);
 
 
 UCLASS()
@@ -40,6 +40,8 @@ public:
 	UFUNCTION()
 	void SetWinTeam(FGameplayTag WinTeam, EGameCompleteType InCompleteType);
 
+	EGameCompleteType GetInCompleteType() const { return CompleteType; }
+	FGameplayTag GetWinTeamTag() const { return WinTeamTag; }
 protected:
 
 	virtual void OnRep_MatchState() override;
@@ -74,6 +76,12 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FOnGameTimeChanged OnGameTimeChanged;
 
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FOnMachInProgress OnMachInProgress;
+
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FOnMatchWaitingPostMatch OnMatchWaitingPostMatch;
+
 	UPROPERTY(ReplicatedUsing = OnRep_GameRemainTime, BlueprintReadOnly, Category = "Time")
 	float GameRemainServerTime = 5.f;
 
@@ -93,10 +101,4 @@ protected:
 
 	UPROPERTY(Replicated, BlueprintReadOnly)
 	FGameplayTag WinTeamTag;
-
-	UPROPERTY(EditDefaultsOnly, Category = "UI")
-	TSubclassOf<UHUDLayoutWidget> HUDWidgetClass;
-
-	UPROPERTY(EditDefaultsOnly, Category = "UI")
-	TSubclassOf<UPlayingWidget> PlayingWidgetClass;
 };

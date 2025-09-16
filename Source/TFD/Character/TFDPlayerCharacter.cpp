@@ -1,4 +1,4 @@
-#include "Character/TFDPlayerCharacter.h"
+﻿#include "Character/TFDPlayerCharacter.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "EnhancedInputComponent.h"
@@ -7,7 +7,7 @@
 #include "Character/TFDPlayerDataAsset.h"
 #include "Controller/TFDPlayerController.h"
 #include "GameFramework/CharacterMovementComponent.h"
-
+#include "GameState/TFDGameState.h"
 
 ATFDPlayerCharacter::ATFDPlayerCharacter()
 {
@@ -32,6 +32,22 @@ ATFDPlayerCharacter::ATFDPlayerCharacter()
 void ATFDPlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	if (AController* PC = GetController())
+	{
+		ATFDPlayerController* MyPC = Cast<ATFDPlayerController>(PC);
+		if (MyPC)
+		{
+			if (ATFDGameState* GS = GetWorld()->GetGameState<ATFDGameState>())
+			{
+				// 기존 바인딩 제거 후 다시 바인딩 (중복 방지)
+				GS->OnMachInProgress.RemoveDynamic(MyPC, &ATFDPlayerController::HandleMatchInProgress);
+				GS->OnMatchWaitingPostMatch.RemoveDynamic(MyPC, &ATFDPlayerController::HandleMatchWaitingPostMatch);
 
+				// 컨트롤러 함수 바인딩
+				GS->OnMachInProgress.AddDynamic(MyPC, &ATFDPlayerController::HandleMatchInProgress);
+				GS->OnMatchWaitingPostMatch.AddDynamic(MyPC, &ATFDPlayerController::HandleMatchWaitingPostMatch);
+			}
+		}
+	}
 }
 
