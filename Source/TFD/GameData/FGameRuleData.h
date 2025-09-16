@@ -12,6 +12,9 @@ struct FGameRuleData
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float PlayTimeSec = 90.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	int32 ThiefScoreForWin = 500;
 	
 	// 캐릭터 액터 클래스
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)

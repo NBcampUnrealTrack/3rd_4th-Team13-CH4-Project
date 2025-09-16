@@ -1,31 +1,58 @@
-#pragma once
+﻿#pragma once
 
 #include "CoreMinimal.h"                                                                           
 #include "PlayerState/TFDPlayerState.h"
 #include "GameFramework/GameState.h"
-#include "GameData/FGameRuleData.h"   
+#include "GameData/FGameRuleData.h"
+#include "GameData/EGameEnums.h"
 #include "TFDGameState.generated.h"
 
-/**
- * 
- */
+class UPlayingWidget;
+class UHUDLayoutWidget;
+
+// 도둑 전체 점수 변경 이벤트 (UI나 GameMode에서 구독 가능)
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnThiefScoreChanged, int32, NewScore);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnThievesChanged);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGameTimeChanged, float, RemainingTimeSec);
+
+
+
 UCLASS()
 class TFD_API ATFDGameState : public AGameState
 {
 	GENERATED_BODY()
 
 public:
+	ATFDGameState();
+
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	float GetCurrentGameTimeSec() const;		// 현재 서버시간 - 게임 시작 서버시간 
 
-	EGameState GetCurrentGameState() const;
-	void SetGameState(EGameState NewState);
 
 	void MarkPlayerReady(ATFDPlayerState* PS);
 	int32 GetReadyPlayerCount() const;
 
 	const FGameRuleData& GetRuleData() const;
-	
+
+	UFUNCTION(BlueprintCallable, Category = "Score")
+	void AddThiefScore(int32 Points);
+
+	UFUNCTION()
+	void SetWinTeam(FGameplayTag WinTeam, EGameCompleteType InCompleteType);
+
+protected:
+
+	virtual void OnRep_MatchState() override;
+
+	UFUNCTION()
+	void OnRep_CaughtThiefPlayerStateArray();
+
+	UFUNCTION()
+	void OnRep_ThiefScore();
+
+	UFUNCTION()
+	void OnRep_GameRemainTime();
+public:
 
 	const int MinimumPlayerNum = 2;
 
@@ -34,22 +61,42 @@ public:
 	TArray<TWeakObjectPtr< ATFDPlayerState>> PolicePlayerStateArray;
 	// 경찰정보 Controller 리스트
 	TArray<TWeakObjectPtr< ATFDPlayerState>> ThiefPlayerStateArray;
-
+	// 잡힌 도둑 Controller 리스트
+	UPROPERTY(ReplicatedUsing = OnRep_CaughtThiefPlayerStateArray)
 	TArray<TWeakObjectPtr<ATFDPlayerState>> CaughtThiefPlayerStateArray;
-	
+
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FOnThiefScoreChanged OnThiefScoreChanged;
+
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FOnThievesChanged OnThievesChanged;
+
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FOnGameTimeChanged OnGameTimeChanged;
+
+	UPROPERTY(ReplicatedUsing = OnRep_GameRemainTime, BlueprintReadOnly, Category = "Time")
+	float GameRemainServerTime = 5.f;
+
 protected:
+
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (AllowPrivateAccess));
 	FGameRuleData GameRuleData;		//TODO: DA 로 변경
 
-	UPROPERTY(Replicated)
-	float GameStartServerTime = 0.f;
-
-	UPROPERTY(ReplicatedUsing = OnRep_GameStateChange, BlueprintReadOnly)
-	EGameState GameState;	// 게임상태 변경처리 OnRep 함수 생성하여 후처리
-	
 	TArray<ATFDPlayerState*> ReadyPlayers;
 
-	// 게임 상태 변환을 알림
-	UFUNCTION()
-	void OnRep_GameStateChange();
+	// 현재 도둑 팀 점수 합계
+	UPROPERTY(ReplicatedUsing = OnRep_ThiefScore, BlueprintReadOnly, Category = "Score")
+	int32 ThiefTotalScore = 0;
+
+	UPROPERTY(Replicated, BlueprintReadOnly)
+	EGameCompleteType CompleteType;
+
+	UPROPERTY(Replicated, BlueprintReadOnly)
+	FGameplayTag WinTeamTag;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UHUDLayoutWidget> HUDWidgetClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UPlayingWidget> PlayingWidgetClass;
 };

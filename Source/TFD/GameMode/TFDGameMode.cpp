@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "GameMode/TFDGameMode.h"
@@ -23,6 +23,9 @@
 
 ATFDGameMode::ATFDGameMode()
 {
+	PrimaryActorTick.bCanEverTick = true;
+	SetActorTickEnabled(false);
+
 	DefaultPawnClass = nullptr;
 	bUseSeamlessTravel = true;
 }
@@ -30,6 +33,12 @@ ATFDGameMode::ATFDGameMode()
 void ATFDGameMode::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (GetGameState())
+	{
+		// 점수 변경 이벤트 구독
+		GetGameState()->OnThiefScoreChanged.AddDynamic(this, &ATFDGameMode::HandleThiefScoreChanged);
+	}
 }
 
 APawn* ATFDGameMode::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, AActor* StartSpot)
@@ -64,10 +73,12 @@ APawn* ATFDGameMode::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, 
 		if (Tag == TAG_Team_Thief)
 		{
 			TFDPawn->CharacterData = RuleData.ThiefDataAsset;
+			GetGameState()->ThiefPlayerStateArray.Add(PState);
 		}
 		else if (Tag == TAG_Team_Cop)
 		{
 			TFDPawn->CharacterData = RuleData.PoliceDataAsset;
+			GetGameState()->PolicePlayerStateArray.Add(PState);
 		}
 	}
 	// FinishSpawningActor 호출 (BeginPlay 직전)
@@ -78,7 +89,7 @@ APawn* ATFDGameMode::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, 
 
 bool ATFDGameMode::ReadyToStartMatch_Implementation()
 {
-	return GetGameState()->GetCurrentGameState() == EGameState::Playing;
+	return MatchState == MatchState::InProgress;
 }
 
 void ATFDGameMode::HandleMatchIsWaitingToStart()
@@ -87,6 +98,26 @@ void ATFDGameMode::HandleMatchIsWaitingToStart()
 	InitializeSpawnVolumes();
 	SpawnAI();
 	SpawnItemStart();
+}
+
+void ATFDGameMode::HandleMatchHasStarted()
+{
+	Super::HandleMatchHasStarted();
+	UE_LOG(LogTemp, Warning, TEXT("HandleMatchHasStarted"));
+	//게임 시작 처리
+	GetGameState()->GameRemainServerTime = GetGameState()->GetRuleData().PlayTimeSec;
+	SetActorTickEnabled(true);
+	GamePause(false);
+}
+
+void ATFDGameMode::HandleMatchHasEnded()
+{
+	Super::HandleMatchHasEnded();
+	UE_LOG(LogTemp, Warning, TEXT("HandleMatchHasEnded"));
+	//게임 종료 처리
+
+
+	SetActorTickEnabled(false);
 }
 
 void ATFDGameMode::PostSeamlessTravel()
@@ -130,6 +161,8 @@ void ATFDGameMode::PostSeamlessTravel()
 void ATFDGameMode::HandleSeamlessTravelPlayer(AController*& C)
 {
 	Super::HandleSeamlessTravelPlayer(C);
+
+	UE_LOG(LogTemp, Warning, TEXT("HandleSeamlessTravelPlayer"));
 	APlayerController* PC = Cast<APlayerController>(C);
 	if (!PC || !PC->Player)
 	{
@@ -143,10 +176,10 @@ void ATFDGameMode::HandleSeamlessTravelPlayer(AController*& C)
 		// 모든 플레이어가 접속했는지 확인 (GameState의 PlayerArray 사용)
 		if (NumTravellingPlayers == 0 && NumPlayers == GetGameState()->PlayerArray.Num())
 		{
-			UE_LOG(LogTemp, Log, TEXT("All players are ready. Starting the game."));
-			GetGameState()->SetGameState(EGameState::Playing);
-			StartPlay();
-			GamePause(false);
+			UE_LOG(LogTemp, Warning, TEXT("All players are ready. Starting the game."));
+
+			StartMatch(); //InProgress 상태로 전환
+
 		}
 	}
 }
@@ -450,6 +483,8 @@ void ATFDGameMode::OnCatchThief(APawn* Pawn)
 
 		// 배열에 저장 가능
 		GetGameState()->CaughtThiefPlayerStateArray.Add(WeakPS);
+
+		GetGameState()->OnThievesChanged.Broadcast();
 	}
 
 
@@ -459,9 +494,39 @@ void ATFDGameMode::OnCatchThief(APawn* Pawn)
 	}
 }
 
+void ATFDGameMode::HandleThiefScoreChanged(int32 NewScore)
+{
+	UE_LOG(LogTemp, Log, TEXT("Thief Score Changed: %d"), NewScore);
+
+	//도둑 승리 점수 체크
+	if (NewScore >= GetGameState()->GetRuleData().ThiefScoreForWin)
+	{
+		//일단은 게임 종료, 이후 점수 달성하면 특정 장소를 스폰할지 뭘할지 생각해보기
+		GameEnd(EGameCompleteType::ThiefWinByScore);
+	}
+}
+
 void ATFDGameMode::GameEnd(EGameCompleteType CompleteType)
 {
-	GetGameState()->SetGameState(EGameState::Result);
+	UE_LOG(LogTemp, Log, TEXT("Game End!!!!!!"));
+
+	if (CompleteType == EGameCompleteType::TimeLimit)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Police Win (TimeLimit)"));
+		GetGameState()->SetWinTeam(TAG_Team_Cop, CompleteType);
+	}
+	else if (CompleteType == EGameCompleteType::CatchAllThief)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Police Win (CatchAllThief)"));
+		GetGameState()->SetWinTeam(TAG_Team_Cop, CompleteType);
+	}
+	else if (CompleteType == EGameCompleteType::ThiefWinByScore)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Thief Win (ThiefWinByScore)"));
+		GetGameState()->SetWinTeam(TAG_Team_Thief, CompleteType);
+	}
+
+	EndMatch();
 }
 
 void ATFDGameMode::GamePause(bool bIsPaused)
@@ -516,9 +581,17 @@ void ATFDGameMode::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	float GameTime = GetGameState()->GetCurrentGameTimeSec();
+	GetGameState()->GameRemainServerTime -= DeltaTime;
+
+	// 호스트용 직접 브로드캐스트
+	if (GetGameState()->HasAuthority())
+	{
+		GetGameState()->OnGameTimeChanged.Broadcast(GetGameState()->GameRemainServerTime);
+	}
+
+
 	// 시간이 종료될 시 게임 종료 로직
-	if (GameTime > GetGameState()->GetRuleData().PlayTimeSec)
+	if (GetGameState()->GameRemainServerTime < 0)
 	{
 		GameEnd(EGameCompleteType::TimeLimit);
 	}
