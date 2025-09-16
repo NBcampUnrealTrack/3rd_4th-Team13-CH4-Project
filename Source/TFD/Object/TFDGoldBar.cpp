@@ -7,7 +7,7 @@
 #include "AbilitySystemComponent.h"
 #include "TFDNativeGameplayTags.h"
 #include "GameFramework/Character.h"
-#include "Character/TFDCharacter.h"
+#include "Character/TFDCharacterBase.h"
 #include "Controller/TFDPlayerController.h"
 #include "GameMode/TFDGameMode.h"
 // Sets default values
@@ -48,8 +48,8 @@ void ATFDGoldBar::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* Ot
 	if (!GoldRewardEffect)
 		return;
 
-
-	if (ATFDCharacter* Player = Cast<ATFDCharacter>(OtherActor))
+	UE_LOG(LogTemp, Warning, TEXT("GRE:1"));
+	if (ATFDCharacterBase* Player = Cast<ATFDCharacterBase>(OtherActor))
 	{
 		// ASC 가져오기
 		if (UAbilitySystemComponent* ASC = Player->GetAbilitySystemComponent())
@@ -59,11 +59,13 @@ void ATFDGoldBar::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* Ot
 			for (const FGameplayTag& Tag : AllowedTeamTag)
 			{
 				AllowedTagContainer.AddTag(Tag);
+				UE_LOG(LogTemp, Warning, TEXT("GRE:2"));
 			}
 
 			// 플레이어가 허용된 팀 태그 중 하나라도 가지고 있다면
 			if (ASC->HasAnyMatchingGameplayTags(AllowedTagContainer))
 			{
+				UE_LOG(LogTemp, Warning, TEXT("GRE:3"));
 				ASC->ApplyGameplayEffectToSelf(GoldRewardEffect.GetDefaultObject(), 1.f, ASC->MakeEffectContext());
 				Destroy();
 			}
