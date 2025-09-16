@@ -3,7 +3,8 @@
 #include "CoreMinimal.h"                                                                           
 #include "PlayerState/TFDPlayerState.h"
 #include "GameFramework/GameState.h"
-#include "GameData/FGameRuleData.h"   
+#include "GameData/FGameRuleData.h"
+#include "GameData/EGameEnums.h"
 #include "TFDGameState.generated.h"
 
 class UPlayingWidget;
@@ -35,6 +36,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Score")
 	void AddThiefScore(int32 Points);
+
+	UFUNCTION()
+	void SetWinTeam(FGameplayTag WinTeam, EGameCompleteType InCompleteType);
 
 protected:
 
@@ -83,6 +87,12 @@ protected:
 	// 현재 도둑 팀 점수 합계
 	UPROPERTY(ReplicatedUsing = OnRep_ThiefScore, BlueprintReadOnly, Category = "Score")
 	int32 ThiefTotalScore = 0;
+
+	UPROPERTY(Replicated, BlueprintReadOnly)
+	EGameCompleteType CompleteType;
+
+	UPROPERTY(Replicated, BlueprintReadOnly)
+	FGameplayTag WinTeamTag;
 
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UHUDLayoutWidget> HUDWidgetClass;

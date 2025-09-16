@@ -21,9 +21,6 @@ inline ENetMode GetNetModeFromObject(const UObject* WorldContext)
 
 TFD_API DECLARE_LOG_CATEGORY_EXTERN(LogTFDNet, Log, All);
 
-//#define NETMODE_TCHAR ((GetNetMode() == ENetMode::NM_Client) ? *FString::Printf(TEXT("Client%02d"), UE::GetPlayInEditorID()) : ((GetNetMode() == ENetMode::NM_Standalone) ? TEXT("StandAlone") : TEXT("Server")))
-
-
 #define NETMODE_TCHAR(WorldContext) \
     ((GetNetModeFromObject(WorldContext) == NM_Client) ? *FString::Printf(TEXT("Client%02d"), UE::GetPlayInEditorID()) : \
     ((GetNetModeFromObject(WorldContext) == NM_Standalone) ? TEXT("Standalone") : TEXT("Server")))

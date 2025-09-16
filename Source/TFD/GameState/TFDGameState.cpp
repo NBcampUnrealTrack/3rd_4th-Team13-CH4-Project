@@ -40,6 +40,8 @@ void ATFDGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	DOREPLIFETIME(ATFDGameState, GameRemainServerTime);
 	DOREPLIFETIME(ATFDGameState, ThiefTotalScore);
 	DOREPLIFETIME(ATFDGameState, CaughtThiefPlayerStateArray);
+	DOREPLIFETIME(ATFDGameState, WinTeamTag);
+	DOREPLIFETIME(ATFDGameState, CompleteType);
 }
 
 float ATFDGameState::GetCurrentGameTimeSec() const
@@ -94,6 +96,8 @@ void ATFDGameState::OnRep_MatchState()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("MatchState: WaitingPostMatch"));
 		// 결과 UI 처리
+		UE_LOG(LogTemp, Warning, TEXT("Win Team Tag : %s"), *WinTeamTag.ToString());
+		UE_LOG(LogTemp, Warning, TEXT("Win CompleteType : %s"), *UEnum::GetValueAsString(CompleteType));
 	}
 	else if (MatchState == MatchState::LeavingMap) // 맵을 떠나는 상태
 	{
@@ -141,3 +145,8 @@ void ATFDGameState::OnRep_GameRemainTime()
 	OnGameTimeChanged.Broadcast(GameRemainServerTime);
 }
 
+void ATFDGameState::SetWinTeam(FGameplayTag WinTeam, EGameCompleteType InCompleteType)
+{
+	WinTeamTag = WinTeam;
+	CompleteType = InCompleteType;
+}
