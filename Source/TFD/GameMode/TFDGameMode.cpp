@@ -14,7 +14,10 @@
 #include "Kismet/GameplayStatics.h"
 #include "GameplayTagContainer.h"
 #include "GameFramework/PlayerStart.h"
+#include "Object/AllowTeamTag.h"
+#include "Object/TFDGoldBar.h"
 #include "Object/TFDSpawnVolume.h"
+#include "Object/TFDSpawnpoint.h"
 #include "Utility/InGameUtility.h"
 
 
@@ -46,7 +49,7 @@ APawn* ATFDGameMode::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, 
 
 	if (!PS || PS->GetTeamTag() == FGameplayTag::EmptyTag)
 		return nullptr;
-	
+
 	// Pawn 클래스 가져오기
 	TSubclassOf<APawn> PawnClass = GetDefaultPawnClassForController(NewPlayer);
 	if (!PawnClass) return nullptr;
@@ -54,16 +57,16 @@ APawn* ATFDGameMode::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, 
 	// SpawnTransform 설정
 	FTransform SpawnTransform = StartSpot->GetActorTransform();
 	FVector SpawnLocation = GetRandomPointInSpawnAreaTag(PS->GetTeamTag());
-	SpawnTransform.SetLocation( SpawnLocation);
+	SpawnTransform.SetLocation(SpawnLocation);
 
 	// SpawnActorDeferred로 Pawn 생성
 	ATFDCharacterBase* Pawn = GetWorld()->SpawnActorDeferred<ATFDCharacterBase>(PawnClass, SpawnTransform, NewPlayer,
 		nullptr, ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn);
 	if (!Pawn) return nullptr;
-	
+
 	const FGameRuleData& RuleData = GetGameState()->GetRuleData();
 	ATFDPlayerState* PState = Cast<ATFDPlayerState>(NewPlayer->PlayerState);
-	ATFDCharacterBase*  TFDPawn = Cast<ATFDCharacterBase>(Pawn);
+	ATFDCharacterBase* TFDPawn = Cast<ATFDCharacterBase>(Pawn);
 	if (PState && TFDPawn)
 	{
 		FGameplayTag Tag = PState->GetTeamTag();
@@ -94,6 +97,7 @@ void ATFDGameMode::HandleMatchIsWaitingToStart()
 	Super::HandleMatchIsWaitingToStart();
 	InitializeSpawnVolumes();
 	SpawnAI();
+	SpawnItemStart();
 }
 
 void ATFDGameMode::HandleMatchHasStarted()
@@ -163,15 +167,15 @@ void ATFDGameMode::HandleSeamlessTravelPlayer(AController*& C)
 	APlayerController* PC = Cast<APlayerController>(C);
 	if (!PC || !PC->Player)
 	{
-		return ;
+		return;
 	}
-	ATFDPlayerState* PlayerState = PC->GetPlayerState<ATFDPlayerState>(); 
-	if(GetGameState() && PlayerState)
+	ATFDPlayerState* PlayerState = PC->GetPlayerState<ATFDPlayerState>();
+	if (GetGameState() && PlayerState)
 	{
 		GetGameState()->MarkPlayerReady(PlayerState);
 
 		// 모든 플레이어가 접속했는지 확인 (GameState의 PlayerArray 사용)
-		if(NumTravellingPlayers == 0 && NumPlayers == GetGameState()->PlayerArray.Num())
+		if (NumTravellingPlayers == 0 && NumPlayers == GetGameState()->PlayerArray.Num())
 		{
 			UE_LOG(LogTemp, Warning, TEXT("All players are ready. Starting the game."));
 
@@ -186,7 +190,7 @@ void ATFDGameMode::SpawnAI()
 	FVector SpawnLoc = GetRandomPointInSpawnArea();
 	FRotator SpawnRot = FRotator::ZeroRotator;
 
-	FGameplayTag AITag =TAG_Team_Neutral;
+	FGameplayTag AITag = TAG_Team_Neutral;
 	TSubclassOf<ATFDCharacterBase> AIClass = GetGameState()->GetRuleData().PawnClassAI;
 	for (int32 i = 0; i < NumberOfAI; ++i)
 	{
@@ -194,6 +198,95 @@ void ATFDGameMode::SpawnAI()
 		UE_LOG(LogTemp, Display, TEXT("Spawning Player X:%.f,Y:%.f,Z:%.f"), SpawnLoc.X, SpawnLoc.Y, SpawnLoc.Z);
 		GetWorld()->SpawnActor(AIClass, &SpawnLoc, &SpawnRot);
 	}
+}
+
+void ATFDGameMode::SpawnItemStart()
+{
+	TArray<AActor*> FoundSpawnPoints;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ATFDSpawnpoint::StaticClass(), FoundSpawnPoints);
+
+	for (AActor* Actor : FoundSpawnPoints)
+	{
+		if (ATFDSpawnpoint* SpawnPoint = Cast<ATFDSpawnpoint>(Actor))
+		{
+			// 예시: 시작 시 전부 스폰
+			SpawnPoint->SpawnItem();
+		}
+	}
+}
+
+
+UDataTable* ATFDGameMode::GetDTAllowedTeamTag()
+{
+	return DTAllowedTeamTag;
+}
+
+TArray<FGameplayTag> ATFDGameMode::GetDTAllowedTeamTag_Array(FGameplayTag ArgGameplayTag)
+{
+	
+	TArray<FGameplayTag> ResultArray;
+
+	if (!DTAllowedTeamTag)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("AllowTeamDataTable is not set."));
+		return ResultArray;
+	}
+	
+	TArray<FAllowTeamTag*> AllRows;
+	DTAllowedTeamTag->GetAllRows<FAllowTeamTag>(TEXT("GetAllRows"), AllRows);
+
+	for (FAllowTeamTag* Row : AllRows)
+	{
+		if (Row && Row->ItemTag == ArgGameplayTag)
+		{
+			ResultArray = Row->AllowedTeamTag;
+			break;
+		}
+	}
+
+	if (ResultArray.Num() == 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No matching ItemTag found for: %s"), *ArgGameplayTag.ToString());
+	}
+	
+	return ResultArray;
+}
+
+TSubclassOf<AActor> ATFDGameMode::GetDTAllowedTeamTag_Item(FGameplayTag ArgGameplayTag)
+{
+	TSubclassOf<AActor> ResultItem;
+
+	if (!DTAllowedTeamTag)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("DTZ:AllowTeamDataTable is not set."));
+		return ResultItem;
+	}
+	
+	TArray<FAllowTeamTag*> AllRows;
+	DTAllowedTeamTag->GetAllRows<FAllowTeamTag>(TEXT("GetAllRows"), AllRows);
+
+	for (FAllowTeamTag* Row : AllRows)
+	{
+		if (Row && Row->ItemTag == ArgGameplayTag)
+		{
+			ResultItem = Row->ItemClass;
+			UE_LOG(LogTemp, Warning, TEXT("DTZ:."));
+			break;
+		}
+	}
+	
+	return ResultItem;
+}
+
+FSpawnPointArray ATFDGameMode::GetSpawnPointArrayTag(ETeamType InEnum)
+{
+	if (FSpawnPointArray* FoundArray = WorldSpawnPointsByTeam.Find(InEnum))
+	{
+		return *FoundArray;
+	}
+    
+	// 키가 존재하지 않을 경우 빈 배열 반환
+	return FSpawnPointArray();
 }
 
 
@@ -290,6 +383,55 @@ ATFDSpawnVolume* ATFDGameMode::GetRandomSpawnVolumeTag(FGameplayTag InTag)
 	return nullptr;
 }
 
+void ATFDGameMode::InitializeSpawnPoints()
+{
+	if (WorldSpawnPointsByTeam.Num() > 0)
+	{
+		UE_LOG(LogTemp, Display, TEXT("Spawn points already initialized."));
+		return;
+	}
+
+	// 팀별 태그 맵 (팀 → FGameplayTag)
+	TMap<ETeamType, FGameplayTag> TeamTagMap;
+	TeamTagMap.Add(ETeamType::Cop, TAG_Team_Cop);
+	TeamTagMap.Add(ETeamType::Thief, TAG_Team_Thief);
+	TeamTagMap.Add(ETeamType::Neutral, TAG_Team_Neutral);
+
+	// 모든 스폰포인트 순회
+	for (TActorIterator<ATFDSpawnpoint> It(GetWorld()); It; ++It)
+	{
+		ATFDSpawnpoint* SpawnPoint = *It;
+		if (!IsValid(SpawnPoint)) continue;
+
+		for (auto& Pair : TeamTagMap)
+		{
+			ETeamType Team = Pair.Key;
+			FGameplayTag TeamTag = Pair.Value;
+
+			if (SpawnPoint->CheckItemTag(TeamTag))
+			{
+				WorldSpawnPointsByTeam.FindOrAdd(Team).Points.Add(SpawnPoint);
+				break; // 한 팀에만 속한다고 가정
+			}
+		}
+	}
+
+	// 로그 출력
+	for (auto& Pair : WorldSpawnPointsByTeam)
+	{
+		UE_LOG(LogTemp, Display, TEXT("%s: %d spawn points found."),
+			*UEnum::GetValueAsString(Pair.Key),
+			Pair.Value.Points.Num());
+	}
+
+	// FSpawnPointArray* CopSpawns = WorldSpawnPointsByTeam.Find(ETeamType::Cop);
+	// if (CopSpawns && CopSpawns->Points.Num() > 0)
+	// {
+	// 	ATFDSpawnpoint* RandomSpawn = CopSpawns->Points[FMath::RandRange(0, CopSpawns->Points.Num() - 1)];
+	// 	
+	// }
+}
+
 
 void ATFDGameMode::InitializeSpawnVolumes()
 {
@@ -328,15 +470,13 @@ void ATFDGameMode::MovePlayerToRandomSpawnPoint(APlayerController* PlayerControl
 }
 
 
-
-
 void ATFDGameMode::OnCatchThief(APawn* Pawn)
 {
 	APlayerState* CatchPlayerState = Pawn->GetPlayerState();
 
 	if (CatchPlayerState == nullptr)
 		return;
-	
+
 	if (ATFDPlayerState* PS = Cast<ATFDPlayerState>(CatchPlayerState))
 	{
 		// ATFDPlayerState*로 WeakPtr 생성
@@ -347,7 +487,7 @@ void ATFDGameMode::OnCatchThief(APawn* Pawn)
 
 		GetGameState()->OnThievesChanged.Broadcast();
 	}
-	
+
 
 	if (GetGameState()->CaughtThiefPlayerStateArray.Num() == GetGameState()->ThiefPlayerStateArray.Num())
 	{
@@ -398,7 +538,7 @@ void ATFDGameMode::GamePause(bool bIsPaused)
 	{
 		return;
 	}
-	
+
 	// bIsPaused 에 따라서 플레이어, AI 활성 비활성화 하고 있습니다.
 	for (FConstPlayerControllerIterator It = World->GetPlayerControllerIterator(); It; ++It)
 	{
@@ -407,12 +547,12 @@ void ATFDGameMode::GamePause(bool bIsPaused)
 			PC->SetMovemnetWalking(!bIsPaused);
 		}
 	}
-	
+
 	// 모든 AI
 	for (TActorIterator<AAIController> It(World); It; ++It)
 	{
 		AAIController* AI = *It;
-		if (ATFDAICharacter* WorldAICharacter = Cast<ATFDAICharacter> (AI->GetCharacter()))
+		if (ATFDAICharacter* WorldAICharacter = Cast<ATFDAICharacter>(AI->GetCharacter()))
 		{
 			if (!bIsPaused)
 			{
@@ -424,7 +564,7 @@ void ATFDGameMode::GamePause(bool bIsPaused)
 			}
 		}
 	}
-	
+
 	UE_LOG(LogTemp, Log, TEXT("Game Start! All players movement enabled."));
 }
 
@@ -457,6 +597,3 @@ void ATFDGameMode::Tick(float DeltaTime)
 		GameEnd(EGameCompleteType::TimeLimit);
 	}
 }
-
-
-
