@@ -1,4 +1,4 @@
-ï»¿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "TFDPlayerState.h"
@@ -25,11 +25,11 @@ void ATFDPlayerState::CopyProperties(APlayerState* NewPlayerState)
 }
 
 //===================================================
-// ì´í•˜ OutGame ê´€ë ¨ - Lobby
+// ÀÌÇÏ OutGame °ü·Ã - Lobby
 //===================================================
 ATFDPlayerState::ATFDPlayerState()
 {
-	// ë³µì œ í™œì„±í™”
+	// º¹Á¦ È°¼ºÈ­
 	bReplicates = true;
 }
 
@@ -38,14 +38,14 @@ void ATFDPlayerState::SetPlayerName(const FString& NewName)
 	if (HasAuthority())
 	{
 		ReplicatedPlayerName = NewName;
-		// ë¶€ëª¨ í´ë˜ìŠ¤ PlayerNameë„ ê°™ì´ ì„¸íŒ…
+		// ºÎ¸ğ Å¬·¡½º PlayerNameµµ °°ÀÌ ¼¼ÆÃ
 		Super::SetPlayerName(NewName);
 	}
 }
 
 void ATFDPlayerState::OnRep_PlayerName()
 {
-	// ì´ë¦„ì´ ë³€ê²½ë˜ì—ˆì„ ë•Œ UI ê°±ì‹ ì´ë‚˜ ë¡œì§ ì²˜ë¦¬í•  ìˆ˜ ìˆë„ë¡ ë¸ë¦¬ê²Œì´íŠ¸ í˜¸ì¶œ
+	// ÀÌ¸§ÀÌ º¯°æµÇ¾úÀ» ¶§ UI °»½ÅÀÌ³ª ·ÎÁ÷ Ã³¸®ÇÒ ¼ö ÀÖµµ·Ï µ¨¸®°ÔÀÌÆ® È£Ãâ
 	OnPlayerNameChanged.Broadcast();
 }
 
@@ -54,4 +54,46 @@ void ATFDPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(ATFDPlayerState, ReplicatedPlayerName);
+
+	//ÆÀ Èñ¸Á º¯¼ö º¹Á¦ µî·Ï
+	DOREPLIFETIME(ATFDPlayerState, PreferredTeam);
+	//½ÇÁ¦ ÆÀ º¯¼ö º¹Á¦ µî·Ï
+	DOREPLIFETIME(ATFDPlayerState, ActualTeam);
+}
+
+
+// PreferredTeam °ü·Ã
+// ¼±È£ ÆÀ ¼³Á¤/È¹µæ ÇÔ¼ö
+FGameplayTag ATFDPlayerState::GetPreferredTeam() const
+{
+	return FGameplayTag();
+}
+
+void ATFDPlayerState::SetPreferredTeam(const FGameplayTag& InTeamTag)
+{
+	PreferredTeam = InTeamTag;
+}
+
+// ActualTeam °ü·Ã
+void ATFDPlayerState::SetActualTeam(const FGameplayTag& NewTeamTag)
+{
+	if (ActualTeam != NewTeamTag)
+	{
+		ActualTeam = NewTeamTag;
+		// ¼­¹ö¿¡¼­ º¯°æ ÈÄ Å¬¶óÀÌ¾ğÆ®¿¡ µ¿±âÈ­
+	}
+}
+
+// ½ÇÁ¦ ÆÀ È¹µæ ÇÔ¼ö
+FGameplayTag ATFDPlayerState::GetActualTeam() const
+{
+	return ActualTeam;
+}
+
+// ActualTeam º¹Á¦ ¿Ï·á ½Ã È£ÃâµÊ (Å¬¶óÀÌ¾ğÆ®)
+void ATFDPlayerState::OnRep_ActualTeam()
+{
+	// Å¬¶óÀÌ¾ğÆ®¿¡¼­ ÆÀ º¯°æ À¸·Î UI µî °»½Å Ã³¸® °¡´É
+	UE_LOG(LogTemp, Log, TEXT("ActualTeam updated to %s for player %s"),
+		*ActualTeam.GetTagName().ToString(), *GetPlayerName());
 }

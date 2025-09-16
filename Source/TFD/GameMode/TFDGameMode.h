@@ -4,15 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameMode.h"
-#include "GameState/TFDGameState.h"
-#include "GameData/EGameEnums.h"
 #include "TFDGameMode.generated.h"
 
-class ATFDAICharacter;
-class ATFDCharacter;
-class ATFDSpawnVolume;
-struct FGameplayTag;
-
+/**
+ * 
+ */
 UCLASS()
 class TFD_API ATFDGameMode : public AGameMode
 {
@@ -22,30 +18,22 @@ public:
 	ATFDGameMode();
 
 	void OnCatchThief(APawn* Pawn);
-	// ê²Œì„ ì¢…ë£Œì‹œ ì²˜ë¦¬ë  ë‚´ìš©ì´ ë‹´ê¹€.
+	// °ÔÀÓ Á¾·á½Ã Ã³¸®µÉ ³»¿ëÀÌ ´ã±è.
 	void GameEnd(EGameCompleteType CompleteType);
 	ATFDGameState* GetGameState();
 	void GamePause(bool bIsPaused);
 
-#pragma region ê²Œì„ ìƒíƒœ ë³€í™”ì— ë”°ë¥¸ ë¡œì§
-	
-	//StartMatch()ê°€ í˜¸ì¶œëì„ ë•Œ WaitingToStart ì—ì„œ InProgress ë¡œ ë„˜ì–´ê°€ê¸° ì „ì— ë„˜ì–´ê°€ë„ ë˜ëŠ”ì§€ íŒë‹¨ (bool ê°’)
+	// ÆÀ ¹èÁ¤ ÇÔ¼ö
+	void AssignTeams();
+
+
+	//pre start match 
 	virtual bool ReadyToStartMatch_Implementation() override;
-	
-	//MatchState ê°€ WaitingToStartë¡œ ë°”ë€” ë•Œ í˜¸ì¶œ
 	virtual void HandleMatchIsWaitingToStart() override;
-
-	//StartMatch()ê°€ ì„±ê³µí•´ì„œ MatchState::InProgress ë¡œ ì§„ì…í•  ë•Œ í˜¸ì¶œ
-	virtual void HandleMatchHasStarted() override;
-
-	//EndMatch()ê°€ í˜¸ì¶œë˜ì–´ MatchState::WaitingPostMatch ë¡œ ë°”ë€” ë•Œ ì‹¤í–‰
-	virtual void HandleMatchHasEnded() override;
-#pragma endregion
-
-	// SeamlessTravel ê´€ë ¨
+	// SeamlessTravel °ü·Ã
 	virtual void PostSeamlessTravel() override;
 	virtual void HandleSeamlessTravelPlayer(AController*& C) override;
-
+    
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
@@ -57,9 +45,6 @@ protected:
 	TArray<ATFDSpawnVolume*> SpawnVolumes;
 
 	ATFDGameState* GameState;
-
-	UFUNCTION()
-	void HandleThiefScoreChanged(int32 NewScore);
 	
 public:
 	void SpawnAI();
@@ -75,5 +60,8 @@ private:
 	
 	void InitializeSpawnVolumes();
 	void MovePlayerToRandomSpawnPoint(APlayerController* PlayerController);
+
+	// ¸ğµç ÇÃ·¹ÀÌ¾îÀÇ PlayerState¿Í ÆÀ ¼±È£ Á¤º¸¸¦ ¼öÁıÇÏ´Â ÇÔ¼ö
+	void GatherPreferredTeams(TArray<ATFDPlayerState*>& OutPlayers, TArray<FGameplayTag>& OutPreferredTeams);
 	
 };

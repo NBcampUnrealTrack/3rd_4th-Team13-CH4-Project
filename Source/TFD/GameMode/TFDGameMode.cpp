@@ -1,4 +1,4 @@
-ï»¿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "GameMode/TFDGameMode.h"
@@ -20,9 +20,6 @@
 
 ATFDGameMode::ATFDGameMode()
 {
-	PrimaryActorTick.bCanEverTick = true;
-	SetActorTickEnabled(false);
-
 	DefaultPawnClass = nullptr;
 	bUseSeamlessTravel = true;
 }
@@ -30,12 +27,6 @@ ATFDGameMode::ATFDGameMode()
 void ATFDGameMode::BeginPlay()
 {
 	Super::BeginPlay();
-
-	if (GetGameState())
-	{
-		// ì ìˆ˜ ë³€ê²½ ì´ë²¤íŠ¸ êµ¬ë…
-		GetGameState()->OnThiefScoreChanged.AddDynamic(this, &ATFDGameMode::HandleThiefScoreChanged);
-	}
 }
 
 APawn* ATFDGameMode::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, AActor* StartSpot)
@@ -47,16 +38,16 @@ APawn* ATFDGameMode::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, 
 	if (!PS || PS->GetTeamTag() == FGameplayTag::EmptyTag)
 		return nullptr;
 	
-	// Pawn í´ë˜ìŠ¤ ê°€ì ¸ì˜¤ê¸°
+	// Pawn Å¬·¡½º °¡Á®¿À±â
 	TSubclassOf<APawn> PawnClass = GetDefaultPawnClassForController(NewPlayer);
 	if (!PawnClass) return nullptr;
 
-	// SpawnTransform ì„¤ì •
+	// SpawnTransform ¼³Á¤
 	FTransform SpawnTransform = StartSpot->GetActorTransform();
 	FVector SpawnLocation = GetRandomPointInSpawnAreaTag(PS->GetTeamTag());
 	SpawnTransform.SetLocation( SpawnLocation);
 
-	// SpawnActorDeferredë¡œ Pawn ìƒì„±
+	// SpawnActorDeferred·Î Pawn »ı¼º
 	ATFDCharacterBase* Pawn = GetWorld()->SpawnActorDeferred<ATFDCharacterBase>(PawnClass, SpawnTransform, NewPlayer,
 		nullptr, ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn);
 	if (!Pawn) return nullptr;
@@ -70,15 +61,13 @@ APawn* ATFDGameMode::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, 
 		if (Tag == TAG_Team_Thief)
 		{
 			TFDPawn->CharacterData = RuleData.ThiefDataAsset;
-			GetGameState()->ThiefPlayerStateArray.Add(PState);
 		}
 		else if (Tag == TAG_Team_Cop)
 		{
 			TFDPawn->CharacterData = RuleData.PoliceDataAsset;
-			GetGameState()->PolicePlayerStateArray.Add(PState);
 		}
 	}
-	// FinishSpawningActor í˜¸ì¶œ (BeginPlay ì§ì „)
+	// FinishSpawningActor È£Ãâ (BeginPlay Á÷Àü)
 	UGameplayStatics::FinishSpawningActor(TFDPawn, SpawnTransform);
 	return Pawn;
 }
@@ -86,7 +75,7 @@ APawn* ATFDGameMode::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, 
 
 bool ATFDGameMode::ReadyToStartMatch_Implementation()
 {
-	return MatchState == MatchState::InProgress;
+	return GetGameState()->GetCurrentGameState() == EGameState::Playing;
 }
 
 void ATFDGameMode::HandleMatchIsWaitingToStart()
@@ -96,35 +85,18 @@ void ATFDGameMode::HandleMatchIsWaitingToStart()
 	SpawnAI();
 }
 
-void ATFDGameMode::HandleMatchHasStarted()
-{
-	Super::HandleMatchHasStarted();
-	UE_LOG(LogTemp, Warning, TEXT("HandleMatchHasStarted"));
-	//ê²Œì„ ì‹œì‘ ì²˜ë¦¬
-	GetGameState()->GameRemainServerTime = GetGameState()->GetRuleData().PlayTimeSec;
-	SetActorTickEnabled(true);
-	GamePause(false);
-}
-
-void ATFDGameMode::HandleMatchHasEnded()
-{
-	Super::HandleMatchHasEnded();
-	UE_LOG(LogTemp, Warning, TEXT("HandleMatchHasEnded"));
-	//ê²Œì„ ì¢…ë£Œ ì²˜ë¦¬
-
-
-	SetActorTickEnabled(false);
-}
-
 void ATFDGameMode::PostSeamlessTravel()
 {
 	Super::PostSeamlessTravel();
-	// íŒ€ ë¹„ìœ¨ ê²°ì •
+	// ÆÀ ºñÀ² °áÁ¤
 	TArray<APlayerState*> PlayerArray = GetGameState()->PlayerArray;
 	int32 PlayerCnt = PlayerArray.Num();
 	int32 PoliceCnt = UInGameUtility::GetPoliceRoleCount(PlayerCnt);
 
-	// ë°°ì—´ì„ ëœë¤ìœ¼ë¡œ ì„ê¸°
+	// ÆÀ ¹èÁ¤
+	AssignTeams();
+
+	// ¹è¿­À» ·£´ıÀ¸·Î ¼¯±â
 	for (int32 i = PlayerArray.Num() - 1; i >= 0; --i)
 	{
 		int32 SwapIndex = FMath::RandRange(0, i);
@@ -140,7 +112,7 @@ void ATFDGameMode::PostSeamlessTravel()
 		ATFDPlayerState* State = Cast<ATFDPlayerState>(PState);
 		if (!State) continue;
 
-		// ëœë¤ìœ¼ë¡œ ê²½ì°° ì—­í•  ë¶€ì—¬
+		// ·£´ıÀ¸·Î °æÂû ¿ªÇÒ ºÎ¿©
 		if (AssignedPolice < PoliceCnt)
 		{
 			State->SetTeamTag(TAG_Team_Cop);
@@ -157,8 +129,6 @@ void ATFDGameMode::PostSeamlessTravel()
 void ATFDGameMode::HandleSeamlessTravelPlayer(AController*& C)
 {
 	Super::HandleSeamlessTravelPlayer(C);
-
-	UE_LOG(LogTemp, Warning, TEXT("HandleSeamlessTravelPlayer"));
 	APlayerController* PC = Cast<APlayerController>(C);
 	if (!PC || !PC->Player)
 	{
@@ -169,13 +139,13 @@ void ATFDGameMode::HandleSeamlessTravelPlayer(AController*& C)
 	{
 		GetGameState()->MarkPlayerReady(PlayerState);
 
-		// ëª¨ë“  í”Œë ˆì´ì–´ê°€ ì ‘ì†í–ˆëŠ”ì§€ í™•ì¸ (GameStateì˜ PlayerArray ì‚¬ìš©)
+		// ¸ğµç ÇÃ·¹ÀÌ¾î°¡ Á¢¼ÓÇß´ÂÁö È®ÀÎ (GameStateÀÇ PlayerArray »ç¿ë)
 		if(NumTravellingPlayers == 0 && NumPlayers == GetGameState()->PlayerArray.Num())
 		{
-			UE_LOG(LogTemp, Warning, TEXT("All players are ready. Starting the game."));
-
-			StartMatch(); //InProgress ìƒíƒœë¡œ ì „í™˜
-
+			UE_LOG(LogTemp, Log, TEXT("All players are ready. Starting the game."));
+			GetGameState()->SetGameState(EGameState::Playing);
+			StartPlay();
+			GamePause(false);
 		}
 	}
 }
@@ -269,10 +239,10 @@ ATFDSpawnVolume* ATFDGameMode::GetRandomSpawnVolumeTag(FGameplayTag InTag)
 	if (ValidCount == 0)
 		return nullptr;
 
-	// ëœë¤ ì¸ë±ìŠ¤ë¥¼ ìƒì„± (0ë¶€í„° ValidCount-1ê¹Œì§€)
+	// ·£´ı ÀÎµ¦½º¸¦ »ı¼º (0ºÎÅÍ ValidCount-1±îÁö)
 	int32 RandomIndex = FMath::RandRange(0, ValidCount - 1);
 
-	// ìœ íš¨í•œ ê²ƒë“¤ ì¤‘ì—ì„œ RandomIndexë²ˆì§¸ ê²ƒì„ ì°¾ëŠ”ë‹¤
+	// À¯È¿ÇÑ °Íµé Áß¿¡¼­ RandomIndex¹øÂ° °ÍÀ» Ã£´Â´Ù
 	int32 CurrentValidIndex = 0;
 	for (ATFDSpawnVolume* SpawnVolume : SpawnVolumes)
 	{
@@ -295,10 +265,10 @@ void ATFDGameMode::InitializeSpawnVolumes()
 	if (SpawnVolumes.Num() > 0)
 	{
 		UE_LOG(LogTemp, Display, TEXT("IS: SpawnVolumes already "));
-		return; // ì´ë¯¸ ì´ˆê¸°í™”ë˜ì„œ ì¢…ë£Œ
+		return; // ÀÌ¹Ì ÃÊ±âÈ­µÇ¼­ Á¾·á
 	}
 
-	// ATFDSpawnVolume í´ë˜ìŠ¤ë§Œ ì§ì ‘ ì°¾ê¸°
+	// ATFDSpawnVolume Å¬·¡½º¸¸ Á÷Á¢ Ã£±â
 	for (TActorIterator<ATFDSpawnVolume> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 	{
 		ATFDSpawnVolume* SpawnVolume = *ActorItr;
@@ -326,9 +296,6 @@ void ATFDGameMode::MovePlayerToRandomSpawnPoint(APlayerController* PlayerControl
 	}
 }
 
-
-
-
 void ATFDGameMode::OnCatchThief(APawn* Pawn)
 {
 	APlayerState* CatchPlayerState = Pawn->GetPlayerState();
@@ -338,13 +305,11 @@ void ATFDGameMode::OnCatchThief(APawn* Pawn)
 	
 	if (ATFDPlayerState* PS = Cast<ATFDPlayerState>(CatchPlayerState))
 	{
-		// ATFDPlayerState*ë¡œ WeakPtr ìƒì„±
+		// ATFDPlayerState*·Î WeakPtr »ı¼º
 		TWeakObjectPtr<ATFDPlayerState> WeakPS = MakeWeakObjectPtr<ATFDPlayerState>(PS);
 
-		// ë°°ì—´ì— ì €ì¥ ê°€ëŠ¥
+		// ¹è¿­¿¡ ÀúÀå °¡´É
 		GetGameState()->CaughtThiefPlayerStateArray.Add(WeakPS);
-
-		GetGameState()->OnThievesChanged.Broadcast();
 	}
 	
 
@@ -354,39 +319,9 @@ void ATFDGameMode::OnCatchThief(APawn* Pawn)
 	}
 }
 
-void ATFDGameMode::HandleThiefScoreChanged(int32 NewScore)
-{
-	UE_LOG(LogTemp, Log, TEXT("Thief Score Changed: %d"), NewScore);
-
-	//ë„ë‘‘ ìŠ¹ë¦¬ ì ìˆ˜ ì²´í¬
-	if (NewScore >= GetGameState()->GetRuleData().ThiefScoreForWin)
-	{
-		//ì¼ë‹¨ì€ ê²Œì„ ì¢…ë£Œ, ì´í›„ ì ìˆ˜ ë‹¬ì„±í•˜ë©´ íŠ¹ì • ì¥ì†Œë¥¼ ìŠ¤í°í• ì§€ ë­˜í• ì§€ ìƒê°í•´ë³´ê¸°
-		GameEnd(EGameCompleteType::ThiefWinByScore);
-	}
-}
-
 void ATFDGameMode::GameEnd(EGameCompleteType CompleteType)
 {
-	UE_LOG(LogTemp, Log, TEXT("Game End!!!!!!"));
-
-	if (CompleteType == EGameCompleteType::TimeLimit)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Police Win (TimeLimit)"));
-		GetGameState()->SetWinTeam(TAG_Team_Cop, CompleteType);
-	}
-	else if (CompleteType == EGameCompleteType::CatchAllThief)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Police Win (CatchAllThief)"));
-		GetGameState()->SetWinTeam(TAG_Team_Cop, CompleteType);
-	}
-	else if (CompleteType == EGameCompleteType::ThiefWinByScore)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Thief Win (ThiefWinByScore)"));
-		GetGameState()->SetWinTeam(TAG_Team_Thief, CompleteType);
-	}
-
-	EndMatch();
+	GetGameState()->SetGameState(EGameState::Result);
 }
 
 void ATFDGameMode::GamePause(bool bIsPaused)
@@ -398,7 +333,7 @@ void ATFDGameMode::GamePause(bool bIsPaused)
 		return;
 	}
 	
-	// bIsPaused ì— ë”°ë¼ì„œ í”Œë ˆì´ì–´, AI í™œì„± ë¹„í™œì„±í™” í•˜ê³  ìˆìŠµë‹ˆë‹¤.
+	// bIsPaused ¿¡ µû¶ó¼­ ÇÃ·¹ÀÌ¾î, AI È°¼º ºñÈ°¼ºÈ­ ÇÏ°í ÀÖ½À´Ï´Ù.
 	for (FConstPlayerControllerIterator It = World->GetPlayerControllerIterator(); It; ++It)
 	{
 		if (ATFDPlayerController* PC = Cast<ATFDPlayerController>(It->Get()))
@@ -407,7 +342,7 @@ void ATFDGameMode::GamePause(bool bIsPaused)
 		}
 	}
 	
-	// ëª¨ë“  AI
+	// ¸ğµç AI
 	for (TActorIterator<AAIController> It(World); It; ++It)
 	{
 		AAIController* AI = *It;
@@ -415,12 +350,13 @@ void ATFDGameMode::GamePause(bool bIsPaused)
 		{
 			if (!bIsPaused)
 			{
-				WorldAICharacter->StartMovemnetWalking(); //ì›€ì§ì„ í™œì„±í™”
+				WorldAICharacter->StartMovemnetWalking(); //¿òÁ÷ÀÓ È°¼ºÈ­
 			}
 			else
 			{
-				WorldAICharacter->StopMovemnetWalking(); //ì›€ì§ì„ ë¹„í™œì„±í™”
+				WorldAICharacter->StopMovemnetWalking(); //¿òÁ÷ÀÓ ºñÈ°¼ºÈ­
 			}
+			
 		}
 	}
 	
@@ -441,21 +377,104 @@ void ATFDGameMode::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	GetGameState()->GameRemainServerTime -= DeltaTime;
-
-	// í˜¸ìŠ¤íŠ¸ìš© ì§ì ‘ ë¸Œë¡œë“œìºìŠ¤íŠ¸
-	if (GetGameState()->HasAuthority())
-	{
-		GetGameState()->OnGameTimeChanged.Broadcast(GetGameState()->GameRemainServerTime);
-	}
-
-
-	// ì‹œê°„ì´ ì¢…ë£Œë  ì‹œ ê²Œì„ ì¢…ë£Œ ë¡œì§
-	if (GetGameState()->GameRemainServerTime < 0)
+	float GameTime = GetGameState()->GetCurrentGameTimeSec();
+	// ½Ã°£ÀÌ Á¾·áµÉ ½Ã °ÔÀÓ Á¾·á ·ÎÁ÷
+	if (GameTime > GetGameState()->GetRuleData().PlayTimeSec)
 	{
 		GameEnd(EGameCompleteType::TimeLimit);
 	}
 }
 
 
+// ¸ğµç ÇÃ·¹ÀÌ¾îÀÇ PlayerState¿Í ÆÀ ¼±È£ Á¤º¸¸¦ ¼öÁıÇÏ´Â ÇÔ¼ö
+// ·Îºñ¿¡¼­ ÆÀ ¹èÁ¤½Ã »ç¿ë
 
+void ATFDGameMode::GatherPreferredTeams(TArray<ATFDPlayerState*>& OutPlayers, TArray<FGameplayTag>& OutPreferredTeams)
+{
+	OutPlayers.Empty();
+	OutPreferredTeams.Empty();
+
+	if (!GetWorld())
+		return;
+
+	for (APlayerState* PS : GetGameState()->PlayerArray)
+	{
+		ATFDPlayerState* TFDPS = Cast<ATFDPlayerState>(PS);
+		if (TFDPS)
+		{
+			OutPlayers.Add(TFDPS);
+			OutPreferredTeams.Add(TFDPS->GetPreferredTeam());
+		}
+	}
+}
+
+// ÆÀ ¹èÁ¤ ÇÔ¼ö
+// ·Îºñ¿¡¼­ ¸ğµç ÇÃ·¹ÀÌ¾î°¡ Á¢¼ÓÇÑ ÈÄ¿¡ È£Ãâ
+
+void ATFDGameMode::AssignTeams()
+{
+	TArray<ATFDPlayerState*> AllPlayers;
+	TArray<FGameplayTag> PreferredTeams;
+
+	// ¸ğµç ÇÃ·¹ÀÌ¾îÀÇ PlayerState¿Í ¼±È£ ÆÀ ¼öÁı
+	GatherPreferredTeams(AllPlayers, PreferredTeams);
+
+	const int32 PoliceTeamMax = 1; // °æÂû Á¤¿ø ¼³Á¤ ¿¹½Ã
+
+	TArray<ATFDPlayerState*> PreferredPolicePlayers;
+	TArray<ATFDPlayerState*> OtherPlayers;
+
+	// ¼±È£ °æÂû°ú ±âÅ¸ ¼±È£ÀÚ ºĞ·ù
+	for (int32 i = 0; i < PreferredTeams.Num(); ++i)
+	{
+		if (PreferredTeams[i] == TAG_Team_Cop)
+		{
+			PreferredPolicePlayers.Add(AllPlayers[i]);
+		}
+		else
+		{
+			OtherPlayers.Add(AllPlayers[i]);
+		}
+	}
+
+	// °æÂû¼±È£ÀÚ ¼ö°¡ Á¤¿ø ÀÌÇÏÀÏ °æ¿ì ¸ğµÎ °æÂû ¹èÁ¤
+	if (PreferredPolicePlayers.Num() <= PoliceTeamMax)
+	{
+		for (ATFDPlayerState* Player : PreferredPolicePlayers)
+		{
+			Player->SetActualTeam(TAG_Team_Cop);
+		}
+		// ³ª¸ÓÁö ÇÃ·¹ÀÌ¾î´Â µµµÏ ¹èÁ¤
+		for (ATFDPlayerState* Player : OtherPlayers)
+		{
+			Player->SetActualTeam(TAG_Team_Thief);
+		}
+	}
+	else
+	{
+		// ¼±È£ °æÂûÀÚµéÀ» ·£´ı ¼¯±â
+		for (int32 i = PreferredPolicePlayers.Num() - 1; i > 0; --i)
+		{
+			int32 SwapIndex = FMath::RandRange(0, i);
+			PreferredPolicePlayers.Swap(i, SwapIndex);
+		}
+		// °æÂû Á¤¿ø¸¸Å­ ¹èÁ¤
+		for (int32 i = 0; i < PoliceTeamMax; ++i)
+		{
+			PreferredPolicePlayers[i]->SetActualTeam(TAG_Team_Cop);
+		}
+		// ÃÊ°úÀÚ ¹× ±âÅ¸ ÇÃ·¹ÀÌ¾î´Â µµµÏ ¹èÁ¤
+		for (int32 i = PoliceTeamMax; i < PreferredPolicePlayers.Num(); ++i)
+		{
+			PreferredPolicePlayers[i]->SetActualTeam(TAG_Team_Thief);
+		}
+		for (ATFDPlayerState* Player : OtherPlayers)
+		{
+			Player->SetActualTeam(TAG_Team_Thief);
+		}
+	}
+}
+
+// PostSeamlessTravel ÀçÁ¤ÀÇ
+// ¸ğµç ÇÃ·¹ÀÌ¾î°¡ Á¢¼ÓÇÑ ÈÄ¿¡ ÆÀ ¹èÁ¤ ÇÔ¼ö È£Ãâ
+// ±âÁ¸ PostSeamlessTravel ·ÎÁ÷µµ À¯Áö
