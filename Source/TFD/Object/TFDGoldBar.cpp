@@ -9,6 +9,7 @@
 #include "GameFramework/Character.h"
 #include "Character/TFDCharacter.h"
 #include "Controller/TFDPlayerController.h"
+#include "GameMode/TFDGameMode.h"
 // Sets default values
 ATFDGoldBar::ATFDGoldBar()
 {
@@ -38,7 +39,7 @@ void ATFDGoldBar::BeginPlay()
 {
 	Super::BeginPlay();
 	CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &ATFDGoldBar::OnOverlapBegin);
-
+	SetAllowedTeamTag();
 }
 
 void ATFDGoldBar::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
@@ -47,18 +48,29 @@ void ATFDGoldBar::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* Ot
 	if (!GoldRewardEffect)
 		return;
 
+
 	if (ATFDCharacter* Player = Cast<ATFDCharacter>(OtherActor))
 	{
-		//ASC가져오는 이유 =  모든 능력치/효과 들고있음 , 어빌리티실행,이 펙트적용 
+		// ASC 가져오기
 		if (UAbilitySystemComponent* ASC = Player->GetAbilitySystemComponent())
 		{
-			if (ASC->HasMatchingGameplayTag(AllowedTeamTag))
+			// 배열 → 컨테이너 변환
+			FGameplayTagContainer AllowedTagContainer;
+			for (const FGameplayTag& Tag : AllowedTeamTag)
+			{
+				AllowedTagContainer.AddTag(Tag);
+			}
+
+			// 플레이어가 허용된 팀 태그 중 하나라도 가지고 있다면
+			if (ASC->HasAnyMatchingGameplayTags(AllowedTagContainer))
 			{
 				ASC->ApplyGameplayEffectToSelf(GoldRewardEffect.GetDefaultObject(), 1.f, ASC->MakeEffectContext());
 				Destroy();
 			}
 		}
 	}
+	
+
 }
 
 // Called every frame
@@ -68,3 +80,15 @@ void ATFDGoldBar::Tick(float DeltaTime)
 
 }
 
+
+void ATFDGoldBar::SetAllowedTeamTag()
+{
+	ATFDGameMode* pGameMode = GetWorld()->GetAuthGameMode<ATFDGameMode>();
+	if (!pGameMode)
+		return;
+
+	TArray<FGameplayTag> FindedPlayTag = pGameMode->GetDTAllowedTeamTag_Array(ItemTag);
+	
+	AllowedTeamTag = FindedPlayTag;
+	
+}
