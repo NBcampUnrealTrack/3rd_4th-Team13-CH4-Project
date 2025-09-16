@@ -7,13 +7,16 @@
 #include "TFDNativeGameplayTags.h"
 
 #include "Blueprint/UserWidget.h"  // OutGame 관련 - Lobby UI 위젯 관련 헤더
-
+#include "GameData/EGameEnums.h"
 #include "TFDPlayerController.generated.h"
 
 
 struct FInputActionValue;
 class UInputAction;
 class UInputMappingContext;
+class UPlayingWidget;
+class UResultWidget;
+class UHUDLayoutWidget;
 
 // Delegate 선언: 공인 IP가 준비되었을 때 알려주는 이벤트
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPublicIPReady, const FString&, PublicIP);
@@ -112,6 +115,12 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Network")
 	FOnPublicIPReady OnPublicIPReady;
 
+	UFUNCTION()
+	void HandleMatchInProgress();
+
+	UFUNCTION()
+	void HandleMatchWaitingPostMatch(FGameplayTag WinTeamTag, EGameCompleteType CompleteType);
+
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UUserWidget> LobbyWidgetClass;
@@ -119,4 +128,13 @@ private:
 	UPROPERTY()
 	TObjectPtr<UUserWidget> LobbyWidgetInstance;
 
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UHUDLayoutWidget> HUDWidgetClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UPlayingWidget> PlayingWidgetClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UResultWidget> ResultWidgetClass;
 };
