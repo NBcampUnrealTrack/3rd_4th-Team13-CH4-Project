@@ -369,19 +369,21 @@ void ATFDGameMode::HandleThiefScoreChanged(int32 NewScore)
 void ATFDGameMode::GameEnd(EGameCompleteType CompleteType)
 {
 	UE_LOG(LogTemp, Log, TEXT("Game End!!!!!!"));
-	//어떻게 게임이 끝났는지 로직이 필요한가?
 
 	if (CompleteType == EGameCompleteType::TimeLimit)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Police Win (TimeLimit)"));
+		GetGameState()->SetWinTeam(TAG_Team_Cop, CompleteType);
 	}
 	else if (CompleteType == EGameCompleteType::CatchAllThief)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Police Win (CatchAllThief)"));
+		GetGameState()->SetWinTeam(TAG_Team_Cop, CompleteType);
 	}
 	else if (CompleteType == EGameCompleteType::ThiefWinByScore)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Thief Win (ThiefWinByScore)"));
+		GetGameState()->SetWinTeam(TAG_Team_Thief, CompleteType);
 	}
 
 	EndMatch();
