@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
+#include "EHitDirection.h"
 #include "TFDAnimInstanceBase.generated.h"
 
 //class ATFDCharacter;
@@ -17,7 +18,15 @@ public:
 	virtual void NativeInitializeAnimation() override;
 
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
+	
+	void PlayHitAnim(EHitDirection Direction);
+	void HitAnimEnd();
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Animation")
+	UAnimMontage* HitMontage;
+	
+	static FName GetSectionNameByDirection(EHitDirection Direction);
+	
 protected:
 	UPROPERTY()
 	TObjectPtr<ATFDCharacterBase> OwnerCharacter; //TFDCharacterBase
@@ -36,5 +45,10 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	uint8 bIsFalling : 1;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Animation")
+	EHitDirection CurrentHitDirection = EHitDirection::None;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Animation")
+	bool bIsHitPlaying = false;
 };
