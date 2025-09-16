@@ -66,7 +66,7 @@ void ATFDPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 // 선호 팀 설정/획득 함수
 FGameplayTag ATFDPlayerState::GetPreferredTeam() const
 {
-	return FGameplayTag();
+	return PreferredTeam;
 }
 
 void ATFDPlayerState::SetPreferredTeam(const FGameplayTag& InTeamTag)
@@ -93,7 +93,9 @@ FGameplayTag ATFDPlayerState::GetActualTeam() const
 // ActualTeam 복제 완료 시 호출됨 (클라이언트)
 void ATFDPlayerState::OnRep_ActualTeam()
 {
-	// 클라이언트에서 팀 변경 으로 UI 등 갱신 처리 가능
-	UE_LOG(LogTemp, Log, TEXT("ActualTeam updated to %s for player %s"),
-		*ActualTeam.GetTagName().ToString(), *GetPlayerName());
+	UE_LOG(LogTemp, Log, TEXT("Player %s replicated ActualTeam: %s"),
+		*GetPlayerName(),
+		*ActualTeam.GetTagName().ToString());
+
+	// UI 업데이트 등 추가 작업
 }

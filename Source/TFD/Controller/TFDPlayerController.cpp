@@ -147,6 +147,77 @@ void ATFDPlayerController::SetupInputComponent()
 	}
 }
 
+void ATFDPlayerController::OnPossess(APawn* InPawn)
+{
+	Super::OnPossess(InPawn);
+
+	SetMovemnetWalking(false);
+}
+
+void ATFDPlayerController::OnUnPossess()
+{
+	if (IsLocalPlayerController())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("UnBind : Job IMC, Job InputAction (Client)"));
+
+		//Job InputAction 초기화
+		if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
+		{
+			for (int32 Handle : JobBindingHandles)
+			{
+				EnhancedInputComponent->RemoveBindingByHandle(Handle);
+			}
+
+			JobBindingHandles.Reset();
+		}
+
+		//Job IMC 초기화
+		if (ActiveJobIMC.IsValid())
+		{
+			if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
+				ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
+			{
+				Subsystem->RemoveMappingContext(ActiveJobIMC.Get());
+			}
+
+			ActiveJobIMC = nullptr;
+		}
+	}
+
+	Super::OnUnPossess();
+}
+
+void ATFDPlayerController::AcknowledgePossession(APawn* InPawn)
+{
+	Super::AcknowledgePossession(InPawn);
+
+	if (IsLocalPlayerController())
+	{
+		if (ATFDCharacterBase* CB = Cast<ATFDCharacterBase>(InPawn))
+		{
+			if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
+				ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
+			{
+				if (CB->CharacterData->JobMappingContext)
+				{
+
+					Subsystem->AddMappingContext(CB->CharacterData->JobMappingContext, 0);
+				}
+			}
+
+			//********직업에 따른 능력 입력 바인딩************
+			if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
+			{
+				for (auto Action : CB->CharacterData->Actions)
+				{
+					EnhancedInputComponent->BindAction(Action.InputAction, ETriggerEvent::Started, this, &ATFDPlayerController::JobAbility, Action.Tag);
+				}
+
+			}
+		}
+	}
+}
+
 void ATFDPlayerController::Dash(const FInputActionValue& Value)
 {
 	if (APawn* ControlledPawn = GetPawn())
@@ -214,7 +285,21 @@ void ATFDPlayerController::StopJumping()
 		pCharacter->StopJumping();
 	}
 }
-
+void ATFDPlayerController::JobAbility(const FInputActionValue& Value, FGameplayTag InputTag)
+{
+	ATFDCharacterBase* OwnerCharacter = Cast<ATFDCharacterBase>(GetPawn());
+	if (OwnerCharacter)
+	{
+		UAbilitySystemComponent* AbilitySystemComponent = OwnerCharacter->GetAbilitySystemComponent();
+		if (AbilitySystemComponent)
+		{
+			FGameplayTagContainer AbilityTags;
+			AbilityTags.AddTag(InputTag);
+			AbilitySystemComponent->TryActivateAbilitiesByTag(AbilityTags);
+		}
+	}
+}
+/*
 void ATFDPlayerController::Attack(const FInputActionValue& Value)
 {
 }
@@ -222,6 +307,147 @@ void ATFDPlayerController::Attack(const FInputActionValue& Value)
 void ATFDPlayerController::TogglePause(const FInputActionValue& Value)
 {
 }
+*/
+//===================================================
+// 이하 OutGame 관련 - Lobby
+//===================================================
+bool ATFDPlayerController::IsHostPlayer() const
+{
+	return IsLocalController() && HasAuthority();
+}
+
+void ATFDPlayerController::LeaveLobby()
+{
+	// 클라이언트는 타이틀로 돌아감 (절대 경로로 ClientTravel)
+	ClientTravel(TFDGameConstants::TitleLevel, ETravelType::TRAVEL_Absolute);
+}
+
+void ATFDPlayerController::StartGame()
+{
+	if (!IsLocalController() || !HasAuthority())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[ATFDPlayerController][StartGame] Not authorized to start the game"));
+		return;
+	}
+
+	// UI 제거
+	RemoveLobbyUI();
+
+	FString TravelCommand = FString::Printf(TEXT("%s?listen"), TFDGameConstants::GameLevel);
+	UE_LOG(LogTemp, Log, TEXT("[ATFDPlayerController][StartGame] ServerTravel to: %s"), *TravelCommand);
+
+	GetWorld()->ServerTravel(TravelCommand, true); // true: seamless travel
+}
+void ATFDPlayerController::RemoveLobbyUI()
+{
+	if (LobbyWidgetInstance)
+	{
+		LobbyWidgetInstance->RemoveFromParent();
+		LobbyWidgetInstance = nullptr;
+	}
+}
+
+FString ATFDPlayerController::GetLocalIP() const
+{// 내 컴퓨터의 로컬 IP 주소(127.0.0.1 제외)를 문자열로 가져오는 함수
+
+	// Winsock(윈속)이라는 시스템 API를 초기화
+	WSADATA wsaData;
+
+	// WSAStartup : 네트워크 기능 사용 초기화
+	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
+	{// 윈도우에서 소켓 API를 쓰기 위한 초기화
+	// 실패 시 기본값 반환
+		return TEXT("0.0.0.0");
+	}
+
+	// 내 컴퓨터의 이름(호스트네임)을 얻음
+	// "내가 누군지"를 알아야 내 IP 주소를 알 수 있음
+	// gethostname : 내 컴퓨터 이름 알아내기
+	char hostname[256];
+	if (gethostname(hostname, sizeof(hostname)) == SOCKET_ERROR)
+	{
+		WSACleanup(); // Winsock(윈속)이라는 시스템 API를 초기화
+		return TEXT("0.0.0.0");
+	}
+	// 호스트 이름으로 IP 주소 목록 얻기
+	// (여러 개일 수도 있음 -> 그래서 리스트처럼 받아옴)
+	// getaddrinfo : 도메인 이름으로 IP 목록 얻기
+	struct addrinfo hints = { 0 };
+	hints.ai_family = AF_INET; // IPv4 주소만 (IPv6은 제외)
+
+	struct addrinfo* info = nullptr;
+	if (getaddrinfo(hostname, nullptr, &hints, &info) != 0)
+	{
+		WSACleanup();
+		return TEXT("0.0.0.0");
+	}
+
+	// 얻은 주소들 중 루프백(127.x.x.x)은 제외하고 실제 IP만 가져오기
+	FString LocalIP = TEXT("0.0.0.0");
+
+	for (struct addrinfo* ptr = info; ptr != nullptr; ptr = ptr->ai_next)
+	{// 여러 IP가 있을 수 있어서 반복하면서 검사
+
+		sockaddr_in* sockaddr_ipv4 = (sockaddr_in*)ptr->ai_addr;
+		char ipStr[INET_ADDRSTRLEN] = { 0 };
+
+		// inet_ntop : 바이너리 IP를 문자열로 변환
+		inet_ntop(AF_INET, &(sockaddr_ipv4->sin_addr), ipStr, INET_ADDRSTRLEN);
+
+		FString CandidateIP = FString(ipStr);
+
+		// 루프백 주소 거르기
+		// 127.x.x.x는 자기 자신(localhost)이므로 제외
+		if (!CandidateIP.StartsWith(TEXT("127.")))
+		{// 첫 번째로 나오는 "정상적인 IP"를 리턴
+			LocalIP = CandidateIP;
+			break;
+		}
+	}
+	// 마무리 정리 (메모리 해제 & 소켓 정리)
+	freeaddrinfo(info);
+	WSACleanup();
+
+	return LocalIP;
+}
+
+void ATFDPlayerController::RequestPublicIP()
+{
+	TSharedRef<IHttpRequest> Request = FHttpModule::Get().CreateRequest();
+	Request->SetURL(TEXT("https://api.ipify.org"));
+	Request->SetVerb("GET");
+	Request->OnProcessRequestComplete().BindLambda([this](FHttpRequestPtr Req, FHttpResponsePtr Resp, bool bSuccess)
+		{
+			if (bSuccess && Resp.IsValid())
+			{
+				CachedPublicIP = Resp->GetContentAsString().TrimStartAndEnd();
+				UE_LOG(LogTemp, Log, TEXT("[ATFDPlayerController][RequestPublicIP] 공인 IP 주소: %s"), *CachedPublicIP);
+
+				// Delegate 호출
+				OnPublicIPReady.Broadcast(CachedPublicIP);
+			}
+			else
+			{
+				CachedPublicIP = TEXT("Unavailable");
+				UE_LOG(LogTemp, Error, TEXT("[ATFDPlayerController][RequestPublicIP] 공인 IP 가져오기 실패"));
+
+				OnPublicIPReady.Broadcast(CachedPublicIP); // 실패 시에도 브로드캐스트 가능
+			}
+		});
+
+	Request->ProcessRequest();
+}
+
+FString ATFDPlayerController::GetPublicIP() const
+{
+	return CachedPublicIP.IsEmpty() ? TEXT("Fetching...") : CachedPublicIP;
+}
+
+
+
+
+
+
 // 팀 희망 선택 서버 RPC
 // 클라이언트에서 호출하여 서버에 팀 태그를 전달
 void ATFDPlayerController::ServerSetPreferredTeam_Implementation(const FGameplayTag& TeamTag)
