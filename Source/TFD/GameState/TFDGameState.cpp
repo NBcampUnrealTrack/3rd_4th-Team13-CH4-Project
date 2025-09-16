@@ -40,6 +40,7 @@ void ATFDGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 
 	DOREPLIFETIME(ATFDGameState, GameRemainServerTime);
 	DOREPLIFETIME(ATFDGameState, ThiefTotalScore);
+	DOREPLIFETIME(ATFDGameState, ThiefPlayerStateArray);
 	DOREPLIFETIME(ATFDGameState, CaughtThiefPlayerStateArray);
 	DOREPLIFETIME(ATFDGameState, WinTeamTag);
 	DOREPLIFETIME(ATFDGameState, CompleteType);

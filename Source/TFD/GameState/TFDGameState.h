@@ -62,6 +62,7 @@ public:
 	// 도둑정보 Controller 리스트
 	TArray<TWeakObjectPtr< ATFDPlayerState>> PolicePlayerStateArray;
 	// 경찰정보 Controller 리스트
+	UPROPERTY(Replicated)
 	TArray<TWeakObjectPtr< ATFDPlayerState>> ThiefPlayerStateArray;
 	// 잡힌 도둑 Controller 리스트
 	UPROPERTY(ReplicatedUsing = OnRep_CaughtThiefPlayerStateArray)
