@@ -8,11 +8,18 @@
 #include "Character/TFDCharacter.h"
 #include "GameFramework/Character.h"
 #include "Character/TFDCharacterBase.h"
+#include "Character/TFDPlayerCharacter.h"
 #include "AbilitySystemInterface.h"
 #include "AbilitySystemComponent.h"
 #include "TFDNativeGameplayTags.h"
 #include "GameMode/TFDGameMode.h"
 #include "GameFramework/CharacterMovementComponent.h"
+
+
+#include "UI/GameUIRouterSubsystem.h"
+#include "UI/InGame/PlayingWidget.h"
+#include "UI/Widget/UHUDLayoutWidget.h"
+#include "UI/InGame/ResultWidget.h"
 
 // 이하 OutGame 관련 - Lobby
 #include "Constants/TFDGameConstants.h"
@@ -73,6 +80,10 @@ void ATFDPlayerController::BeginPlay()
 		Subsystem->AddMappingContext(DefaultMappingContext, 0);
 
 	}
+
+	
+
+	
 
 	//===================================================
 	// 이하 OutGame 관련 - Lobby
@@ -151,6 +162,16 @@ void ATFDPlayerController::OnPossess(APawn* InPawn)
 	Super::OnPossess(InPawn);
 
 	SetMovemnetWalking(false);
+	if (ATFDGameState* GS = GetWorld()->GetGameState<ATFDGameState>())
+	{
+		// 기존 바인딩 제거 후 다시 바인딩 (중복 방지)
+		GS->OnMachInProgress.RemoveDynamic(this, &ATFDPlayerController::HandleMatchInProgress);
+		GS->OnMatchWaitingPostMatch.RemoveDynamic(this, &ATFDPlayerController::HandleMatchWaitingPostMatch);
+
+		// 컨트롤러 함수 바인딩
+		GS->OnMachInProgress.AddDynamic(this, &ATFDPlayerController::HandleMatchInProgress);
+		GS->OnMatchWaitingPostMatch.AddDynamic(this, &ATFDPlayerController::HandleMatchWaitingPostMatch);
+	}
 }
 
 
@@ -184,7 +205,11 @@ void ATFDPlayerController::OnUnPossess()
 			ActiveJobIMC = nullptr;
 		}
 	}
-
+	if (ATFDGameState* GS = GetWorld()->GetGameState<ATFDGameState>())
+	{
+		GS->OnMachInProgress.RemoveDynamic(this, &ATFDPlayerController::HandleMatchInProgress);
+		GS->OnMatchWaitingPostMatch.RemoveDynamic(this, &ATFDPlayerController::HandleMatchWaitingPostMatch);
+	}
 	Super::OnUnPossess();
 }
 
@@ -451,4 +476,67 @@ void ATFDPlayerController::RequestPublicIP()
 FString ATFDPlayerController::GetPublicIP() const
 {
 	return CachedPublicIP.IsEmpty() ? TEXT("Fetching...") : CachedPublicIP;
+}
+
+void ATFDPlayerController::HandleMatchInProgress()
+{
+	bShowMouseCursor = false;
+
+	ULocalPlayer* LP = GetLocalPlayer();
+	if (!LP)
+	{
+		return;
+	}
+
+	if (UGameUIRouterSubsystem* UISub = LP->GetSubsystem<UGameUIRouterSubsystem>())
+	{
+		if (!HUDWidgetClass)
+		{
+			return;
+		}
+
+		UISub->SetHUDLayoutClass(HUDWidgetClass);
+		UISub->CreateHUD();
+
+		if (PlayingWidgetClass)
+		{
+			UISub->PlayingWidget = Cast<UPlayingWidget>(
+				UISub->AddWidgetToLayer(EUILayer::GameLayer, PlayingWidgetClass)
+			);
+		}
+	}
+}
+
+// 게임 종료/포스트 매치 이벤트 발생 시 처리
+void ATFDPlayerController::HandleMatchWaitingPostMatch(FGameplayTag WinTeamTag, EGameCompleteType CompleteType)
+{
+	bShowMouseCursor = true;
+
+	ULocalPlayer* LP = GetLocalPlayer();
+	if (!LP)
+	{
+		return;
+	}
+
+	if (UGameUIRouterSubsystem* UISub = GetLocalPlayer()->GetSubsystem<UGameUIRouterSubsystem>())
+	{
+		if (UISub->PlayingWidget)
+		{
+			UISub->RemoveWidgetFromLayer(EUILayer::GameLayer, UISub->PlayingWidget);
+			UISub->PlayingWidget = nullptr;
+		}
+
+		if (ResultWidgetClass)
+		{
+			if (UUserWidget* Widget = UISub->AddWidgetToLayer(EUILayer::GameLayer, ResultWidgetClass))
+			{
+				if (UResultWidget* RW = Cast<UResultWidget>(Widget))
+				{
+					ATFDPlayerCharacter* MyCharacter = Cast<ATFDPlayerCharacter>(GetPawn());
+					RW->InitResult(WinTeamTag, CompleteType, MyCharacter);
+					UISub->ResultWidget = RW; // Subsystem에 인스턴스 보관
+				}
+			}
+		}
+	}
 }
