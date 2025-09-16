@@ -35,8 +35,11 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "GAS")
 	TSubclassOf<UGameplayEffect> GoldRewardEffect;
 
-	UPROPERTY(EditDefaultsOnly, Category="GAS")
-	FGameplayTag AllowedTeamTag;
+	UPROPERTY(EditAnywhere, Category="GAS")
+	FGameplayTag		ItemTag;
+	
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly, Category="GAS")
+	TArray<FGameplayTag>		AllowedTeamTag;
 	
 	UFUNCTION()
 	void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
@@ -46,5 +49,7 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+private:
+	void SetAllowedTeamTag();
 
 };
