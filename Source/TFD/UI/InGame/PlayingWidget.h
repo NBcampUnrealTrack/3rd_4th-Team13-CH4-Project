@@ -34,6 +34,9 @@ public:
     UFUNCTION(BlueprintCallable)
     void UpdateRemainingTime(float RemainingTimeSec);
 
+    UFUNCTION(BlueprintCallable)
+    void UpdateTeamName(const FString& TeamName);
+
 protected:
     UPROPERTY(meta = (BindWidget))
     UTextBlock* RemainingTimeText;
@@ -43,6 +46,11 @@ protected:
 
     UPROPERTY(meta = (BindWidget))
     UTextBlock* ThiefCountText;
+
+    /** 팀 이름 출력용 텍스트 */
+    UPROPERTY(meta = (BindWidget))
+    UTextBlock* TeamNameText;
+
 
 private:
     ATFDGameState* CachedGameState = nullptr;

@@ -4,6 +4,7 @@
 #include "UI/InGame/PlayingWidget.h"
 #include "Components/TextBlock.h"
 #include "GameState/TFDGameState.h"
+#include "PlayerState/TFDPlayerState.h"
 #include "GameFramework/PlayerController.h"
 
 void UPlayingWidget::NativeConstruct()
@@ -14,6 +15,15 @@ void UPlayingWidget::NativeConstruct()
 
     if (APlayerController* PC = GetOwningPlayer())
     {
+        // PlayerState 가져오기
+        if (ATFDPlayerState* PS = PC->GetPlayerState<ATFDPlayerState>())
+        {
+            FGameplayTag TeamTag = PS->GetTeamTag();
+            UE_LOG(LogTemp, Log, TEXT("[UPlayingWidget] PlayerState found: %s, TeamTag: %s"),
+                *PS->GetName(), *TeamTag.ToString());
+            UpdateTeamName(TeamTag.ToString());
+        }
+
         CachedGameState = PC->GetWorld()->GetGameState<ATFDGameState>();
         if (CachedGameState)
         {
@@ -75,5 +85,13 @@ void UPlayingWidget::UpdateRemainingTime(float RemainingTimeSec)
     if (RemainingTimeText)
     {
         RemainingTimeText->SetText(FText::FromString(FString::Printf(TEXT("%02d:%02d"), Minutes, Seconds)));
+    }
+}
+
+void UPlayingWidget::UpdateTeamName(const FString& TeamName)
+{
+    if (TeamNameText)
+    {
+        TeamNameText->SetText(FText::FromString(FString::Printf(TEXT("팀: %s"), *TeamName)));
     }
 }
