@@ -40,6 +40,7 @@ void ATFDGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 
 	DOREPLIFETIME(ATFDGameState, GameRemainServerTime);
 	DOREPLIFETIME(ATFDGameState, ThiefTotalScore);
+	DOREPLIFETIME(ATFDGameState, PolicePlayerStateArray);
 	DOREPLIFETIME(ATFDGameState, ThiefPlayerStateArray);
 	DOREPLIFETIME(ATFDGameState, CaughtThiefPlayerStateArray);
 	DOREPLIFETIME(ATFDGameState, WinTeamTag);
@@ -125,6 +126,16 @@ void ATFDGameState::OnRep_ThiefScore()
 void ATFDGameState::OnRep_GameRemainTime()
 {
 	OnGameTimeChanged.Broadcast(GameRemainServerTime);
+}
+
+void ATFDGameState::OnRep_PolicePlayerStateArray()
+{
+	OnPoliceArrayChanged.Broadcast(PolicePlayerStateArray);
+}
+
+void ATFDGameState::OnRep_ThiefPlayerStateArray()
+{
+	OnThiefArrayChanged.Broadcast(ThiefPlayerStateArray);
 }
 
 void ATFDGameState::SetWinTeam(FGameplayTag WinTeam, EGameCompleteType InCompleteType)
