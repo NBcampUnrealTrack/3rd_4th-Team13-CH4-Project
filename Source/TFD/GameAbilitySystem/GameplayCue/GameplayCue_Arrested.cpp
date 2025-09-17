@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "GameplayCue_HitReact.h"
+#include "GameplayCue_Arrested.h"
 
 #include "AnimInstance/TFDAnimInstanceBase.h"
 #include "Character/TFDCharacterBase.h"

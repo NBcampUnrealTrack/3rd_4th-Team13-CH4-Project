@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameplayCueNotify_Actor.h"
-#include "GameplayCue_HitReact.generated.h"
+#include "GameplayCue_Arrested.generated.h"
 
 UCLASS()
 class TFD_API AGameplayCue_HitReact : public AGameplayCueNotify_Actor

@@ -40,8 +40,8 @@ void UTFDAnimInstanceBase::PlayHitAnim(EHitDirection Direction)
 
 	CurrentHitDirection = Direction;
 	Montage_Play(HitMontage);
-	FName SectionName = GetSectionNameByDirection(Direction);
-	Montage_JumpToSection(SectionName, HitMontage);
+	// FName SectionName = GetSectionNameByDirection(Direction);
+	// Montage_JumpToSection(SectionName, HitMontage);
 	bIsHitPlaying = true;
 }
 
@@ -52,7 +52,7 @@ void UTFDAnimInstanceBase::HitAnimEnd()
 		Montage_Stop(0.1f, HitMontage);
 	}
 	bIsHitPlaying = false;
-	CurrentHitDirection = EHitDirection::None;
+	//CurrentHitDirection = EHitDirection::None;
 }
 
 FName UTFDAnimInstanceBase::GetSectionNameByDirection(EHitDirection Direction)
