@@ -6,9 +6,14 @@
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
 
+#include "GameState/TFDGameState.h"
+#include "PlayerState/TFDPlayerState.h"
+
+#include "TFDNativeGameplayTags.h"
+
 void UMiniMapWidget::NativeConstruct()
 {
-	Super::NativeConstruct();
+    Super::NativeConstruct();
 
     WorldMin = FVector2D(-6000.f, -7500.f);
     WorldMax = FVector2D(6000.f, 7500.f);
@@ -17,7 +22,6 @@ void UMiniMapWidget::NativeConstruct()
     {
         MapSize = MapImage->Brush.ImageSize;
 
-        // Brush.ImageSize가 0이면 CanvasSlot에서 실제 크기 가져오기
         if (MapSize.IsZero())
         {
             if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(MapImage->Slot))
@@ -26,18 +30,8 @@ void UMiniMapWidget::NativeConstruct()
             }
         }
     }
-    UE_LOG(LogTemp, Warning, TEXT("MapSize: X=%.2f, Y=%.2f"), MapSize.X, MapSize.Y);
-}
 
-void UMiniMapWidget::SetMapTexture(UTexture2D* NewTexture)
-{
-    if (MapImage && NewTexture)
-    {
-        FSlateBrush Brush;
-        Brush.SetResourceObject(NewTexture);
-        Brush.ImageSize = FVector2D(NewTexture->GetSizeX(), NewTexture->GetSizeY());
-        MapImage->SetBrush(Brush);
-    }
+    CurrentGameState = GetWorld()->GetGameState<ATFDGameState>();
 }
 
 void UMiniMapWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
@@ -48,47 +42,116 @@ void UMiniMapWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 
     FVector Location = OwnerPawn->GetActorLocation();
 
-    // X와 Y를 바꿔서 매핑
     float XRatio = (Location.Y - WorldMin.Y) / (WorldMax.Y - WorldMin.Y);
     float YRatio = (Location.X - WorldMin.X) / (WorldMax.X - WorldMin.X);
 
     FVector2D MiniMapPos = FVector2D(
         XRatio * MapSize.X,
-        (1.f - YRatio) * MapSize.Y // Y축 반전 적용
+        (1.f - YRatio) * MapSize.Y
     );
 
     if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(PlayerIcon->Slot))
     {
         CanvasSlot->SetPosition(MiniMapPos);
     }
+
+    // 팀원 아이콘 위치 갱신
+    for (int32 i = 0; i < TeamPlayerIcons.Num(); i++)
+    {
+        if (!TeamPlayerIcons[i] || i >= TeamPlayerStateArray.Num()) continue;
+
+        ATFDPlayerState* PS = TeamPlayerStateArray[i];
+        if (!PS) continue;
+
+        FVector PSLocation = PS->GetPawn() ? PS->GetPawn()->GetActorLocation() : FVector::ZeroVector;
+
+        float X = (PSLocation.Y - WorldMin.Y) / (WorldMax.Y - WorldMin.Y) * MapSize.X;
+        float Y = (1.f - (PSLocation.X - WorldMin.X) / (WorldMax.X - WorldMin.X)) * MapSize.Y;
+
+        if (UCanvasPanelSlot* TeamSlot = Cast<UCanvasPanelSlot>(TeamPlayerIcons[i]->Slot))
+        {
+            TeamSlot->SetPosition(FVector2D(X, Y));
+        }
+    }
 }
 
 void UMiniMapWidget::SetOwnerPawn(APawn* InPawn)
 {
     OwnerPawn = InPawn;
+    TryInitializeOwnerPawnState();
+}
 
-    if (OwnerPawn && PlayerIcon)
+void UMiniMapWidget::TryInitializeOwnerPawnState()
+{
+    if (!OwnerPawn) return;
+
+    OwnerPawnState = OwnerPawn->GetPlayerState<ATFDPlayerState>();
+    if (!OwnerPawnState)
     {
-        FVector PlayerLoc = OwnerPawn->GetActorLocation();
+        // PawnState 아직 없으면 다음 Tick에 재시도
+        GetWorld()->GetTimerManager().SetTimerForNextTick(this, &UMiniMapWidget::TryInitializeOwnerPawnState);
+        return;
+    }
 
-        float XRatio = (PlayerLoc.Y - WorldMin.Y) / (WorldMax.Y - WorldMin.Y); // X/Y 뒤집음
-        float YRatio = (PlayerLoc.X - WorldMin.X) / (WorldMax.X - WorldMin.X);
+    if (!CurrentGameState) return;
 
-        FVector2D MiniMapPos = FVector2D(
-            XRatio * MapSize.X,
-            (1.f - YRatio) * MapSize.Y
-        );
-
-        if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(PlayerIcon->Slot))
-        {
-            CanvasSlot->SetPosition(MiniMapPos);
-        }
-
-        // 🔹 로그 찍기
-        UE_LOG(LogTemp, Warning, TEXT("[MiniMap] Player World: X=%.2f, Y=%.2f, MiniMap: X=%.2f, Y=%.2f"),
-            PlayerLoc.X, PlayerLoc.Y, MiniMapPos.X, MiniMapPos.Y);
+    FGameplayTag TeamTag = OwnerPawnState->GetTeamTag();
+    if (TeamTag == TAG_Team_Cop)
+    {
+        CurrentGameState->OnPoliceArrayChanged.AddDynamic(this, &UMiniMapWidget::UpdateTeamPlayerStateArray);
+        UpdateTeamPlayerStateArray(CurrentGameState->PolicePlayerStateArray);
+    }
+    else if (TeamTag == TAG_Team_Thief)
+    {
+        CurrentGameState->OnThiefArrayChanged.AddDynamic(this, &UMiniMapWidget::UpdateTeamPlayerStateArray);
+        UpdateTeamPlayerStateArray(CurrentGameState->ThiefPlayerStateArray);
     }
 }
 
+void UMiniMapWidget::UpdateTeamPlayerStateArray(const TArray<TWeakObjectPtr<ATFDPlayerState>>& TeamArray)
+{
+    if (!OwnerPawnState) return;
 
+    TeamPlayerStateArray.Empty();
 
+    for (auto& WeakPS : TeamArray)
+    {
+        if (ATFDPlayerState* PS = WeakPS.Get())
+        {
+            if (PS != OwnerPawnState)
+            {
+                TeamPlayerStateArray.Add(PS);
+            }
+        }
+    }
+
+    // 기존 아이콘 제거
+    for (UImage* Icon : TeamPlayerIcons)
+    {
+        if (Icon)
+        {
+            Icon->RemoveFromParent();
+        }
+    }
+    TeamPlayerIcons.Empty();
+
+    // 루트를 CanvasPanel로 캐스팅
+    UCanvasPanel* RootCanvas = Cast<UCanvasPanel>(GetRootWidget());
+    if (!RootCanvas) return;
+
+    // 팀원 아이콘 생성
+    for (int32 i = 0; i < TeamPlayerStateArray.Num(); i++)
+    {
+        UImage* Icon = NewObject<UImage>(this);
+        Icon->SetBrushFromTexture(TeamIconTexture);
+
+        if (UCanvasPanelSlot* IconSlot = RootCanvas->AddChildToCanvas(Icon))
+        {
+            IconSlot->SetSize(FVector2D(16.f, 16.f));
+            IconSlot->SetAlignment(FVector2D(0.5f, 0.5f));
+        }
+
+        TeamPlayerIcons.Add(Icon);
+    }
+
+}

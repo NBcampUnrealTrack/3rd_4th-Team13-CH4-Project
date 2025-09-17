@@ -8,6 +8,8 @@
 
 class UImage;
 class UTexture2D;
+class ATFDPlayerState;
+class ATFDGameState;
 /**
  * 
  */
@@ -16,9 +18,6 @@ class TFD_API UMiniMapWidget : public UUserWidget
 {
 	GENERATED_BODY()
 public:
-    // 맵 텍스처 설정 함수
-    UFUNCTION(BlueprintCallable, Category = "MiniMap")
-    void SetMapTexture(UTexture2D* NewTexture);
 
     virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
@@ -26,6 +25,11 @@ public:
 
 protected:
     virtual void NativeConstruct() override;
+
+    UFUNCTION()
+    void UpdateTeamPlayerStateArray(const TArray<TWeakObjectPtr<ATFDPlayerState>>& TeamArray);
+
+    void TryInitializeOwnerPawnState();
 
     UPROPERTY(meta = (BindWidget))
     UImage* MapImage;
@@ -35,6 +39,23 @@ protected:
 
     UPROPERTY(BlueprintReadWrite, Category = "MiniMap")
     APawn* OwnerPawn;
+
+    UPROPERTY(BlueprintReadWrite, Category = "MiniMap")
+    ATFDPlayerState* OwnerPawnState;
+
+    UPROPERTY()
+    TArray<ATFDPlayerState*> TeamPlayerStateArray;
+
+    UPROPERTY(BlueprintReadWrite, Category = "MiniMap")
+    ATFDGameState* CurrentGameState;
+
+    // 아이콘 위젯 배열
+    UPROPERTY()
+    TArray<UImage*> TeamPlayerIcons;
+
+    // 팀원 아이콘 Texture
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MiniMap")
+    UTexture2D* TeamIconTexture;
 
     FVector2D WorldMin;
     FVector2D WorldMax;  
