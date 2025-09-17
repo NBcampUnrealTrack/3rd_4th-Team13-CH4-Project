@@ -106,7 +106,6 @@ void ATFDGameMode::HandleMatchHasStarted()
 	UE_LOG(LogTemp, Warning, TEXT("HandleMatchHasStarted"));
 	//게임 시작 처리
 	GetGameState()->GameRemainServerTime = GetGameState()->GetRuleData().PlayTimeSec;
-	GetGameState()->OnMachInProgress.Broadcast();
 	SetActorTickEnabled(true);
 	GamePause(false);
 }
@@ -117,7 +116,7 @@ void ATFDGameMode::HandleMatchHasEnded()
 	UE_LOG(LogTemp, Warning, TEXT("HandleMatchHasEnded"));
 	//게임 종료 처리
 
-	GetGameState()->OnMatchWaitingPostMatch.Broadcast(GetGameState()->GetWinTeamTag(), GetGameState()->GetInCompleteType());
+
 	SetActorTickEnabled(false);
 }
 
