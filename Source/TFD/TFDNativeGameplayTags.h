@@ -26,6 +26,8 @@ UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ability_Neutral_RandomMove); //도둑-훔치�
 //4. object
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Object_Door); //문
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Object_Money); //돈
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Object_SlowItem);
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Object_SKillStockItem_00);
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Object_SpawnArea); //스폰지역
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Object_SpawnPoint); //스폰포인트
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Object_SpawnPoint_Cop); 
