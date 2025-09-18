@@ -16,6 +16,11 @@ class TFD_API ATFDGameModeBase_Lobby : public AGameMode
 	GENERATED_BODY()
 	
 public:
+
+	ATFDGameModeBase_Lobby();
+
+	virtual void PostSeamlessTravel() override;
+
 	// 플레이어가 접속했을 때 호출되는 함수 오버라이드
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 };
