@@ -10,6 +10,7 @@ class UImage;
 class UTexture2D;
 class ATFDPlayerState;
 class ATFDGameState;
+class ATFDBaseObject;
 /**
  * 
  */
@@ -28,6 +29,9 @@ protected:
 
     UFUNCTION()
     void UpdateTeamPlayerStateArray(const TArray<TWeakObjectPtr<ATFDPlayerState>>& TeamArray);
+
+    UFUNCTION()
+    void UpdateTeamItemIcon(const TArray<TWeakObjectPtr<ATFDBaseObject>>& TeamItemArray);
 
     void TryInitializeOwnerPawnState();
 
@@ -56,6 +60,14 @@ protected:
     // 팀원 아이콘 Texture
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MiniMap")
     UTexture2D* TeamIconTexture;
+
+    // 아이템 아이콘 배열
+    UPROPERTY()
+    TArray<UImage*> TeamItemIcons;
+
+    // 아이템 아이콘 Texture
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MiniMap")
+    UTexture2D* TeamItemIconTexture;
 
     FVector2D WorldMin;
     FVector2D WorldMax;  

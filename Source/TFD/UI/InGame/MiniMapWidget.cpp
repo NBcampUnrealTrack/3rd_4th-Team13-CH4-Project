@@ -99,12 +99,16 @@ void UMiniMapWidget::TryInitializeOwnerPawnState()
     if (TeamTag == TAG_Team_Cop)
     {
         CurrentGameState->OnPoliceArrayChanged.AddDynamic(this, &UMiniMapWidget::UpdateTeamPlayerStateArray);
+        CurrentGameState->OnPoliceItemArrayChanged.AddDynamic(this, &UMiniMapWidget::UpdateTeamItemIcon);
         UpdateTeamPlayerStateArray(CurrentGameState->PolicePlayerStateArray);
+        UpdateTeamItemIcon(CurrentGameState->PoliceMapItemArray);
     }
     else if (TeamTag == TAG_Team_Thief)
     {
         CurrentGameState->OnThiefArrayChanged.AddDynamic(this, &UMiniMapWidget::UpdateTeamPlayerStateArray);
+        CurrentGameState->OnThiefItemArrayChanged.AddDynamic(this, &UMiniMapWidget::UpdateTeamItemIcon);
         UpdateTeamPlayerStateArray(CurrentGameState->ThiefPlayerStateArray);
+        UpdateTeamItemIcon(CurrentGameState->ThiefMapItemArray);
     }
 }
 
@@ -154,4 +158,46 @@ void UMiniMapWidget::UpdateTeamPlayerStateArray(const TArray<TWeakObjectPtr<ATFD
         TeamPlayerIcons.Add(Icon);
     }
 
+}
+
+void UMiniMapWidget::UpdateTeamItemIcon(const TArray<TWeakObjectPtr<ATFDBaseObject>>& TeamItemArray)
+{
+    // 기존 아이콘 모두 제거
+    for (UImage* Icon : TeamItemIcons)
+    {
+        if (Icon && Icon->IsValidLowLevel())
+        {
+            Icon->RemoveFromParent();
+        }
+    }
+    TeamItemIcons.Empty();
+
+    UCanvasPanel* RootCanvas = Cast<UCanvasPanel>(GetRootWidget());
+    if (!RootCanvas) return;
+
+    // 아이템 배열 기준으로 새 아이콘 생성
+    for (int32 i = 0; i < TeamItemArray.Num(); i++)
+    {
+        if (!TeamItemArray[i].IsValid()) continue;
+
+        UImage* Icon = NewObject<UImage>(this);
+        Icon->SetBrushFromTexture(TeamItemIconTexture);
+
+        if (UCanvasPanelSlot* ItemIconSlot = RootCanvas->AddChildToCanvas(Icon))
+        {
+            ItemIconSlot->SetSize(FVector2D(16.f, 16.f));
+            ItemIconSlot->SetAlignment(FVector2D(0.5f, 0.5f));
+
+            // 월드 위치 가져오기
+            FVector WorldPos = TeamItemArray[i]->GetActorLocation();
+
+            // 미니맵 좌표 변환
+            float X = (WorldPos.Y - WorldMin.Y) / (WorldMax.Y - WorldMin.Y) * MapSize.X;
+            float Y = (1.f - (WorldPos.X - WorldMin.X) / (WorldMax.X - WorldMin.X)) * MapSize.Y;
+
+            ItemIconSlot->SetPosition(FVector2D(X, Y));
+        }
+
+        TeamItemIcons.Add(Icon);
+    }
 }
