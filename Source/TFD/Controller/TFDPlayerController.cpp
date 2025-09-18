@@ -338,6 +338,7 @@ void ATFDPlayerController::StartGame()
 
 	GetWorld()->ServerTravel(TravelCommand, true); // true: seamless travel
 }
+
 void ATFDPlayerController::RemoveLobbyUI()
 {
 	if (LobbyWidgetInstance)
@@ -468,5 +469,9 @@ bool ATFDPlayerController::ServerSetPreferredTeam_Validate(const FGameplayTag& T
 // 서버에서 호출하여 클라이언트에게 팀 태그를 전달
 void ATFDPlayerController::SendPreferredTeam(FGameplayTag TeamTag)
 {
-	ServerSetPreferredTeam(TeamTag);
+	if (ATFDPlayerState* PS = GetPlayerState<ATFDPlayerState>())
+	{
+		PS->SetPreferredTeam(TeamTag);       // 선호 팀 저장
+		PS->SetActualTeam(TeamTag);          // 실제 팀도 동시에 세팅
+	}
 }

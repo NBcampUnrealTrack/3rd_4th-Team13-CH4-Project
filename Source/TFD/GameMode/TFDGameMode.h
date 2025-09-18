@@ -31,6 +31,9 @@ public:
 
 	// 팀 배정 함수
 	void AssignTeams();
+	
+	UFUNCTION(BlueprintCallable)
+	void AssignTeamsOnGameStart();
 
 #pragma region 
 

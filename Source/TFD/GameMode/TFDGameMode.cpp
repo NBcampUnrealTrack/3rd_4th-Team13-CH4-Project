@@ -38,7 +38,18 @@ void ATFDGameMode::BeginPlay()
 		// 점수 변경 이벤트 구독
 		GetGameState()->OnThiefScoreChanged.AddDynamic(this, &ATFDGameMode::HandleThiefScoreChanged);
 	}
+	// 게임 시작 시점에서 팀 배정
+	for (APlayerState* PS : GameState->PlayerArray)
+	{
+		if (ATFDPlayerState* TFDPS = Cast<ATFDPlayerState>(PS))
+		{
+			TFDPS->SetActualTeam(TFDPS->GetPreferredTeam());
+		}
+	}
+
 }
+
+
 
 APawn* ATFDGameMode::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, AActor* StartSpot)
 {
@@ -547,8 +558,24 @@ void ATFDGameMode::AssignTeams()
 	{
 		UE_LOG(LogTemp, Log, TEXT("Player %s assigned to team %s"),
 			*Player->GetPlayerName(),
-			*Player->GetActualTeam().ToString() // <-- GetTagName()에서 ToString()으로 수정
+			*(Player->GetActualTeam().ToString())
+
 		);
+	}
+
+}
+
+void ATFDGameMode::AssignTeamsOnGameStart()
+{
+	for (APlayerState* PS : GameState->PlayerArray)
+	{
+		if (ATFDPlayerState* TFDPS = Cast<ATFDPlayerState>(PS))
+		{
+			TFDPS->SetActualTeam(TFDPS->GetPreferredTeam());
+			UE_LOG(LogTemp, Log, TEXT("Player %s assigned ActualTeam: %s"),
+				*TFDPS->GetPlayerName(),
+				*TFDPS->GetActualTeam().GetTagName().ToString());
+		}
 	}
 }
 

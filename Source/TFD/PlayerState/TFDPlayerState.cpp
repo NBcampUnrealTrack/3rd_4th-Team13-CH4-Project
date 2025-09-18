@@ -81,6 +81,9 @@ void ATFDPlayerState::SetActualTeam(const FGameplayTag& NewTeamTag)
 	{
 		ActualTeam = NewTeamTag;
 		// 서버에서 변경 후 클라이언트에 동기화
+		UE_LOG(LogTemp, Log, TEXT("Player %s assigned ActualTeam: %s (Server)"),
+			*GetPlayerName(),
+			*ActualTeam.GetTagName().ToString());
 	}
 }
 
