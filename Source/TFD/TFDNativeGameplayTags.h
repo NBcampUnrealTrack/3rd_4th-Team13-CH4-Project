@@ -33,6 +33,7 @@ UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Object_SpawnPoint); //스폰포인트
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Object_SpawnPoint_Cop); 
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Object_SpawnPoint_Thief); 
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Object_SpawnPoint_Neutral); 
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Object_SpawnPoint_Period); 
 
 //5.게임플레이큐 - 이펙트
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_GameplayCue_Arrested); //체포 시 효과
