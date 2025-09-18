@@ -66,3 +66,8 @@ void UTFDAttributeSet::OnRep_Gold(const FGameplayAttributeData& OldGold)
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UTFDAttributeSet, Gold, OldGold);
 }
 
+void UTFDAttributeSet::OnRep_SkillStock(const FGameplayAttributeData& OlSkillStock)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UTFDAttributeSet, SkillStock, OlSkillStock);
+}
+
