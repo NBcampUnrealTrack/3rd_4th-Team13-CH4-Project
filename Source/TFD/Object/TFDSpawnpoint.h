@@ -11,7 +11,7 @@ UCLASS()
 class TFD_API ATFDSpawnpoint : public AActor
 {
 	GENERATED_BODY()
-	
+
 public:
 	// Sets default values for this actor's properties
 	ATFDSpawnpoint();
@@ -25,6 +25,7 @@ public:
 	FGameplayTagContainer GetAllowedTeamTag();
 
 	bool CheckItemTag(FGameplayTag InTag);
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -34,15 +35,28 @@ protected:
 	class UBillboardComponent* Billboard;
 
 	UPROPERTY(EditAnywhere, Category="GAS")
-	FGameplayTag		ItemTag;
+	FGameplayTag ItemTag;
 
-	UPROPERTY(VisibleAnywhere,BlueprintReadOnly, Category="GAS")
-	FGameplayTagContainer		AllowedTeamTag;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="GAS")
+	FGameplayTagContainer AllowedTeamTag;
 
 	// 스폰할 아이템
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly , Category="Tag")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="GAS")
 	TSubclassOf<AActor> ItemClass;
+
+	// 스폰할 아이템 주기
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Tag")
+	float SpawnPeriodSec;
+
+	//만들어진 아이템
+	UPROPERTY()
+	TWeakObjectPtr<AActor> SpawnedItem;
+
+	UFUNCTION()
+	void OnSpawnedItemDestroyed(AActor* DestroyedActor);
 
 private:
 	void SetAllowedTeamTag();
+private:
+	FTimerHandle ItemPeriodSpawnTimerHandle;
 };

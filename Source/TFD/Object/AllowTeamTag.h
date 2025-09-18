@@ -23,4 +23,11 @@ public:
 	// 스폰할 아이템
 	UPROPERTY(EditAnywhere, BlueprintReadOnly , Category="Tag")
 	TSubclassOf<AActor> ItemClass;
+
+	// 스폰할 아이템 주기
+	UPROPERTY(EditAnywhere, BlueprintReadOnly , Category="Tag")
+	float SpawnPeriodSec;
+
+	
+	
 };
