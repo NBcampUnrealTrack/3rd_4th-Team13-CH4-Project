@@ -22,7 +22,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	FVector GetSpawnPointLocation();
-	TArray<FGameplayTag> GetAllowedTeamTag();
+	FGameplayTagContainer GetAllowedTeamTag();
 
 	bool CheckItemTag(FGameplayTag InTag);
 protected:
@@ -37,7 +37,7 @@ protected:
 	FGameplayTag		ItemTag;
 
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly, Category="GAS")
-	TArray<FGameplayTag>		AllowedTeamTag;
+	FGameplayTagContainer		AllowedTeamTag;
 
 	// 스폰할 아이템
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly , Category="Tag")

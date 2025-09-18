@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Object/TFDGoldBar.h"
+#include "Object/Discard/TFDGoldBar.h"
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "AbilitySystemComponent.h"
@@ -89,8 +89,8 @@ void ATFDGoldBar::SetAllowedTeamTag()
 	if (!pGameMode)
 		return;
 
-	TArray<FGameplayTag> FindedPlayTag = pGameMode->GetDTAllowedTeamTag_Array(ItemTag);
-	
-	AllowedTeamTag = FindedPlayTag;
+	// TArray<FGameplayTag> FindedPlayTag = pGameMode->GetDTAllowedTeamTag_Array(ItemTag);
+	//
+	// AllowedTeamTag = FindedPlayTag;
 	
 }
