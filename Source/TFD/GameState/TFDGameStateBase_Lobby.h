@@ -20,6 +20,9 @@ class TFD_API ATFDGameStateBase_Lobby : public AGameState
 public:
 	ATFDGameStateBase_Lobby();
 
+	UPROPERTY(ReplicatedUsing = OnRep_LobbyStarted)
+	bool bLobbyStarted = false;
+
 	// 클라이언트용 접속자 리스트 갱신용 델리게이트
 	UPROPERTY(BlueprintAssignable, Category = "Lobby")
 	FOnPlayerListChanged OnPlayerListChanged;
@@ -30,6 +33,9 @@ public:
 protected:
 	virtual void HandleBeginPlay() override;
 
+	UFUNCTION()
+	void OnRep_LobbyStarted();
+
 public:
 	// 게임 상태에서 플레이어 상태가 추가되거나 제거될 때 호출됨
 	virtual void AddPlayerState(APlayerState* PlayerState) override;
@@ -37,4 +43,7 @@ public:
 
 	// 복제 설정 함수 추가
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	// 서버에서 직접 호출
+	void StartLobby();
 };
