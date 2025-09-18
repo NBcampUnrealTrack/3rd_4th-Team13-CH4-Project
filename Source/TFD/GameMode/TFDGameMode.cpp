@@ -224,6 +224,7 @@ void ATFDGameMode::SpawnItemStart()
 }
 
 
+
 UDataTable* ATFDGameMode::GetDTAllowedTeamTag()
 {
 	return DTAllowedTeamTag;
@@ -265,7 +266,6 @@ TSubclassOf<AActor> ATFDGameMode::GetDTAllowedTeamTag_Item(FGameplayTag ArgGamep
 
 	if (!DTAllowedTeamTag)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("DTZ:AllowTeamDataTable is not set."));
 		return ResultItem;
 	}
 	
@@ -277,12 +277,35 @@ TSubclassOf<AActor> ATFDGameMode::GetDTAllowedTeamTag_Item(FGameplayTag ArgGamep
 		if (Row && Row->ItemTag == ArgGameplayTag)
 		{
 			ResultItem = Row->ItemClass;
-			UE_LOG(LogTemp, Warning, TEXT("DTZ:."));
 			break;
 		}
 	}
 	
 	return ResultItem;
+}
+
+float ATFDGameMode::GetDTAllowedTeamTag_Period(FGameplayTag ArgGameplayTag)
+{
+	float result = 0.f;
+
+	if (!DTAllowedTeamTag)
+	{
+		return result;
+	}
+	
+	TArray<FAllowTeamTag*> AllRows;
+	DTAllowedTeamTag->GetAllRows<FAllowTeamTag>(TEXT("GetAllRows"), AllRows);
+
+	for (FAllowTeamTag* Row : AllRows)
+	{
+		if (Row && Row->ItemTag == ArgGameplayTag)
+		{
+			result = Row->SpawnPeriodSec;
+			break;
+		}
+	}
+	
+	return result;
 }
 
 FSpawnPointArray ATFDGameMode::GetSpawnPointArrayTag(ETeamType InEnum)
