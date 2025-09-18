@@ -25,7 +25,7 @@ void UTFDAnimInstanceBase::NativeUpdateAnimation(float DeltaSeconds)
 	
 	// CharacterMovement Replication 이 꺼져있어서 동기화 되지 않음.
 	// 호스트, 클라이언트
-	Velocity = OwnerCharacterMovementComponent->Velocity;   
+	Velocity = OwnerCharacterMovementComponent->GetLastUpdateVelocity();   
 	GroundSpeed = FVector(Velocity.X, Velocity.Y, 0.f).Size(); 
 	// GetCurrentAcceleration 은 input 을 받았을 때만 변경됨
 	// CharacterMovement Use Acceleration for Paths 을 사용해야 NavMesh 이동으로 인한 가속이 적용됨.
