@@ -1,4 +1,4 @@
-#include "Character/TFDCharacterBase.h"
+﻿#include "Character/TFDCharacterBase.h"
 #include "GameAbilitySystem/Attibute/TFDAttributeSet.h"
 #include "Kismet/GameplayStatics.h"
 #include "TFDPlayerDataAsset.h"
@@ -126,9 +126,21 @@ void ATFDCharacterBase::SetDAPlayerStat()
 		}
 
 		//JobDataAsset - 팀태그 넘겨주는 코드
-		if (AbilitySystemComponent && CharacterData)
+		if (AbilitySystemComponent && CharacterData && CharacterData->GiveTeamtagEffect)
 		{
-			AbilitySystemComponent->AddLooseGameplayTag(CharacterData->TeamTag);
+			FGameplayEffectContextHandle ContextHandle = AbilitySystemComponent->MakeEffectContext();
+			ContextHandle.AddSourceObject(this);
+
+			FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(
+				CharacterData->GiveTeamtagEffect,
+				1.0f,
+				ContextHandle
+			);
+
+			if (SpecHandle.IsValid())
+			{
+				AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+			}
 		}
 
 		//도둑일 경우 골드 습득 시 OnGoldAttributeChanged 연결
