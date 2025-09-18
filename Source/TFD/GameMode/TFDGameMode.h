@@ -96,7 +96,7 @@ public:
 	UDataTable* DTAllowedTeamTag;
 public:
 	UDataTable* GetDTAllowedTeamTag();
-	TArray<FGameplayTag> GetDTAllowedTeamTag_Array(FGameplayTag ArgGameplayTag);
+	FGameplayTagContainer GetDTAllowedTeamTagContainer(FGameplayTag ArgGameplayTag);
 	TSubclassOf<AActor> GetDTAllowedTeamTag_Item(FGameplayTag ArgGameplayTag);
 private:
 	//팀 enum 넣으면 SpawnPointArray 받는 함수
