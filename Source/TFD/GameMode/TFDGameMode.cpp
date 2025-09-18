@@ -15,7 +15,6 @@
 #include "GameplayTagContainer.h"
 #include "GameFramework/PlayerStart.h"
 #include "Object/AllowTeamTag.h"
-#include "Object/TFDGoldBar.h"
 #include "Object/TFDSpawnVolume.h"
 #include "Object/TFDSpawnpoint.h"
 #include "Utility/InGameUtility.h"
@@ -221,15 +220,14 @@ UDataTable* ATFDGameMode::GetDTAllowedTeamTag()
 	return DTAllowedTeamTag;
 }
 
-TArray<FGameplayTag> ATFDGameMode::GetDTAllowedTeamTag_Array(FGameplayTag ArgGameplayTag)
+FGameplayTagContainer ATFDGameMode::GetDTAllowedTeamTagContainer(FGameplayTag ArgGameplayTag)
 {
-	
-	TArray<FGameplayTag> ResultArray;
+	FGameplayTagContainer ResultContainer;
 
 	if (!DTAllowedTeamTag)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("AllowTeamDataTable is not set."));
-		return ResultArray;
+		return ResultContainer;
 	}
 	
 	TArray<FAllowTeamTag*> AllRows;
@@ -239,17 +237,17 @@ TArray<FGameplayTag> ATFDGameMode::GetDTAllowedTeamTag_Array(FGameplayTag ArgGam
 	{
 		if (Row && Row->ItemTag == ArgGameplayTag)
 		{
-			ResultArray = Row->AllowedTeamTag;
+			ResultContainer = Row->AllowedTeamTag; 
 			break;
 		}
 	}
 
-	if (ResultArray.Num() == 0)
+	if (ResultContainer.IsEmpty())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("No matching ItemTag found for: %s"), *ArgGameplayTag.ToString());
 	}
-	
-	return ResultArray;
+
+	return ResultContainer;
 }
 
 TSubclassOf<AActor> ATFDGameMode::GetDTAllowedTeamTag_Item(FGameplayTag ArgGameplayTag)
