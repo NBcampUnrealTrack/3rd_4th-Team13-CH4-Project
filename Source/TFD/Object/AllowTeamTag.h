@@ -18,7 +18,7 @@ public:
 	FGameplayTag ItemTag;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Tag")
-	TArray<FGameplayTag>		AllowedTeamTag;
+	FGameplayTagContainer		AllowedTeamTag;
 
 	// 스폰할 아이템
 	UPROPERTY(EditAnywhere, BlueprintReadOnly , Category="Tag")
