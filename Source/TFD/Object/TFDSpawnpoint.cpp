@@ -14,7 +14,6 @@ ATFDSpawnpoint::ATFDSpawnpoint()
 
 	Billboard = CreateDefaultSubobject<UBillboardComponent>(TEXT("Billboard"));
 	RootComponent = Billboard;
-
 }
 
 void ATFDSpawnpoint::SpawnItem()
@@ -41,11 +40,10 @@ void ATFDSpawnpoint::SetAllowedTeamTag()
 	ATFDGameMode* pGameMode = GetWorld()->GetAuthGameMode<ATFDGameMode>();
 	if (!pGameMode)
 		return;
-	UE_LOG(LogTemp,Display, TEXT("TFDSpawnpoint setting"));
+	UE_LOG(LogTemp, Display, TEXT("TFDSpawnpoint setting"));
 
-	TArray<FGameplayTag> FindedPlayTag = pGameMode->GetDTAllowedTeamTag_Array(ItemTag);
-	
-	AllowedTeamTag = FindedPlayTag;
+	AllowedTeamTag = pGameMode->GetDTAllowedTeamTagContainer(ItemTag);
+
 
 	ItemClass = pGameMode->GetDTAllowedTeamTag_Item(ItemTag);
 }
@@ -54,7 +52,6 @@ void ATFDSpawnpoint::SetAllowedTeamTag()
 void ATFDSpawnpoint::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
 FVector ATFDSpawnpoint::GetSpawnPointLocation()
@@ -62,7 +59,7 @@ FVector ATFDSpawnpoint::GetSpawnPointLocation()
 	return Billboard->GetComponentLocation();
 }
 
-TArray<FGameplayTag> ATFDSpawnpoint::GetAllowedTeamTag()
+FGameplayTagContainer ATFDSpawnpoint::GetAllowedTeamTag()
 {
 	return AllowedTeamTag;
 }
@@ -74,4 +71,3 @@ bool ATFDSpawnpoint::CheckItemTag(FGameplayTag InTag)
 		result = true;
 	return result;
 }
-
