@@ -3,8 +3,27 @@
 
 #include "GameState/TFDGameStateBase_Lobby.h"
 #include "Controller/TFDPlayerController_Title.h"
+#include "Controller/TFDPlayerController.h"
 #include "Constants/TFDGameConstants.h"
 #include "GameFramework/PlayerState.h"
+
+ATFDGameModeBase_Lobby::ATFDGameModeBase_Lobby()
+{
+	GameStateClass = ATFDGameStateBase_Lobby::StaticClass();
+	bUseSeamlessTravel = true;
+}
+
+void ATFDGameModeBase_Lobby::PostSeamlessTravel()
+{
+	Super::PostSeamlessTravel();
+
+	UE_LOG(LogTemp, Warning, TEXT("PostSeamlessTravel() - Lobby Level Entered (Server Only)"));
+
+	if (ATFDGameStateBase_Lobby* GS = GetGameState<ATFDGameStateBase_Lobby>())
+	{
+		GS->StartLobby();
+	}
+}
 
 void ATFDGameModeBase_Lobby::PostLogin(APlayerController* NewPlayer)
 {

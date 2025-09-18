@@ -80,7 +80,13 @@ protected:
 	UFUNCTION()
 	void HandleThiefScoreChanged(int32 NewScore);
 	
+	FTimerHandle LobbyReturnTimerHandle;
 
+	UFUNCTION()
+	void ReturnToLobby();
+
+
+#pragma region 스폰관련
 protected:
 	UPROPERTY()
 	TMap<ETeamType, FSpawnPointArray> WorldSpawnPointsByTeam;
@@ -113,5 +119,6 @@ private:
 	
 	void InitializeSpawnVolumes();
 	void MovePlayerToRandomSpawnPoint(APlayerController* PlayerController);
-	
+#pragma endregion
+
 };
