@@ -19,6 +19,7 @@ UCLASS()
 class TFD_API UTFDAttributeSet : public UAttributeSet
 {
 	GENERATED_BODY()
+
 public:
 	UTFDAttributeSet();
 
@@ -57,7 +58,9 @@ public:
 	FGameplayAttributeData Gold;
 	ATTRIBUTE_ACCESSORS(UTFDAttributeSet, Gold)
 
-	
+	UPROPERTY(BlueprintReadOnly, Category = "SkillStock", ReplicatedUsing = OnRep_SkillStock)
+	FGameplayAttributeData SkillStock;
+	ATTRIBUTE_ACCESSORS(UTFDAttributeSet, SkillStock)
 
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -86,6 +89,10 @@ protected:
 	UFUNCTION()
 	virtual void OnRep_Gold(const FGameplayAttributeData& OldGold);
 
-protected:
+	UFUNCTION()
+	virtual void OnRep_SkillStock(const FGameplayAttributeData& OlSkillStock);
 
+	
+
+protected:
 };
