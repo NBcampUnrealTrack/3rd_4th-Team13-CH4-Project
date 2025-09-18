@@ -14,12 +14,16 @@
 #include "TFDNativeGameplayTags.h"
 #include "GameMode/TFDGameMode.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "PlayerState/TFDPlayerState.h"
+#include "GameFramework/PlayerState.h"
 
 
 #include "UI/GameUIRouterSubsystem.h"
 #include "UI/InGame/PlayingWidget.h"
 #include "UI/Widget/UHUDLayoutWidget.h"
 #include "UI/InGame/ResultWidget.h"
+#include "UI/InGame/MiniMapWidget.h"
 
 // 이하 OutGame 관련 - Lobby
 #include "Constants/TFDGameConstants.h"
@@ -49,7 +53,6 @@ void ATFDPlayerController::SetMovemnetWalking(bool bMovement)
 
 	if (ATFDCharacterBase* CB = Cast<ATFDCharacterBase>(GetPawn()))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Movement Waling"));
 		if (bMovement)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Movement Walking"));
@@ -81,51 +84,19 @@ void ATFDPlayerController::BeginPlay()
 
 	}
 
-	
-
-	
 
 	//===================================================
 	// 이하 OutGame 관련 - Lobby
 	//===================================================
-	if (IsLocalController() == false)
+
+	if (IsLocalController())
 	{
-		return;
-	}
+		FString CurrentLevelName = FPaths::GetBaseFilename(UGameplayStatics::GetCurrentLevelName(this, true));
+		FString LobbyLevelName = FPaths::GetBaseFilename(TFDGameConstants::LobbyLevel); // or TFDGameConstants::LobbyLevel
 
-	if (IsHostPlayer())
-	{
-		RequestPublicIP();
-	}
-
-	UWorld* World = GetWorld();
-	if (World)
-	{
-		// 현재 로드된 레벨 이름 가져오기
-		FString CurrentLevelName = World->GetMapName();
-		CurrentLevelName.RemoveFromStart(World->StreamingLevelsPrefix); // 접두어 제거
-
-		// "L_Lobby" 문자열만 추출
-		FString LobbyLevelName = FPaths::GetBaseFilename(TFDGameConstants::LobbyLevel);
-
-		if (!CurrentLevelName.Equals(LobbyLevelName))
-		{// 로비가 아닐 경우
-			bShowMouseCursor = false;
-			RemoveLobbyUI();
-		}
-		else
-		{// 로비인 경우
-			// 로비에서만 마우스 커서 보이게 설정
-			bShowMouseCursor = true;
-
-			if (LobbyWidgetClass && LobbyWidgetInstance == nullptr)
-			{
-				LobbyWidgetInstance = CreateWidget<UUserWidget>(this, LobbyWidgetClass);
-				if (LobbyWidgetInstance)
-				{
-					LobbyWidgetInstance->AddToViewport();
-				}
-			}
+		if (CurrentLevelName.Equals(LobbyLevelName, ESearchCase::IgnoreCase))
+		{
+			EnterLobby(); // 처음 로비 레벨에서 시작했을 때만 실행
 		}
 	}
 }
@@ -234,7 +205,7 @@ void ATFDPlayerController::AcknowledgePossession(APawn* InPawn)
 			//********직업에 따른 능력 입력 바인딩************
 			if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
 			{
-				for (auto Action : CB->CharacterData->Actions)
+				for (auto& Action : CB->CharacterData->Actions)
 				{
 					EnhancedInputComponent->BindAction(Action.InputAction, ETriggerEvent::Started, this, &ATFDPlayerController::JobAbility, Action.Tag);
 				}
@@ -342,6 +313,40 @@ void ATFDPlayerController::TogglePause(const FInputActionValue& Value)
 //===================================================
 // 이하 OutGame 관련 - Lobby
 //===================================================
+
+void ATFDPlayerController::EnterLobby()
+{
+
+	if(IsLocalController())
+	{
+		if (IsHostPlayer())
+		{
+			RequestPublicIP();
+		}
+
+		bShowMouseCursor = true;
+		RemoveLobbyUI();
+
+		if (APlayerState* PS = GetPlayerState<APlayerState>())
+		{
+			if(ATFDPlayerState* State = Cast<ATFDPlayerState>(PS))
+			{
+				//플레이어의 팀 태그 초기화
+				State->SetTeamTag(FGameplayTag::EmptyTag);
+			}
+		}
+
+		if (LobbyWidgetClass && LobbyWidgetInstance == nullptr)
+		{
+			LobbyWidgetInstance = CreateWidget<UUserWidget>(this, LobbyWidgetClass);
+			if (LobbyWidgetInstance)
+			{
+				LobbyWidgetInstance->AddToViewport();
+			}
+		}
+	}
+}
+
 bool ATFDPlayerController::IsHostPlayer() const
 {
 	return IsLocalController() && HasAuthority();
@@ -482,6 +487,11 @@ void ATFDPlayerController::HandleMatchInProgress()
 {
 	bShowMouseCursor = false;
 
+	if (!IsLocalController()) // 서버 전용 PC에서는 UI 건드리지 않음
+	{
+		return;
+	}
+
 	ULocalPlayer* LP = GetLocalPlayer();
 	if (!LP)
 	{
@@ -500,9 +510,22 @@ void ATFDPlayerController::HandleMatchInProgress()
 
 		if (PlayingWidgetClass)
 		{
-			UISub->PlayingWidget = Cast<UPlayingWidget>(
-				UISub->AddWidgetToLayer(EUILayer::GameLayer, PlayingWidgetClass)
-			);
+			if (!UISub->PlayingWidget) 
+			{
+				UISub->PlayingWidget = Cast<UPlayingWidget>(
+					UISub->AddWidgetToLayer(EUILayer::GameLayer, PlayingWidgetClass)
+				);
+			}
+		}
+		if (MiniMapWidgetClass)
+		{
+			if (!UISub->MiniMapWidget) 
+			{
+				UISub->MiniMapWidget = Cast<UMiniMapWidget>(
+					UISub->AddWidgetToLayer(EUILayer::GameLayer, MiniMapWidgetClass)
+				);
+				UISub->MiniMapWidget->SetOwnerPawn(GetPawn());
+			}
 		}
 	}
 }
@@ -512,19 +535,28 @@ void ATFDPlayerController::HandleMatchWaitingPostMatch(FGameplayTag WinTeamTag, 
 {
 	bShowMouseCursor = true;
 
+
+
 	ULocalPlayer* LP = GetLocalPlayer();
 	if (!LP)
 	{
 		return;
 	}
 
-	if (UGameUIRouterSubsystem* UISub = GetLocalPlayer()->GetSubsystem<UGameUIRouterSubsystem>())
+	if (UGameUIRouterSubsystem* UISub = LP->GetSubsystem<UGameUIRouterSubsystem>())
 	{
 		if (UISub->PlayingWidget)
 		{
 			UISub->RemoveWidgetFromLayer(EUILayer::GameLayer, UISub->PlayingWidget);
 			UISub->PlayingWidget = nullptr;
 		}
+
+		if (UISub->MiniMapWidget)
+		{
+			UISub->RemoveWidgetFromLayer(EUILayer::GameLayer, UISub->MiniMapWidget);
+			UISub->MiniMapWidget = nullptr;
+		}
+
 
 		if (ResultWidgetClass)
 		{

@@ -35,7 +35,7 @@ public:
     void UpdateRemainingTime(float RemainingTimeSec);
 
     UFUNCTION(BlueprintCallable)
-    void UpdateTeamName(const FString& TeamName);
+    void UpdateTeamName();
 
 protected:
     UPROPERTY(meta = (BindWidget))

@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"                                                                           
 #include "PlayerState/TFDPlayerState.h"
 #include "GameFramework/GameState.h"
+#include "Object/TFDBaseObject.h"
 #include "GameData/FGameRuleData.h"
 #include "GameData/EGameEnums.h"
 #include "TFDGameState.generated.h"
@@ -15,7 +16,10 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnThievesChanged);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGameTimeChanged, float, RemainingTimeSec);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnMachInProgress);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnMatchWaitingPostMatch, FGameplayTag, WinTeamTag, EGameCompleteType, CompleteType);
-
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnThiefArrayChanged, const TArray<TWeakObjectPtr<ATFDPlayerState>>&, ThiefArray);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPoliceArrayChanged, const TArray<TWeakObjectPtr<ATFDPlayerState>>&, PoliceArray);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnThiefItemArrayChanged, const TArray<TWeakObjectPtr<ATFDBaseObject>>&, ThiefItemArray);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPoliceItemArrayChanged, const TArray<TWeakObjectPtr<ATFDBaseObject>>&, PoliceItemArray);
 
 UCLASS()
 class TFD_API ATFDGameState : public AGameState
@@ -54,19 +58,44 @@ protected:
 
 	UFUNCTION()
 	void OnRep_GameRemainTime();
+
+	UFUNCTION()
+	void OnRep_PolicePlayerStateArray();
+
+	UFUNCTION()
+	void OnRep_ThiefPlayerStateArray();
+
+	UFUNCTION()
+	void OnRep_PoliceMapItemArray();
+
+	UFUNCTION()
+	void OnRep_ThiefMapItemArray();
+
 public:
 
 	const int MinimumPlayerNum = 2;
 
 	// HACK: 캡슐화 하기 번거로워서 공개 변수로 둠.
-	// 도둑정보 Controller 리스트
-	TArray<TWeakObjectPtr< ATFDPlayerState>> PolicePlayerStateArray;
 	// 경찰정보 Controller 리스트
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing = OnRep_PolicePlayerStateArray)
+	TArray<TWeakObjectPtr< ATFDPlayerState>> PolicePlayerStateArray;
+	// 도둑정보 Controller 리스트
+	UPROPERTY(ReplicatedUsing = OnRep_ThiefPlayerStateArray)
 	TArray<TWeakObjectPtr< ATFDPlayerState>> ThiefPlayerStateArray;
 	// 잡힌 도둑 Controller 리스트
 	UPROPERTY(ReplicatedUsing = OnRep_CaughtThiefPlayerStateArray)
 	TArray<TWeakObjectPtr<ATFDPlayerState>> CaughtThiefPlayerStateArray;
+
+	//경찰 아이템 리스트
+	UPROPERTY(ReplicatedUsing = OnRep_PoliceMapItemArray)
+	TArray<TWeakObjectPtr<ATFDBaseObject>> PoliceMapItemArray;
+	//도둑 아이템 리스트
+	UPROPERTY(ReplicatedUsing = OnRep_ThiefMapItemArray)
+	TArray<TWeakObjectPtr<ATFDBaseObject>> ThiefMapItemArray;
+
+	//아이템 제거시 호출될 함수
+	void RemoveAllowedItem(ATFDBaseObject* Object);
+
 
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FOnThiefScoreChanged OnThiefScoreChanged;
@@ -82,6 +111,19 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FOnMatchWaitingPostMatch OnMatchWaitingPostMatch;
+
+
+	UPROPERTY(BlueprintAssignable)
+	FOnThiefArrayChanged OnThiefArrayChanged;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnPoliceArrayChanged OnPoliceArrayChanged;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnThiefItemArrayChanged OnThiefItemArrayChanged;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnPoliceItemArrayChanged OnPoliceItemArrayChanged;
 
 	UPROPERTY(ReplicatedUsing = OnRep_GameRemainTime, BlueprintReadOnly, Category = "Time")
 	float GameRemainServerTime = 5.f;

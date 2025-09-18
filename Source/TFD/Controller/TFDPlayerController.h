@@ -17,6 +17,7 @@ class UInputMappingContext;
 class UPlayingWidget;
 class UResultWidget;
 class UHUDLayoutWidget;
+class UMiniMapWidget;
 
 // Delegate 선언: 공인 IP가 준비되었을 때 알려주는 이벤트
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPublicIPReady, const FString&, PublicIP);
@@ -82,6 +83,8 @@ private:
 public:
 	//virtual void BeginPlay() override;
 
+	UFUNCTION(BlueprintCallable)
+	void EnterLobby();
 	// 이 플레이어가 호스트인지 확인
 	UFUNCTION(BlueprintCallable, Category = "Lobby")
 	bool IsHostPlayer() const;
@@ -137,4 +140,7 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UResultWidget> ResultWidgetClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UMiniMapWidget> MiniMapWidgetClass;
 };

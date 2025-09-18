@@ -18,6 +18,7 @@
 #include "Object/TFDSpawnVolume.h"
 #include "Object/TFDSpawnpoint.h"
 #include "Utility/InGameUtility.h"
+#include "Constants/TFDGameConstants.h"
 
 
 ATFDGameMode::ATFDGameMode()
@@ -105,7 +106,6 @@ void ATFDGameMode::HandleMatchHasStarted()
 	UE_LOG(LogTemp, Warning, TEXT("HandleMatchHasStarted"));
 	//게임 시작 처리
 	GetGameState()->GameRemainServerTime = GetGameState()->GetRuleData().PlayTimeSec;
-	GetGameState()->OnMachInProgress.Broadcast();
 	SetActorTickEnabled(true);
 	GamePause(false);
 }
@@ -116,8 +116,17 @@ void ATFDGameMode::HandleMatchHasEnded()
 	UE_LOG(LogTemp, Warning, TEXT("HandleMatchHasEnded"));
 	//게임 종료 처리
 
-	GetGameState()->OnMatchWaitingPostMatch.Broadcast(GetGameState()->GetWinTeamTag(), GetGameState()->GetInCompleteType());
+
 	SetActorTickEnabled(false);
+
+	const FGameRuleData& RuleData = GetGameState()->GetRuleData();
+	GetWorldTimerManager().SetTimer(
+		LobbyReturnTimerHandle,
+		this,
+		&ATFDGameMode::ReturnToLobby,
+		RuleData.ReturnToLobbySec,
+		false
+	);
 }
 
 void ATFDGameMode::PostSeamlessTravel()
@@ -526,6 +535,19 @@ void ATFDGameMode::GameEnd(EGameCompleteType CompleteType)
 	}
 
 	EndMatch();
+}
+
+void ATFDGameMode::ReturnToLobby()
+{
+	GetWorldTimerManager().ClearTimer(LobbyReturnTimerHandle);
+
+	FString TravelCmd = FString::Printf(TEXT("%s?listen"), TFDGameConstants::LobbyLevel);
+	UE_LOG(LogTemp, Warning, TEXT("Returning to Lobby: %s"), *TravelCmd);
+
+	if (UWorld* World = GetWorld())
+	{
+		World->ServerTravel(TravelCmd, true); // SeamlessTravel
+	}
 }
 
 void ATFDGameMode::GamePause(bool bIsPaused)

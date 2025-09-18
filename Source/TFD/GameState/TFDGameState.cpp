@@ -40,8 +40,11 @@ void ATFDGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 
 	DOREPLIFETIME(ATFDGameState, GameRemainServerTime);
 	DOREPLIFETIME(ATFDGameState, ThiefTotalScore);
+	DOREPLIFETIME(ATFDGameState, PolicePlayerStateArray);
 	DOREPLIFETIME(ATFDGameState, ThiefPlayerStateArray);
 	DOREPLIFETIME(ATFDGameState, CaughtThiefPlayerStateArray);
+	DOREPLIFETIME(ATFDGameState, PoliceMapItemArray);
+	DOREPLIFETIME(ATFDGameState, ThiefMapItemArray);
 	DOREPLIFETIME(ATFDGameState, WinTeamTag);
 	DOREPLIFETIME(ATFDGameState, CompleteType);
 }
@@ -125,6 +128,42 @@ void ATFDGameState::OnRep_ThiefScore()
 void ATFDGameState::OnRep_GameRemainTime()
 {
 	OnGameTimeChanged.Broadcast(GameRemainServerTime);
+}
+
+void ATFDGameState::OnRep_PolicePlayerStateArray()
+{
+	OnPoliceArrayChanged.Broadcast(PolicePlayerStateArray);
+}
+
+void ATFDGameState::OnRep_ThiefPlayerStateArray()
+{
+	OnThiefArrayChanged.Broadcast(ThiefPlayerStateArray);
+}
+
+void ATFDGameState::OnRep_PoliceMapItemArray()
+{
+	OnPoliceItemArrayChanged.Broadcast(PoliceMapItemArray);
+}
+
+void ATFDGameState::OnRep_ThiefMapItemArray()
+{
+	OnThiefItemArrayChanged.Broadcast(ThiefMapItemArray);
+}
+
+void ATFDGameState::RemoveAllowedItem(ATFDBaseObject* Object)
+{
+	if (!Object) return;
+
+	const FGameplayTagContainer& ItemTag = Object->GetAllowedTeamTag();
+
+	if (ItemTag.HasTag(TAG_Team_Cop))
+	{
+		PoliceMapItemArray.RemoveSingleSwap(Object);
+	}
+	else if (ItemTag.HasTag(TAG_Team_Thief))
+	{
+		ThiefMapItemArray.RemoveSingleSwap(Object);
+	}
 }
 
 void ATFDGameState::SetWinTeam(FGameplayTag WinTeam, EGameCompleteType InCompleteType)

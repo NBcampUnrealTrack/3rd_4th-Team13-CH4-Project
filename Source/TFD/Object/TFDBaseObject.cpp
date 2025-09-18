@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "Object/TFDBaseObject.h"
@@ -48,6 +48,16 @@ void ATFDBaseObject::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor*
 			if (ASC->HasAnyMatchingGameplayTags(AllowedTagContainer))
 			{
 				ASC->ApplyGameplayEffectToSelf(CollisionEffect.GetDefaultObject(), 1.f, ASC->MakeEffectContext());
+
+				// GameState에 아이템 제거 알림
+				if (UWorld* World = GetWorld())
+				{
+					if (ATFDGameState* GS = World->GetGameState<ATFDGameState>())
+					{
+						GS->RemoveAllowedItem(this);
+					}
+				}
+
 				Destroy();
 			}
 		}

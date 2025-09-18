@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "Object/TFDSpawnpoint.h"
@@ -21,11 +21,27 @@ void ATFDSpawnpoint::SpawnItem()
 	if (ItemClass == nullptr)
 		return;
 
-	GetWorld()->SpawnActor<AActor>(
+	ATFDBaseObject* SpawnedItem = GetWorld()->SpawnActor<ATFDBaseObject>(
 		ItemClass,
 		GetActorLocation(),
 		GetActorRotation()
 	);
+
+	if (!SpawnedItem) return;
+
+	if (ATFDGameState* GS = GetWorld()->GetGameState<ATFDGameState>())
+	{
+		const FGameplayTagContainer& TeamTags = SpawnedItem->GetAllowedTeamTag();
+
+		if (TeamTags.HasTag(TAG_Team_Cop))
+		{
+			GS->PoliceMapItemArray.Add(MakeWeakObjectPtr(SpawnedItem));
+		}
+		else if (TeamTags.HasTag(TAG_Team_Thief))
+		{
+			GS->ThiefMapItemArray.Add(MakeWeakObjectPtr(SpawnedItem));
+		}
+	}
 }
 
 // Called when the game starts or when spawned
