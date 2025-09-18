@@ -29,7 +29,7 @@ int32 ATFDGameState::GetReadyPlayerCount() const
 	return ReadyPlayers.Num();
 }
 
-const FGameRuleData& ATFDGameState::GetRuleData() const
+UTFDGameRuleData* ATFDGameState::GetRuleData() const
 {
 	return GameRuleData;
 }

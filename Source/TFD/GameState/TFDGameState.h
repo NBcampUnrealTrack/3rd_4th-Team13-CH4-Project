@@ -4,7 +4,7 @@
 #include "PlayerState/TFDPlayerState.h"
 #include "GameFramework/GameState.h"
 #include "Object/TFDBaseObject.h"
-#include "GameData/FGameRuleData.h"
+#include "GameData/TFDGameRuleData.h"
 #include "GameData/EGameEnums.h"
 #include "TFDGameState.generated.h"
 
@@ -36,7 +36,8 @@ public:
 	void MarkPlayerReady(ATFDPlayerState* PS);
 	int32 GetReadyPlayerCount() const;
 
-	const FGameRuleData& GetRuleData() const;
+	UFUNCTION(BlueprintCallable, Category = "Rule")
+	UTFDGameRuleData* GetRuleData() const;
 
 	UFUNCTION(BlueprintCallable, Category = "Score")
 	void AddThiefScore(int32 Points);
@@ -131,7 +132,7 @@ public:
 protected:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (AllowPrivateAccess));
-	FGameRuleData GameRuleData;		//TODO: DA 로 변경
+	UTFDGameRuleData* GameRuleData;
 
 	TArray<ATFDPlayerState*> ReadyPlayers;
 
