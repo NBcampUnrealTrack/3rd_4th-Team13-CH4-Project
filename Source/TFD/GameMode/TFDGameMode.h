@@ -8,7 +8,6 @@
 #include "GameData/EGameEnums.h"
 #include "TFDGameMode.generated.h"
 
-
 class ATFDAICharacter;
 class ATFDCharacter;
 class ATFDSpawnVolume;
@@ -78,14 +77,20 @@ protected:
 
 	ATFDGameState* GameState;
 
+	UFUNCTION()
+	void HandleThiefScoreChanged(int32 NewScore);
+	
+	FTimerHandle LobbyReturnTimerHandle;
+
+	UFUNCTION()
+	void ReturnToLobby();
+
+
+#pragma region 스폰관련
 protected:
 	UPROPERTY()
 	TMap<ETeamType, FSpawnPointArray> WorldSpawnPointsByTeam;
 
-
-	UFUNCTION()
-	void HandleThiefScoreChanged(int32 NewScore);
-	
 public:
 	void SpawnAI();
 	void SpawnItemStart();
@@ -114,5 +119,6 @@ private:
 	
 	void InitializeSpawnVolumes();
 	void MovePlayerToRandomSpawnPoint(APlayerController* PlayerController);
-	
+#pragma endregion
+
 };
