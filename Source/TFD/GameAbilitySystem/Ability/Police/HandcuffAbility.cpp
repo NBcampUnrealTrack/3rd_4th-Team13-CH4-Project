@@ -147,56 +147,65 @@ AActor* UHandcuffAbility::FindTarget(const FGameplayAbilityActorInfo* ActorInfo)
 
 void UHandcuffAbility::HandcuffToTarget(AActor* TargetActor, const FGameplayAbilityActorInfo* ActorInfo)
 {
-	//잡힌 대상에게 상태부여
-	if (GetCurrentActorInfo()->IsNetAuthority())
+	// 잡힌 대상에게 상태 부여
+	if (!GetCurrentActorInfo()->IsNetAuthority())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Handcuff To Target"));
+		return;
+	}
 
-		if (ActorInfo->AbilitySystemComponent.Get() && ArrestedEffect)
+	UE_LOG(LogTemp, Warning, TEXT("Handcuff To Target"));
+
+	if (!ActorInfo->AbilitySystemComponent.Get() || !ArrestedEffect)
+	{
+		return;
+	}
+
+	FGameplayEffectContextHandle Context = ActorInfo->AbilitySystemComponent->MakeEffectContext();
+	Context.AddSourceObject(this);
+
+	FGameplayEffectSpecHandle SpecHandle = ActorInfo->AbilitySystemComponent->MakeOutgoingSpec(
+		ArrestedEffect, GetAbilityLevel(), Context);
+
+	if (!SpecHandle.IsValid())
+	{
+		return;
+	}
+
+	ATFDCharacterBase* CB = Cast<ATFDCharacterBase>(TargetActor);
+	if (!CB)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ATFDCharacterBase null"));
+		return;
+	}
+
+	UAbilitySystemComponent* TargetASC = CB->GetAbilitySystemComponent();
+	if (TargetASC->HasMatchingGameplayTag(TAG_Team_Cop) ||
+		TargetASC->HasMatchingGameplayTag(TAG_Character_State_Arrested))
+	{
+		return;
+	}
+
+	// 경찰도 아니고, Arrested 태그도 없는 경우 이펙트 적용
+	ActorInfo->AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(
+		*SpecHandle.Data.Get(),
+		TargetASC
+	);
+
+	if (!TargetASC->HasMatchingGameplayTag(TAG_Team_Thief))
+	{
+		return;
+	}
+
+	// 도둑인 경우 GameMode 호출
+	if (UWorld* World = GetWorld())
+	{
+		if (ATFDGameMode* GM = World->GetAuthGameMode<ATFDGameMode>())
 		{
-			FGameplayEffectContextHandle Context = ActorInfo->AbilitySystemComponent->MakeEffectContext();
-			Context.AddSourceObject(this);
-
-			FGameplayEffectSpecHandle SpecHandle = ActorInfo->AbilitySystemComponent->MakeOutgoingSpec(
-				ArrestedEffect, GetAbilityLevel(), Context);
-
-			if (SpecHandle.IsValid())
+			if (APawn* TargetPawn = Cast<APawn>(TargetActor))
 			{
-				ATFDCharacterBase* CB = Cast<ATFDCharacterBase>(TargetActor);
-				if (!CB)
-				{
-					UE_LOG(LogTemp, Warning, TEXT("ATFDCharacterBase null"));
-					return;
-				}
-
-				if (!CB->GetAbilitySystemComponent()->HasMatchingGameplayTag(TAG_Team_Cop))
-				{
-					// 이미 Arrested 상태면 스킵
-					if (!CB->GetAbilitySystemComponent()->HasMatchingGameplayTag(TAG_Character_State_Arrested))
-					{
-						// 경찰이 아니고, Arrested 태그도 없는 경우 이펙트 적용
-						ActorInfo->AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(
-							*SpecHandle.Data.Get(),
-							CB->GetAbilitySystemComponent()
-						);
-						if (CB->GetAbilitySystemComponent()->HasMatchingGameplayTag(TAG_Team_Thief))
-						{
-							// 도둑인 경우 GameMode 호출
-							if (UWorld* World = GetWorld())
-							{
-								if (ATFDGameMode* GM = World->GetAuthGameMode<ATFDGameMode>())
-								{
-									if (APawn* TargetPawn = Cast<APawn>(TargetActor))
-									{
-										GM->OnCatchThief(TargetPawn);
-										UE_LOG(LogTemp, Warning, TEXT("OnCatchThief called for %s"), *TargetPawn->GetName());
-									}
-								}
-							}
-						}
-						
-					}
-				}
+				GM->OnCatchThief(TargetPawn);
+				UE_LOG(LogTemp, Warning, TEXT("OnCatchThief called for %s"),
+					   *TargetPawn->GetName());
 			}
 		}
 	}
