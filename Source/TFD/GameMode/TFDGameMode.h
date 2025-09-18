@@ -6,6 +6,7 @@
 #include "GameFramework/GameMode.h"
 #include "GameState/TFDGameState.h"
 #include "GameData/EGameEnums.h"
+#include "GameData/TFDGameRuleData.h"
 #include "TFDGameMode.generated.h"
 
 class ATFDAICharacter;
@@ -76,6 +77,8 @@ protected:
 	TArray<ATFDSpawnVolume*> SpawnVolumes;
 
 	ATFDGameState* GameState;
+
+	UTFDGameRuleData* RuleData;
 
 	UFUNCTION()
 	void HandleThiefScoreChanged(int32 NewScore);

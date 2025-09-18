@@ -49,7 +49,7 @@ void UPlayingWidget::UpdateFromGameState()
 
 void UPlayingWidget::UpdateThiefScore(int32 NewScore)
 {
-    int32 TotalScoreGoal = CachedGameState->GetRuleData().ThiefScoreForWin;
+    int32 TotalScoreGoal = CachedGameState->GetRuleData()->ThiefScoreForWin;
 
     ThiefGoalText->SetText(FText::FromString(
         FString::Printf(TEXT("현재 점수: %d / 총 점수: %d"), NewScore, TotalScoreGoal)
