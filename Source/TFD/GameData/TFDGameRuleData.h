@@ -25,6 +25,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rule")
 	float PlayTimeSec = 90.f;
 
+	//스폰할 AI 마릿수
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rule")
 	int32 NumberOfAI = 10;
 
