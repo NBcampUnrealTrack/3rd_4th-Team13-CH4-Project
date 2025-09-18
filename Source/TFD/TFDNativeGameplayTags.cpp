@@ -22,6 +22,8 @@ UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Neutral_RandomMove, "Ability.Neutral.RandomMo
 UE_DEFINE_GAMEPLAY_TAG(TAG_Object_Door,"Object.Door"); //문
 UE_DEFINE_GAMEPLAY_TAG(TAG_Object_Money,"Object.Money"); //돈
 UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SpawnArea,"Object.SpawnArea"); //스폰
+UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SlowItem,"Object.SlowItem"); //스폰
+UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SKillStockItem_00,"Object.SkillStockItem_00"); //스폰
 UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SpawnPoint,"Object.SpawnPoint"); //스폰포인트
 UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SpawnPoint_Cop,"Object.SpawnPoint.Cop"); //스폰포인트
 UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SpawnPoint_Thief,"Object.SpawnPoint.Thief"); //스폰포인트
