@@ -15,14 +15,8 @@ void UPlayingWidget::NativeConstruct()
 
     if (APlayerController* PC = GetOwningPlayer())
     {
-        // PlayerState 가져오기
-        if (ATFDPlayerState* PS = PC->GetPlayerState<ATFDPlayerState>())
-        {
-            FGameplayTag TeamTag = PS->GetTeamTag();
-            UE_LOG(LogTemp, Log, TEXT("[UPlayingWidget] PlayerState found: %s, TeamTag: %s"),
-                *PS->GetName(), *TeamTag.ToString());
-            UpdateTeamName(TeamTag.ToString());
-        }
+        UpdateTeamName();
+
 
         CachedGameState = PC->GetWorld()->GetGameState<ATFDGameState>();
         if (CachedGameState)
@@ -88,10 +82,34 @@ void UPlayingWidget::UpdateRemainingTime(float RemainingTimeSec)
     }
 }
 
-void UPlayingWidget::UpdateTeamName(const FString& TeamName)
+void UPlayingWidget::UpdateTeamName()
 {
-    if (TeamNameText)
+    if (ATFDPlayerState* PS = GetOwningPlayer()->GetPlayerState<ATFDPlayerState>())
     {
-        TeamNameText->SetText(FText::FromString(FString::Printf(TEXT("팀: %s"), *TeamName)));
+        FGameplayTag TeamTag = PS->GetTeamTag();
+
+        // TeamTag가 None이면 다음 Tick에 재시도
+        if (!TeamTag.IsValid())
+        {
+            GetWorld()->GetTimerManager().SetTimerForNextTick([this]()
+                {
+                    UpdateTeamName();
+                });
+            return;
+        }
+
+        // 팀 이름 바로 업데이트
+        if (TeamNameText)
+        {
+            TeamNameText->SetText(FText::FromString(FString::Printf(TEXT("팀: %s"), *TeamTag.ToString())));
+        }
+    }
+    else
+    {
+        // PlayerState가 아직 없으면 다음 Tick에 재시도
+        GetWorld()->GetTimerManager().SetTimerForNextTick([this]()
+            {
+                UpdateTeamName();
+            });
     }
 }

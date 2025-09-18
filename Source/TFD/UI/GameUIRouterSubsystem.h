@@ -7,9 +7,11 @@
 #include "EUIDefine.h"
 #include "Components/CanvasPanel.h"
 #include "GameUIRouterSubsystem.generated.h"
+
 class UHUDLayoutWidget;
 class UPlayingWidget;
 class UResultWidget;
+class UMiniMapWidget;
 /**
  * UI 관리 서브 시스템
  * - LocalPlayerSubsystem 기반으로 자동 클라 전용
@@ -62,4 +64,7 @@ public:
 
 	UPROPERTY()
 	UResultWidget* ResultWidget = nullptr;
+
+	UPROPERTY()
+	UMiniMapWidget* MiniMapWidget = nullptr;
 };

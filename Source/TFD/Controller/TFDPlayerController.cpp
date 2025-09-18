@@ -23,6 +23,7 @@
 #include "UI/InGame/PlayingWidget.h"
 #include "UI/Widget/UHUDLayoutWidget.h"
 #include "UI/InGame/ResultWidget.h"
+#include "UI/InGame/MiniMapWidget.h"
 
 // 이하 OutGame 관련 - Lobby
 #include "Constants/TFDGameConstants.h"
@@ -486,6 +487,11 @@ void ATFDPlayerController::HandleMatchInProgress()
 {
 	bShowMouseCursor = false;
 
+	if (!IsLocalController()) // 서버 전용 PC에서는 UI 건드리지 않음
+	{
+		return;
+	}
+
 	ULocalPlayer* LP = GetLocalPlayer();
 	if (!LP)
 	{
@@ -504,9 +510,22 @@ void ATFDPlayerController::HandleMatchInProgress()
 
 		if (PlayingWidgetClass)
 		{
-			UISub->PlayingWidget = Cast<UPlayingWidget>(
-				UISub->AddWidgetToLayer(EUILayer::GameLayer, PlayingWidgetClass)
-			);
+			if (!UISub->PlayingWidget) 
+			{
+				UISub->PlayingWidget = Cast<UPlayingWidget>(
+					UISub->AddWidgetToLayer(EUILayer::GameLayer, PlayingWidgetClass)
+				);
+			}
+		}
+		if (MiniMapWidgetClass)
+		{
+			if (!UISub->MiniMapWidget) 
+			{
+				UISub->MiniMapWidget = Cast<UMiniMapWidget>(
+					UISub->AddWidgetToLayer(EUILayer::GameLayer, MiniMapWidgetClass)
+				);
+				UISub->MiniMapWidget->SetOwnerPawn(GetPawn());
+			}
 		}
 	}
 }
@@ -516,19 +535,28 @@ void ATFDPlayerController::HandleMatchWaitingPostMatch(FGameplayTag WinTeamTag, 
 {
 	bShowMouseCursor = true;
 
+
+
 	ULocalPlayer* LP = GetLocalPlayer();
 	if (!LP)
 	{
 		return;
 	}
 
-	if (UGameUIRouterSubsystem* UISub = GetLocalPlayer()->GetSubsystem<UGameUIRouterSubsystem>())
+	if (UGameUIRouterSubsystem* UISub = LP->GetSubsystem<UGameUIRouterSubsystem>())
 	{
 		if (UISub->PlayingWidget)
 		{
 			UISub->RemoveWidgetFromLayer(EUILayer::GameLayer, UISub->PlayingWidget);
 			UISub->PlayingWidget = nullptr;
 		}
+
+		if (UISub->MiniMapWidget)
+		{
+			UISub->RemoveWidgetFromLayer(EUILayer::GameLayer, UISub->MiniMapWidget);
+			UISub->MiniMapWidget = nullptr;
+		}
+
 
 		if (ResultWidgetClass)
 		{
