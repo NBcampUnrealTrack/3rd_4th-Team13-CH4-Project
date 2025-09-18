@@ -11,6 +11,9 @@ struct FGameRuleData
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float ReturnToLobbySec = 5.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float PlayTimeSec = 90.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)

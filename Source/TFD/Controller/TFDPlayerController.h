@@ -83,6 +83,8 @@ private:
 public:
 	//virtual void BeginPlay() override;
 
+	UFUNCTION(BlueprintCallable)
+	void EnterLobby();
 	// 이 플레이어가 호스트인지 확인
 	UFUNCTION(BlueprintCallable, Category = "Lobby")
 	bool IsHostPlayer() const;

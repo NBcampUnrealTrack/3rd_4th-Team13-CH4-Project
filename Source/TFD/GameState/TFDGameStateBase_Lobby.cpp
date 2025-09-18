@@ -2,6 +2,7 @@
 #include "GameState/TFDGameStateBase_Lobby.h"
 
 #include "GameFramework/PlayerState.h"
+#include "Controller/TFDPlayerController.h"
 #include "Net/UnrealNetwork.h"
 
 ATFDGameStateBase_Lobby::ATFDGameStateBase_Lobby()
@@ -47,5 +48,35 @@ void ATFDGameStateBase_Lobby::RemovePlayerState(APlayerState* PlayerState)
 void ATFDGameStateBase_Lobby::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(ATFDGameStateBase_Lobby, bLobbyStarted);
 
+}
+
+void ATFDGameStateBase_Lobby::StartLobby()
+{
+    if (HasAuthority())
+    {
+        bLobbyStarted = true;
+        OnRep_LobbyStarted(); // 서버에서도 즉시 처리
+    }
+}
+
+void ATFDGameStateBase_Lobby::OnRep_LobbyStarted()
+{
+    if (bLobbyStarted)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("OnRep_LobbyStarted triggered on %s"), *GetName());
+
+        // 로컬 컨트롤러만 UI 실행
+        if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
+        {
+            if (ATFDPlayerController* TFDPC = Cast<ATFDPlayerController>(PC))
+            {
+                if (TFDPC->IsLocalController())
+                {
+                    TFDPC->EnterLobby();
+                }
+            }
+        }
+    }
 }
