@@ -209,7 +209,6 @@ void ATFDPlayerController::AcknowledgePossession(APawn* InPawn)
 				{
 					EnhancedInputComponent->BindAction(Action.InputAction, ETriggerEvent::Started, this, &ATFDPlayerController::JobAbility, Action.Tag);
 				}
-				
 			}
 		}
 	}

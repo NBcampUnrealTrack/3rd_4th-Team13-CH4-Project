@@ -15,11 +15,9 @@ ATFDCharacterBase::ATFDCharacterBase()
 	// ASC 생성
 	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComp"));
 	AbilitySystemComponent->SetIsReplicated(true);
-	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed); // or Full
-
+	//AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed); // or Full
 	// AttributeSet 생성
-	AttributeSet = CreateDefaultSubobject<UTFDAttributeSet>(TEXT("AttributeSet"));
-
+	//AttributeSet = CreateDefaultSubobject<UTFDAttributeSet>(TEXT("AttributeSet"));
 }
 
 // Called when the game starts or when spawned
@@ -27,6 +25,8 @@ void ATFDCharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
 	BaseSetting();
+
+	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed); // or Full
 }
 
 void ATFDCharacterBase::OnRep_PlayerState()
@@ -56,7 +56,10 @@ void ATFDCharacterBase::NotifyControllerChanged()
 void ATFDCharacterBase::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
-
+	if (AttributeSet == nullptr)
+	{
+		AttributeSet = NewObject<UTFDAttributeSet>();
+	}
 	// 서버일 때만 실행
 	if (HasAuthority())
 	{
@@ -67,9 +70,8 @@ void ATFDCharacterBase::PossessedBy(AController* NewController)
 				AbilitySystemComponent->InitAbilityActorInfo(PS, this);
 			}
 		}
-
+		
 		SetDAPlayerStat();
-
 	}
 
 }
@@ -92,23 +94,22 @@ void ATFDCharacterBase::BaseSetting()
 	GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
 	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
-
 }
 
 void ATFDCharacterBase::SetDAPlayerStat()
 {
 	if (!HasAuthority()) return;
 
-	if (CharacterData && AttributeSet)
+	if (CharacterData)
 	{
 		// AttributeSet의 초기값을 데이터 에셋의 값으로 설정
-		AttributeSet->SetHealth(CharacterData->Health);
-		AttributeSet->SetMaxHealth(CharacterData->MaxHealth);
-		AttributeSet->SetMana(CharacterData->Mana);
-		AttributeSet->SetMaxMana(CharacterData->MaxMana);
-		AttributeSet->SetSpeed(CharacterData->Speed);
+		// AttributeSet->SetHealth(CharacterData->Health);
+		// AttributeSet->SetMaxHealth(CharacterData->MaxHealth);
+		// AttributeSet->SetMana(CharacterData->Mana);
+		// AttributeSet->SetMaxMana(CharacterData->MaxMana);
+		// AttributeSet->SetSpeed(CharacterData->Speed);
 
-		if (GetCharacterMovement() && AttributeSet)
+		if (GetCharacterMovement())
 		{
 			GetCharacterMovement()->MaxWalkSpeed = AttributeSet->GetSpeed();
 
@@ -126,7 +127,7 @@ void ATFDCharacterBase::SetDAPlayerStat()
 		}
 
 		//JobDataAsset - 팀태그 넘겨주는 코드
-		if (AbilitySystemComponent && CharacterData && CharacterData->GiveTeamtagEffect)
+		if (CharacterData && CharacterData->GiveTeamtagEffect)
 		{
 			FGameplayEffectContextHandle ContextHandle = AbilitySystemComponent->MakeEffectContext();
 			ContextHandle.AddSourceObject(this);
