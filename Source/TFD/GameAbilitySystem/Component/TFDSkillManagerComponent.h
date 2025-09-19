@@ -32,7 +32,7 @@ struct FTFDSkillSlot
 
 	// 스킬 사용 가능 횟수
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	int32 UsageCount = 1;
+	int32 UsageCount;
 
 	FTFDSkillSlot()
 		: UsageCount(1)
@@ -57,11 +57,7 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	//==========================
-	// GAS 관련
-	//==========================
-	// ASC 초기화 처리 (PossessedBy 또는 OnRep_PlayerState 이후 호출 필요)
-	void InitializeASC();
+
 
 public:
 	// 스킬 추가 (자동 슬롯 배치)
@@ -80,12 +76,22 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "SkillManager")
 	FTFDSkillSlot GetSkillAt(int32 SlotIndex) const;
 
-	// 스킬 사용 시 호출 (사용 횟수 차감 및 제거)
-	void UseSkill(FGameplayTag SkillTag);
+	// 슬롯 인덱스로 스킬 사용 시 호출 (사용 횟수 차감 및 제거)
+	UFUNCTION(BlueprintCallable, Category = "SkillManager")
+	void UseSkillAtSlot(int32 SlotIndex);
 
 	// 스킬 변경 이벤트 (UI 바인딩용)
 	UPROPERTY(BlueprintAssignable, Category = "SkillManager")
 	FOnSkillChanged OnSkillChanged;
+
+	//==========================
+	// GAS 관련
+	//==========================
+	// ASC 초기화 처리 (PossessedBy 또는 OnRep_PlayerState 이후 호출 필요)
+	void SetupASC();
+
+	// ASC 초기화 여부 반환
+	bool IsASCSetup() const;
 
 protected:
 	//==========================
@@ -96,7 +102,7 @@ protected:
 	UAbilitySystemComponent* ASC;
 
 	// ASC 초기화 여부
-	bool bASCInitialized = false;
+	bool bASCSetup = false;
 
 	//==========================
 	// 데이터 및 슬롯 구성
