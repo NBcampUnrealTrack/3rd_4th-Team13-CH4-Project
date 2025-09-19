@@ -169,32 +169,25 @@ void UHandcuffAbility::HandcuffToTarget(AActor* TargetActor, const FGameplayAbil
 					return;
 				}
 
-				if (!CB->GetAbilitySystemComponent()->HasMatchingGameplayTag(TAG_Team_Cop))
+				FActiveGameplayEffectHandle Handle =
+					ActorInfo->AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(
+						*SpecHandle.Data.Get(),
+						CB->GetAbilitySystemComponent()
+				);
+
+				if (Handle.IsValid())
 				{
-					// 이미 Arrested 상태면 스킵
-					if (!CB->GetAbilitySystemComponent()->HasMatchingGameplayTag(TAG_Character_State_Arrested))
+					UE_LOG(LogTemp, Log, TEXT("GE 적용 성공!"));
+					if (UWorld* World = GetWorld())
 					{
-						// 경찰이 아니고, Arrested 태그도 없는 경우 이펙트 적용
-						ActorInfo->AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(
-							*SpecHandle.Data.Get(),
-							CB->GetAbilitySystemComponent()
-						);
-						if (CB->GetAbilitySystemComponent()->HasMatchingGameplayTag(TAG_Team_Thief))
+						if (ATFDGameMode* GM = World->GetAuthGameMode<ATFDGameMode>())
 						{
-							// 도둑인 경우 GameMode 호출
-							if (UWorld* World = GetWorld())
+							if (APawn* TargetPawn = Cast<APawn>(TargetActor))
 							{
-								if (ATFDGameMode* GM = World->GetAuthGameMode<ATFDGameMode>())
-								{
-									if (APawn* TargetPawn = Cast<APawn>(TargetActor))
-									{
-										GM->OnCatchThief(TargetPawn);
-										UE_LOG(LogTemp, Warning, TEXT("OnCatchThief called for %s"), *TargetPawn->GetName());
-									}
-								}
+								GM->OnCatchThief(TargetPawn);
+								UE_LOG(LogTemp, Warning, TEXT("OnCatchThief called for %s"), *TargetPawn->GetName());
 							}
 						}
-						
 					}
 				}
 			}

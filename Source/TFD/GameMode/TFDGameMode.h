@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -42,6 +42,7 @@ public:
 	ATFDGameMode();
 
 	void OnCatchThief(APawn* Pawn);
+	void OffCatchThief(APawn* Pawn);
 	// 게임 종료시 처리될 내용이 담김.
 	void GameEnd(EGameCompleteType CompleteType);
 	ATFDGameState* GetGameState();

@@ -24,6 +24,9 @@
 #include "UI/Widget/UHUDLayoutWidget.h"
 #include "UI/InGame/ResultWidget.h"
 #include "UI/InGame/MiniMapWidget.h"
+#include "UI/InGame/ReleaseWidget.h"
+
+#include "Object/JailCell.h"
 
 // 이하 OutGame 관련 - Lobby
 #include "Constants/TFDGameConstants.h"
@@ -64,8 +67,6 @@ void ATFDPlayerController::SetMovemnetWalking(bool bMovement)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Movement None"));
 
-			CB->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
-			CB->GetCharacterMovement()->Activate();
 			CB->GetCharacterMovement()->DisableMovement();
 			CB->GetCharacterMovement()->SetMovementMode(MOVE_None);
 			CB->GetCharacterMovement()->StopMovementImmediately();
@@ -195,21 +196,82 @@ void ATFDPlayerController::AcknowledgePossession(APawn* InPawn)
 			if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
 				ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
 			{
-				if (CB->CharacterData->JobMappingContext)
+				if (CB->CharacterData)
 				{
-
-					Subsystem->AddMappingContext(CB->CharacterData->JobMappingContext, 0);
+					if (CB->CharacterData->JobMappingContext)
+					{
+						Subsystem->AddMappingContext(CB->CharacterData->JobMappingContext, 0);
+					}
 				}
 			}
 
 			//********직업에 따른 능력 입력 바인딩************
 			if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
 			{
-				for (auto& Action : CB->CharacterData->Actions)
+				if (CB->CharacterData)
 				{
-					EnhancedInputComponent->BindAction(Action.InputAction, ETriggerEvent::Started, this, &ATFDPlayerController::JobAbility, Action.Tag);
+					for (auto& Action : CB->CharacterData->Actions)
+					{
+						EnhancedInputComponent->BindAction(Action.InputAction, ETriggerEvent::Started, this, &ATFDPlayerController::JobAbility, Action.Tag);
+					}
 				}
-				
+			}
+		}
+	}
+}
+
+void ATFDPlayerController::TryJobMapping()
+{
+
+	ATFDCharacterBase* CB = Cast<ATFDCharacterBase>(GetPawn());
+	if (!CB)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[ATFDPlayerController] CB is null"));
+		return;
+	}
+
+	ATFDGameState* GS = GetWorld()->GetGameState<ATFDGameState>();
+	if (!GS) return;
+	
+	UE_LOG(LogTemp, Warning, TEXT("[ATFDPlayerController] GS found"));
+	
+	ATFDPlayerState* PS = Cast<ATFDPlayerState>(CB->GetPlayerState());
+	if (!PS)
+	{
+		FTimerHandle RetryTimerHandle;
+		GetWorldTimerManager().SetTimer(RetryTimerHandle, this, &ATFDPlayerController::TryJobMapping, 0.2f, false);
+		UE_LOG(LogTemp, Warning, TEXT("[ATFDPlayerController] Retry JobMapping"));
+		return;
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[ATFDPlayerController] PS found"));
+		if (PS->GetTeamTag() == TAG_Team_Thief)
+		{
+			CB->CharacterData = GS->GetRuleData()->ThiefDataAsset;
+		}
+		else if (PS->GetTeamTag() == TAG_Team_Cop)
+		{
+			CB->CharacterData = GS->GetRuleData()->PoliceDataAsset;
+		}
+	}
+
+	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
+	{
+		if (CB->CharacterData && CB->CharacterData->JobMappingContext)
+		{
+			Subsystem->AddMappingContext(CB->CharacterData->JobMappingContext, 0);
+		}
+	}
+
+	//********직업에 따른 능력 입력 바인딩************
+	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
+	{
+		if (CB->CharacterData)
+		{
+			for (auto& Action : CB->CharacterData->Actions)
+			{
+				EnhancedInputComponent->BindAction(Action.InputAction, ETriggerEvent::Started, this, &ATFDPlayerController::JobAbility, Action.Tag);
 			}
 		}
 	}
@@ -495,8 +557,11 @@ void ATFDPlayerController::HandleMatchInProgress()
 	ULocalPlayer* LP = GetLocalPlayer();
 	if (!LP)
 	{
+		UE_LOG(LogTemp, Error, TEXT("[ATFDPlayerController] LP no"));
 		return;
-	}
+	}	
+
+	TryJobMapping();
 
 	if (UGameUIRouterSubsystem* UISub = LP->GetSubsystem<UGameUIRouterSubsystem>())
 	{
@@ -535,13 +600,18 @@ void ATFDPlayerController::HandleMatchWaitingPostMatch(FGameplayTag WinTeamTag, 
 {
 	bShowMouseCursor = true;
 
-
+	if (!IsLocalController()) // 서버 전용 PC에서는 UI 건드리지 않음
+	{
+		return;
+	}
 
 	ULocalPlayer* LP = GetLocalPlayer();
 	if (!LP)
 	{
 		return;
 	}
+
+	
 
 	if (UGameUIRouterSubsystem* UISub = LP->GetSubsystem<UGameUIRouterSubsystem>())
 	{
@@ -569,6 +639,64 @@ void ATFDPlayerController::HandleMatchWaitingPostMatch(FGameplayTag WinTeamTag, 
 					UISub->ResultWidget = RW; // Subsystem에 인스턴스 보관
 				}
 			}
+		}
+	}
+	HandleRemoveReleaseWidget();
+}
+
+
+
+void ATFDPlayerController::HandleShowReleaseWidget()
+{
+	if (!IsLocalController()) // 서버 전용 PC에서는 UI 건드리지 않음
+	{
+		return;
+	}
+
+	ULocalPlayer* LP = GetLocalPlayer();
+	if (!LP)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[ATFDPlayerController] LP no"));
+		return;
+	}
+
+	if (UGameUIRouterSubsystem* UISub = LP->GetSubsystem<UGameUIRouterSubsystem>())
+	{
+		if (!ReleaseWidgetClass) return;
+		
+		UE_LOG(LogTemp, Error, TEXT("[ATFDPlayerController] 클래스 있음"));
+		if (UUserWidget* Widget = UISub->AddWidgetToLayer(EUILayer::PopupLayer, ReleaseWidgetClass))
+		{
+			UE_LOG(LogTemp, Error, TEXT("[ATFDPlayerController] 위젯 있음"));
+			if (UReleaseWidget* RW = Cast<UReleaseWidget>(Widget))
+			{
+				UE_LOG(LogTemp, Error, TEXT("[ATFDPlayerController] 캐스트 됨"));
+				ATFDPlayerCharacter* MyCharacter = Cast<ATFDPlayerCharacter>(GetPawn());
+				UISub->ReleaseWidget = RW;
+			}
+		}
+	}
+}
+
+void ATFDPlayerController::HandleRemoveReleaseWidget()
+{
+	if (!IsLocalController()) // 서버 전용 PC에서는 UI 건드리지 않음
+	{
+		return;
+	}
+
+	ULocalPlayer* LP = GetLocalPlayer();
+	if (!LP)
+	{
+		return;
+	}
+
+	if (UGameUIRouterSubsystem* UISub = LP->GetSubsystem<UGameUIRouterSubsystem>())
+	{
+		if (UISub->ReleaseWidget)
+		{
+			UISub->RemoveWidgetFromLayer(EUILayer::PopupLayer, UISub->ReleaseWidget);
+			UISub->ReleaseWidget = nullptr;
 		}
 	}
 }

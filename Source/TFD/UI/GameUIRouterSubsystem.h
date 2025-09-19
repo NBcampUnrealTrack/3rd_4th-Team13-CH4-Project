@@ -12,6 +12,7 @@ class UHUDLayoutWidget;
 class UPlayingWidget;
 class UResultWidget;
 class UMiniMapWidget;
+class UReleaseWidget;
 /**
  * UI 관리 서브 시스템
  * - LocalPlayerSubsystem 기반으로 자동 클라 전용
@@ -67,4 +68,7 @@ public:
 
 	UPROPERTY()
 	UMiniMapWidget* MiniMapWidget = nullptr;
+
+	UPROPERTY()
+	UReleaseWidget* ReleaseWidget = nullptr;
 };

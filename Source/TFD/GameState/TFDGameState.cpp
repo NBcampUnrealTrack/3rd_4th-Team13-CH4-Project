@@ -3,6 +3,9 @@
 
 #include "GameState/TFDGameState.h"
 
+#include "Kismet/GameplayStatics.h"
+#include "Object/JailCell.h"
+
 #include "Net/UnrealNetwork.h"
 #include "GameFramework/GameMode.h"
 
@@ -47,11 +50,18 @@ void ATFDGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	DOREPLIFETIME(ATFDGameState, ThiefMapItemArray);
 	DOREPLIFETIME(ATFDGameState, WinTeamTag);
 	DOREPLIFETIME(ATFDGameState, CompleteType);
+	DOREPLIFETIME(ATFDGameState, WorldJailCell);
 }
 
 float ATFDGameState::GetCurrentGameTimeSec() const
 {
 	return GetServerWorldTimeSeconds() - GameRemainServerTime;
+}
+
+void ATFDGameState::RegisterJailCell(AActor* CurrentJailCell)
+{
+	AJailCell* CurrentWorldJailCell = Cast<AJailCell>(CurrentJailCell);
+	WorldJailCell = CurrentWorldJailCell;
 }
 
 // Client 전용 처리 UI 표시 등에 사용.

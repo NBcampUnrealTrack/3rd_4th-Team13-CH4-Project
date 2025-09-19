@@ -8,6 +8,7 @@
 #include "GameData/EGameEnums.h"
 #include "TFDGameState.generated.h"
 
+class AJailCell;
 
 
 // 도둑 전체 점수 변경 이벤트 (UI나 GameMode에서 구독 가능)
@@ -47,6 +48,9 @@ public:
 
 	EGameCompleteType GetInCompleteType() const { return CompleteType; }
 	FGameplayTag GetWinTeamTag() const { return WinTeamTag; }
+
+	void RegisterJailCell(AActor* CurrentJailCell);
+	AJailCell* GetWorldJailCell() const { return WorldJailCell; }
 protected:
 
 	virtual void OnRep_MatchState() override;
@@ -145,4 +149,7 @@ protected:
 
 	UPROPERTY(Replicated, BlueprintReadOnly)
 	FGameplayTag WinTeamTag;
+
+	UPROPERTY(Replicated, BlueprintReadWrite)
+	AJailCell* WorldJailCell;
 };

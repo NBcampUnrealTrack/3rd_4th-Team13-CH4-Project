@@ -45,6 +45,7 @@ void ATFDGameMode::BeginPlay()
 	{
 		NumberOfAI = RuleData->NumberOfAI;
 	}
+	
 }
 
 APawn* ATFDGameMode::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, AActor* StartSpot)
@@ -526,6 +527,25 @@ void ATFDGameMode::OnCatchThief(APawn* Pawn)
 	if (GetGameState()->CaughtThiefPlayerStateArray.Num() == GetGameState()->ThiefPlayerStateArray.Num())
 	{
 		GameEnd(EGameCompleteType::CatchAllThief);
+	}
+}
+
+void ATFDGameMode::OffCatchThief(APawn* Pawn)
+{
+	APlayerState* OffCatchPlayerState = Pawn->GetPlayerState();
+
+	if (OffCatchPlayerState == nullptr)
+		return;
+
+	if (ATFDPlayerState* PS = Cast<ATFDPlayerState>(OffCatchPlayerState))
+	{
+		// ATFDPlayerState*로 WeakPtr 생성
+		TWeakObjectPtr<ATFDPlayerState> WeakPS = MakeWeakObjectPtr<ATFDPlayerState>(PS);
+
+		// 배열에 저장 가능
+		GetGameState()->CaughtThiefPlayerStateArray.Remove(WeakPS);
+
+		GetGameState()->OnThievesChanged.Broadcast();
 	}
 }
 
