@@ -34,3 +34,15 @@ UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SpawnPoint_Period,"Object.SpawnPoint.Period");
 
 //5.게임플레이큐 - 이펙트
 UE_DEFINE_GAMEPLAY_TAG(TAG_GameplayCue_Arrested, "GameplayCue.Arrested");
+
+//6. 쿨타임
+UE_DEFINE_GAMEPLAY_TAG(TAG_CoolDown, "CoolDown");
+UE_DEFINE_GAMEPLAY_TAG(TAG_CoolDown_Duration, "CoolDown.Duration");
+
+
+
+//7.GameAbility Tag
+UE_DEFINE_GAMEPLAY_TAG(TAG_GameAbility, "GameAbility");
+UE_DEFINE_GAMEPLAY_TAG(TAG_GameAbilityTask, "GameAbilityTask");
+UE_DEFINE_GAMEPLAY_TAG(TAG_GameAbilityTask_FireProjectile, "GameAbilityTask.FireProjectile");
+UE_DEFINE_GAMEPLAY_TAG(TAG_GameAbilityEffect, "GameAbilityEffect");

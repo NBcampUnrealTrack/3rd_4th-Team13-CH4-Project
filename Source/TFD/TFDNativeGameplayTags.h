@@ -37,3 +37,18 @@ UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Object_SpawnPoint_Period);
 
 //5.게임플레이큐 - 이펙트
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_GameplayCue_Arrested); //체포 시 효과
+
+
+//6 쿨타임관련
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_CoolDown);
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_CoolDown_Duration);
+
+//7.GameAbility Tag
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_GameAbility);
+
+
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_GameAbilityTask);
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_GameAbilityTask_FireProjectile);
+
+
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_GameAbilityEffect);
