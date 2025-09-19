@@ -12,6 +12,13 @@ class USphereComponent;
 class UStaticMeshComponent;
 class UGameplayEffect;
 
+USTRUCT(BlueprintType)
+struct FTFDBaseObjectParam
+{
+	GENERATED_BODY()
+
+	
+};
 UCLASS()
 class TFD_API ATFDBaseObject : public AActor
 {
