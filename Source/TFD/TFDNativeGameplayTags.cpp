@@ -33,8 +33,12 @@ UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SpawnPoint_Period,"Object.SpawnPoint.Period");
 
 
 //5.게임플레이큐 - 이펙트
-UE_DEFINE_GAMEPLAY_TAG(TAG_GameplayCue_Arrested, "GameplayCue.Arrested");
+UE_DEFINE_GAMEPLAY_TAG(TAG_GameplayCue_Character_Arrested, "GameplayCue.Character.Arrested");
+UE_DEFINE_GAMEPLAY_TAG(TAG_GameplayCue_Character_HandCuff, "GameplayCue.Character.HandCuff");
 
+//GameplayEvent
+UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Cop_HandCuff_Apply, "Ability.Cop.HandCuff.Apply"); // 체포 발동 시점 GameplayEvent 수신 태그
+UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Cop_HandCuff_End, "Ability.Cop.HandCuff.End"); // 체포 발동 시점 GameplayEvent 수신 태그
 // 6. 입력 - 스킬 슬롯
 UE_DEFINE_GAMEPLAY_TAG(TAG_Input_Skill_Slot1, "Input.Skill.Slot1");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Input_Skill_Slot2, "Input.Skill.Slot2");
