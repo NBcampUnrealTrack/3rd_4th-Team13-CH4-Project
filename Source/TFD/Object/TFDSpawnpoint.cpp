@@ -18,28 +18,42 @@ ATFDSpawnpoint::ATFDSpawnpoint()
 
 void ATFDSpawnpoint::SpawnItem()
 {
+	if (SpawnedItem.IsValid())
+	{
+		// 이미 아이템이 있으면 스폰하지 않음
+		return;
+	}
+	
 	if (ItemClass == nullptr)
 		return;
 
-	ATFDBaseObject* SpawnedItem = GetWorld()->SpawnActor<ATFDBaseObject>(
+	ATFDBaseObject* NewSpawnedItem = GetWorld()->SpawnActor<ATFDBaseObject>(
 		ItemClass,
 		GetActorLocation(),
 		GetActorRotation()
 	);
 
-	if (!SpawnedItem) return;
+	if (!NewSpawnedItem)
+		return;
 
+	SpawnedItem = NewSpawnedItem;
+	
+	
+	// 아이템 소멸 시 콜백 등록
+	NewSpawnedItem->OnDestroyed.AddDynamic(this,&ATFDSpawnpoint::OnSpawnedItemDestroyed);
+
+	
 	if (ATFDGameState* GS = GetWorld()->GetGameState<ATFDGameState>())
 	{
-		const FGameplayTagContainer& TeamTags = SpawnedItem->GetAllowedTeamTag();
+		const FGameplayTagContainer& TeamTags = NewSpawnedItem->GetAllowedTeamTag();
 
 		if (TeamTags.HasTag(TAG_Team_Cop))
 		{
-			GS->PoliceMapItemArray.Add(MakeWeakObjectPtr(SpawnedItem));
+			GS->PoliceMapItemArray.Add(MakeWeakObjectPtr(NewSpawnedItem));
 		}
 		else if (TeamTags.HasTag(TAG_Team_Thief))
 		{
-			GS->ThiefMapItemArray.Add(MakeWeakObjectPtr(SpawnedItem));
+			GS->ThiefMapItemArray.Add(MakeWeakObjectPtr(NewSpawnedItem));
 		}
 	}
 }
@@ -49,6 +63,21 @@ void ATFDSpawnpoint::BeginPlay()
 {
 	Super::BeginPlay();
 	SetAllowedTeamTag();
+}
+
+void ATFDSpawnpoint::OnSpawnedItemDestroyed(AActor* DestroyedActor)
+{
+	SpawnedItem.Reset();
+    
+	// 일정 시간 후 다시 스폰
+	GetWorld()->GetTimerManager().SetTimer(
+		ItemPeriodSpawnTimerHandle,
+		this,
+		&ATFDSpawnpoint::SpawnItem,
+		SpawnPeriodSec,
+		false
+	);
+	
 }
 
 void ATFDSpawnpoint::SetAllowedTeamTag()
@@ -62,6 +91,8 @@ void ATFDSpawnpoint::SetAllowedTeamTag()
 
 
 	ItemClass = pGameMode->GetDTAllowedTeamTag_Item(ItemTag);
+
+	SpawnPeriodSec = pGameMode->GetDTAllowedTeamTag_Period(ItemTag);
 }
 
 // Called every frame

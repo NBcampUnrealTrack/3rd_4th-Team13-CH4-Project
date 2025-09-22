@@ -25,6 +25,9 @@
 #include "UI/InGame/ResultWidget.h"
 #include "UI/InGame/MiniMapWidget.h"
 
+// 스킬 시스템 관련
+#include "GameAbilitySystem/Component/TFDSkillManagerComponent.h"
+
 // 이하 OutGame 관련 - Lobby
 #include "Constants/TFDGameConstants.h"
 #include "TimerManager.h"	// 타이머 매니저 관련
@@ -117,14 +120,15 @@ void ATFDPlayerController::SetupInputComponent()
 	{
 		check(MoveAction);
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ATFDPlayerController::Move);
-
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ATFDPlayerController::Look);
-
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ATFDPlayerController::Jump);
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this,
-		                                   &ATFDPlayerController::StopJumping);
-		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Triggered, this,
-								   &ATFDPlayerController::Dash);
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ATFDPlayerController::StopJumping);
+		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Triggered, this, &ATFDPlayerController::Dash);
+
+		// 스킬 시스템 관련
+		EnhancedInputComponent->BindAction(Skill1Action, ETriggerEvent::Started, this, &ATFDPlayerController::OnSkillInput1);
+		EnhancedInputComponent->BindAction(Skill2Action, ETriggerEvent::Started, this, &ATFDPlayerController::OnSkillInput2);
+		EnhancedInputComponent->BindAction(Skill3Action, ETriggerEvent::Started, this, &ATFDPlayerController::OnSkillInput3);
 	}
 }
 
@@ -190,26 +194,27 @@ void ATFDPlayerController::AcknowledgePossession(APawn* InPawn)
 
 	if (IsLocalPlayerController())
 	{
-		if (ATFDCharacterBase* CB = Cast<ATFDCharacterBase>(InPawn))
+		ATFDCharacterBase* CB = Cast<ATFDCharacterBase>(InPawn);
+		if (!CB) return;
+		
+		UEnhancedInputLocalPlayerSubsystem* Subsystem =
+			ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer());
+		if(!Subsystem) return;
+
+		if (CB->CharacterData->JobMappingContext)
 		{
-			if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
-				ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
-			{
-				if (CB->CharacterData->JobMappingContext)
-				{
+			Subsystem->AddMappingContext(CB->CharacterData->JobMappingContext, 0);
+		}
 
-					Subsystem->AddMappingContext(CB->CharacterData->JobMappingContext, 0);
-				}
-			}
 
-			//********직업에 따른 능력 입력 바인딩************
-			if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
-			{
-				for (auto& Action : CB->CharacterData->Actions)
-				{
-					EnhancedInputComponent->BindAction(Action.InputAction, ETriggerEvent::Started, this, &ATFDPlayerController::JobAbility, Action.Tag);
-				}
-			}
+		//********직업에 따른 능력 입력 바인딩************
+		UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent);
+		if (!EnhancedInputComponent)
+			return;
+
+		for (auto& Action : CB->CharacterData->Actions)
+		{
+			EnhancedInputComponent->BindAction(Action.InputAction, ETriggerEvent::Started, this, &ATFDPlayerController::JobAbility, Action.Tag);
 		}
 	}
 }
@@ -282,6 +287,38 @@ void ATFDPlayerController::StopJumping()
 	}
 }
 
+void ATFDPlayerController::OnSkillInput1(const FInputActionValue& Value)
+{
+	if (APawn* ControlledPawn = GetPawn())
+	{
+		if (UTFDSkillManagerComponent* SkillManager = ControlledPawn->FindComponentByClass<UTFDSkillManagerComponent>())
+		{
+			SkillManager->UseSkillAtSlot(0);
+		}
+	}
+}
+
+void ATFDPlayerController::OnSkillInput2(const FInputActionValue& Value)
+{
+	if (APawn* ControlledPawn = GetPawn())
+	{
+		if (UTFDSkillManagerComponent* SkillManager = ControlledPawn->FindComponentByClass<UTFDSkillManagerComponent>())
+		{
+			SkillManager->UseSkillAtSlot(1);
+		}
+	}
+}
+
+void ATFDPlayerController::OnSkillInput3(const FInputActionValue& Value)
+{
+	if (APawn* ControlledPawn = GetPawn())
+	{
+		if (UTFDSkillManagerComponent* SkillManager = ControlledPawn->FindComponentByClass<UTFDSkillManagerComponent>())
+		{
+			SkillManager->UseSkillAtSlot(2);
+		}
+	}
+}
 
 //DataAsset에서 추가한 액션과 태그로 자동 바인딩
 void ATFDPlayerController::JobAbility(const FInputActionValue& Value, FGameplayTag InputTag)

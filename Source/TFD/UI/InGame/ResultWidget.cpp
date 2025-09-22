@@ -57,6 +57,9 @@ void UResultWidget::InitResult(FGameplayTag WinTeamTag, EGameCompleteType InComp
     case EGameCompleteType::ThiefWinByScore:
         ConditionStr = TEXT("도둑이 모든 포인트를 모았습니다.");
         break;
+    case EGameCompleteType::Aborted:
+        ConditionStr = TEXT("게임 진행 불가");
+        break;
     default:
         ConditionStr = TEXT("");
         break;

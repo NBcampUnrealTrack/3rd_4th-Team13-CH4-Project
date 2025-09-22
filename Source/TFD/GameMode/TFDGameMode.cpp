@@ -39,6 +39,12 @@ void ATFDGameMode::BeginPlay()
 		// 점수 변경 이벤트 구독
 		GetGameState()->OnThiefScoreChanged.AddDynamic(this, &ATFDGameMode::HandleThiefScoreChanged);
 	}
+
+	RuleData = GetGameState()->GetRuleData();
+	if (RuleData)
+	{
+		NumberOfAI = RuleData->NumberOfAI;
+	}
 }
 
 APawn* ATFDGameMode::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, AActor* StartSpot)
@@ -64,7 +70,6 @@ APawn* ATFDGameMode::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, 
 		nullptr, ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn);
 	if (!Pawn) return nullptr;
 
-	const FGameRuleData& RuleData = GetGameState()->GetRuleData();
 	ATFDPlayerState* PState = Cast<ATFDPlayerState>(NewPlayer->PlayerState);
 	ATFDCharacterBase* TFDPawn = Cast<ATFDCharacterBase>(Pawn);
 	if (PState && TFDPawn)
@@ -72,12 +77,12 @@ APawn* ATFDGameMode::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, 
 		FGameplayTag Tag = PState->GetTeamTag();
 		if (Tag == TAG_Team_Thief)
 		{
-			TFDPawn->CharacterData = RuleData.ThiefDataAsset;
+			TFDPawn->CharacterData = RuleData->ThiefDataAsset;
 			GetGameState()->ThiefPlayerStateArray.Add(PState);
 		}
 		else if (Tag == TAG_Team_Cop)
 		{
-			TFDPawn->CharacterData = RuleData.PoliceDataAsset;
+			TFDPawn->CharacterData = RuleData->PoliceDataAsset;
 			GetGameState()->PolicePlayerStateArray.Add(PState);
 		}
 	}
@@ -105,7 +110,7 @@ void ATFDGameMode::HandleMatchHasStarted()
 	Super::HandleMatchHasStarted();
 	UE_LOG(LogTemp, Warning, TEXT("HandleMatchHasStarted"));
 	//게임 시작 처리
-	GetGameState()->GameRemainServerTime = GetGameState()->GetRuleData().PlayTimeSec;
+	GetGameState()->GameRemainServerTime = RuleData->PlayTimeSec;
 	SetActorTickEnabled(true);
 	GamePause(false);
 }
@@ -119,12 +124,11 @@ void ATFDGameMode::HandleMatchHasEnded()
 
 	SetActorTickEnabled(false);
 
-	const FGameRuleData& RuleData = GetGameState()->GetRuleData();
 	GetWorldTimerManager().SetTimer(
 		LobbyReturnTimerHandle,
 		this,
 		&ATFDGameMode::ReturnToLobby,
-		RuleData.ReturnToLobbySec,
+		RuleData->ReturnToLobbySec,
 		false
 	);
 }
@@ -199,7 +203,7 @@ void ATFDGameMode::SpawnAI()
 	FRotator SpawnRot = FRotator::ZeroRotator;
 
 	FGameplayTag AITag = TAG_Team_Neutral;
-	TSubclassOf<ATFDCharacterBase> AIClass = GetGameState()->GetRuleData().PawnClassAI;
+	TSubclassOf<ATFDCharacterBase> AIClass = RuleData->PawnClassAI;
 	for (int32 i = 0; i < NumberOfAI; ++i)
 	{
 		SpawnLoc = GetRandomPointInSpawnAreaTag(AITag);
@@ -222,6 +226,7 @@ void ATFDGameMode::SpawnItemStart()
 		}
 	}
 }
+
 
 
 UDataTable* ATFDGameMode::GetDTAllowedTeamTag()
@@ -265,7 +270,6 @@ TSubclassOf<AActor> ATFDGameMode::GetDTAllowedTeamTag_Item(FGameplayTag ArgGamep
 
 	if (!DTAllowedTeamTag)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("DTZ:AllowTeamDataTable is not set."));
 		return ResultItem;
 	}
 	
@@ -277,12 +281,35 @@ TSubclassOf<AActor> ATFDGameMode::GetDTAllowedTeamTag_Item(FGameplayTag ArgGamep
 		if (Row && Row->ItemTag == ArgGameplayTag)
 		{
 			ResultItem = Row->ItemClass;
-			UE_LOG(LogTemp, Warning, TEXT("DTZ:."));
 			break;
 		}
 	}
 	
 	return ResultItem;
+}
+
+float ATFDGameMode::GetDTAllowedTeamTag_Period(FGameplayTag ArgGameplayTag)
+{
+	float result = 0.f;
+
+	if (!DTAllowedTeamTag)
+	{
+		return result;
+	}
+	
+	TArray<FAllowTeamTag*> AllRows;
+	DTAllowedTeamTag->GetAllRows<FAllowTeamTag>(TEXT("GetAllRows"), AllRows);
+
+	for (FAllowTeamTag* Row : AllRows)
+	{
+		if (Row && Row->ItemTag == ArgGameplayTag)
+		{
+			result = Row->SpawnPeriodSec;
+			break;
+		}
+	}
+	
+	return result;
 }
 
 FSpawnPointArray ATFDGameMode::GetSpawnPointArrayTag(ETeamType InEnum)
@@ -507,7 +534,7 @@ void ATFDGameMode::HandleThiefScoreChanged(int32 NewScore)
 	UE_LOG(LogTemp, Log, TEXT("Thief Score Changed: %d"), NewScore);
 
 	//도둑 승리 점수 체크
-	if (NewScore >= GetGameState()->GetRuleData().ThiefScoreForWin)
+	if (NewScore >= RuleData->ThiefScoreForWin)
 	{
 		//일단은 게임 종료, 이후 점수 달성하면 특정 장소를 스폰할지 뭘할지 생각해보기
 		GameEnd(EGameCompleteType::ThiefWinByScore);
@@ -604,16 +631,69 @@ void ATFDGameMode::Tick(float DeltaTime)
 
 	GetGameState()->GameRemainServerTime -= DeltaTime;
 
-	// 호스트용 직접 브로드캐스트
-	if (GetGameState()->HasAuthority())
-	{
-		GetGameState()->OnGameTimeChanged.Broadcast(GetGameState()->GameRemainServerTime);
-	}
-
-
 	// 시간이 종료될 시 게임 종료 로직
 	if (GetGameState()->GameRemainServerTime < 0)
 	{
 		GameEnd(EGameCompleteType::TimeLimit);
 	}
+}
+
+void ATFDGameMode::Logout(AController* Exiting)
+{
+	Super::Logout(Exiting);
+	
+	UE_LOG(LogTemp, Warning, TEXT("Player Logout Exiting"));
+	ATFDPlayerState* PS = Exiting->GetPlayerState<ATFDPlayerState>();
+	if(!PS) return;
+
+	ATFDGameState* GS = GetGameState();
+	if (!GS) return;
+	
+	// 경찰/도둑/잡힌도둑 배열에서 제거, 각 배열이 변경되면 GameState에서 OnRep_로 UI 변경까지 진행됨
+	GS->PolicePlayerStateArray.Remove(PS);
+	GS->ThiefPlayerStateArray.Remove(PS);
+	GS->CaughtThiefPlayerStateArray.Remove(PS);
+
+	GS->OnThiefArrayChanged.Broadcast(GS->ThiefPlayerStateArray);
+
+	CheckGameContinuable();
+
+}
+
+void ATFDGameMode::CheckGameContinuable()
+{
+	//게임이 지속 가능한지 체크
+	ATFDGameState* GS = GetGameState();
+	if (!GS) return;
+
+	//도둑이 전부 나갔으면 게임 종료
+	if (GS->ThiefPlayerStateArray.Num() == 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No thieves left. Ending game."));
+		GetGameState()->SetWinTeam(TAG_Team_Cop, EGameCompleteType::Aborted);
+		EndMatch();
+		return;
+	}
+
+	//도둑이 나간 경우 살아있는 도둑은 없고 잡힌 도둑만 남아있으면 게임 종료
+	if (GS->ThiefPlayerStateArray.Num() == GS->CaughtThiefPlayerStateArray.Num())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No Alive thieves left. Ending game."));
+		GetGameState()->SetWinTeam(TAG_Team_Cop, EGameCompleteType::Aborted);
+		EndMatch();
+		return;
+	}
+
+	//경찰이 전부 나갔으면 게임 종료
+	if(GS->PolicePlayerStateArray.Num() == 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No police left. Thieves win!"));
+		GetGameState()->SetWinTeam(TAG_Team_Thief, EGameCompleteType::Aborted);
+		EndMatch();
+		return;
+	}
+
+	// 아직 게임 진행 가능 → 그냥 넘어감
+	UE_LOG(LogTemp, Warning, TEXT("Game still playable. Continue..."));
+	
 }

@@ -6,6 +6,7 @@
 #include "GameFramework/GameMode.h"
 #include "GameState/TFDGameState.h"
 #include "GameData/EGameEnums.h"
+#include "GameData/TFDGameRuleData.h"
 #include "TFDGameMode.generated.h"
 
 class ATFDAICharacter;
@@ -18,8 +19,8 @@ struct FGameplayTag;
 UENUM(BlueprintType)
 enum class ETeamType : uint8
 {
-	Cop     UMETA(DisplayName = "Cop"),
-	Thief   UMETA(DisplayName = "Thief"),
+	Cop UMETA(DisplayName = "Cop"),
+	Thief UMETA(DisplayName = "Thief"),
 	Neutral UMETA(DisplayName = "Neutral")
 };
 
@@ -47,10 +48,10 @@ public:
 	void GamePause(bool bIsPaused);
 
 #pragma region 게임 상태 변화에 따른 로직
-	
+
 	//StartMatch()가 호출됐을 때 WaitingToStart 에서 InProgress 로 넘어가기 전에 넘어가도 되는지 판단 (bool 값)
 	virtual bool ReadyToStartMatch_Implementation() override;
-	
+
 	//MatchState 가 WaitingToStart로 바뀔 때 호출
 	virtual void HandleMatchIsWaitingToStart() override;
 
@@ -68,18 +69,24 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
-	
+	virtual void Logout(AController* Exiting) override;
+
 	//virtual UClass* GetDefaultPawnClassForController_Implementation(AController* InController) override;
 	virtual APawn* SpawnDefaultPawnFor_Implementation(AController* NewPlayer, AActor* StartSpot) override;
-	
+
 	UPROPERTY()
 	TArray<ATFDSpawnVolume*> SpawnVolumes;
 
 	ATFDGameState* GameState;
 
+	UTFDGameRuleData* RuleData;
+
 	UFUNCTION()
 	void HandleThiefScoreChanged(int32 NewScore);
-	
+
+	UFUNCTION()
+	void CheckGameContinuable();
+
 	FTimerHandle LobbyReturnTimerHandle;
 
 	UFUNCTION()
@@ -87,6 +94,7 @@ protected:
 
 
 #pragma region 스폰관련
+
 protected:
 	UPROPERTY()
 	TMap<ETeamType, FSpawnPointArray> WorldSpawnPointsByTeam;
@@ -95,30 +103,32 @@ public:
 	void SpawnAI();
 	void SpawnItemStart();
 
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Spawn")
 	int32 NumberOfAI;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DataTable")
 	UDataTable* DTAllowedTeamTag;
+
 public:
 	UDataTable* GetDTAllowedTeamTag();
 	FGameplayTagContainer GetDTAllowedTeamTagContainer(FGameplayTag ArgGameplayTag);
 	TSubclassOf<AActor> GetDTAllowedTeamTag_Item(FGameplayTag ArgGameplayTag);
+	float GetDTAllowedTeamTag_Period(FGameplayTag ArgGameplayTag);
+
 private:
 	//팀 enum 넣으면 SpawnPointArray 받는 함수
 	FSpawnPointArray GetSpawnPointArrayTag(ETeamType InEnum);
-	
+
 	FVector GetRandomPointInSpawnArea();
 	FVector GetRandomPointInSpawnAreaTag(FGameplayTag InTag);
 	FVector GetRandomPointInSpawnAreaAI();
-	
+
 	ATFDSpawnVolume* GetRandomSpawnVolume();
 	ATFDSpawnVolume* GetRandomSpawnVolumeTag(FGameplayTag InTag);
 
 	void InitializeSpawnPoints();
-	
+
 	void InitializeSpawnVolumes();
 	void MovePlayerToRandomSpawnPoint(APlayerController* PlayerController);
 #pragma endregion
-
 };
