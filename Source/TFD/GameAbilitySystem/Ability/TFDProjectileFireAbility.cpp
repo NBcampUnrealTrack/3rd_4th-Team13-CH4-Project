@@ -43,10 +43,3 @@ void UTFDProjectileFireAbility::EndAbility(const FGameplayAbilitySpecHandle Hand
 
 
 
-void UTFDProjectileFireAbility::OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo,
-                                              const FGameplayAbilitySpec& Spec)
-{
-	Super::OnGiveAbility(ActorInfo, Spec);
-}
-
-

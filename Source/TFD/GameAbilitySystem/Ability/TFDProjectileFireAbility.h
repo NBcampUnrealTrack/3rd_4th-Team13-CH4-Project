@@ -34,10 +34,6 @@ public:
 		bool bReplicateEndAbility,
 		bool bWasCancelled) override;
 
-	virtual bool CheckCooldown(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
-						   OUT FGameplayTagContainer* OptionalRelevantTags) const override;
-
-	virtual void OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec) override;
 
 
 protected:
@@ -45,9 +41,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "TFD|Ability")
 	bool bIsOnAutoCast = false;
 	
-	// 쿨다운으로 사용할 GE 클래스 (BP에서 세팅)
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "TFD|Ability|Cooldown")
-	TSubclassOf<UGameplayEffect> CooldownGameplayEffectClass;
+	// // 쿨다운으로 사용할 GE 클래스 (BP에서 세팅)
+	// UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "TFD|Ability|Cooldown")
+	// TSubclassOf<UGameplayEffect> CooldownGameplayEffectClass;
 
 protected:
 
