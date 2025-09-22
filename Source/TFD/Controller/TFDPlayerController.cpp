@@ -209,7 +209,8 @@ void ATFDPlayerController::AcknowledgePossession(APawn* InPawn)
 
 		//********직업에 따른 능력 입력 바인딩************
 		UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent);
-		if (!EnhancedInputComponent) return;
+		if (!EnhancedInputComponent)
+			return;
 
 		for (auto& Action : CB->CharacterData->Actions)
 		{
