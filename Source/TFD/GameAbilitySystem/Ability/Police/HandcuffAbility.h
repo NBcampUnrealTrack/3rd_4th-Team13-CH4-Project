@@ -65,5 +65,6 @@ private:
 
 	UFUNCTION()
 	void OnApplyCuffEvent(FGameplayEventData Payload); // ← AnimNotify로 쏘는 GameplayEvent 수신
-
+	UFUNCTION()
+	void OnEndCuffEvent(FGameplayEventData Payload);
 };

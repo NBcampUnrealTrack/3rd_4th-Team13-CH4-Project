@@ -49,7 +49,7 @@ protected:
 		USkeletalMeshComponent* MeshComp = Pawn->FindComponentByClass<USkeletalMeshComponent>();
 		if (!MeshComp) return false;
 
-		MeshComp->GetAnimInstance()->Montage_Stop(0.08f, MontageToPlay);
+		MeshComp->GetAnimInstance()->Montage_Stop(0.03f, MontageToPlay);
 		return true;
 	}
 };

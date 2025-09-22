@@ -13,9 +13,6 @@ UE_DEFINE_GAMEPLAY_TAG(TAG_Character_State_Idle, "Character.State.Idle");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Character_State_Stun, "Character.State.Stun");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Character_State_Detecting, "Character.State.Detecting");
 
-
-UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Cop_HandCuff_Apply, "Ability.Cop.HandCuff.Apply"); // 체포 발동 시점 GameplayEvent 수신 태그
-
 //3.캐릭터 능력 
 UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Cop_Handcuff, "Ability.Cop.Handcuff");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Thief_Steal, "Ability.Thief.Steal");
@@ -35,3 +32,7 @@ UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SpawnPoint_Neutral,"Object.SpawnPoint.Neutral"
 //5.게임플레이큐 - 이펙트
 UE_DEFINE_GAMEPLAY_TAG(TAG_GameplayCue_Character_Arrested, "GameplayCue.Character.Arrested");
 UE_DEFINE_GAMEPLAY_TAG(TAG_GameplayCue_Character_HandCuff, "GameplayCue.Character.HandCuff");
+
+//GameplayEvent
+UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Cop_HandCuff_Apply, "Ability.Cop.HandCuff.Apply"); // 체포 발동 시점 GameplayEvent 수신 태그
+UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Cop_HandCuff_End, "Ability.Cop.HandCuff.End"); // 체포 발동 시점 GameplayEvent 수신 태그

@@ -20,7 +20,10 @@ UHandcuffAbility::UHandcuffAbility()
 	//필요하면 쿨다운, 코스트, 차단 조건 추가
 
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
-	//NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::ServerInitiated; // 로컬 입력 → 서버 실행
+
+	// 입력 즉시 반응 + 서버 검증
+	NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::LocalPredicted;
+	ReplicationPolicy  = EGameplayAbilityReplicationPolicy::ReplicateNo;
 }
 
 void UHandcuffAbility::ActivateAbility(
@@ -44,10 +47,15 @@ void UHandcuffAbility::ActivateAbility(
 		return;
 	}
 	UAbilitySystemComponent* ASC = GetCurrentActorInfo()->AbilitySystemComponent.Get();
+
+	if (!ASC) return;
 	
 	FGameplayEffectSpecHandle EffectSpec = ASC->MakeOutgoingSpec(
 		HandcuffAnimEffect, GetAbilityLevel(), ASC->MakeEffectContext()
 	);
+	if (EffectSpec.IsValid() == false)
+		return;
+	
 	// 자신에게 적용
 	FActiveGameplayEffectHandle EffectHandle = ASC->ApplyGameplayEffectSpecToSelf(*EffectSpec.Data.Get());
 	if (EffectHandle.IsValid() && EffectHandle.WasSuccessfullyApplied())
@@ -56,6 +64,12 @@ void UHandcuffAbility::ActivateAbility(
 			UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, TAG_Ability_Cop_HandCuff_Apply, nullptr, true, true);
 		WaitEvent->EventReceived.AddDynamic(this, &UHandcuffAbility::OnApplyCuffEvent);
 		WaitEvent->ReadyForActivation();
+
+		UAbilityTask_WaitGameplayEvent* WaitEventAnimEnd =
+			UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, TAG_Ability_Cop_HandCuff_End,
+				nullptr, true, true);
+		WaitEventAnimEnd->EventReceived.AddDynamic(this, &UHandcuffAbility::OnEndCuffEvent);
+		WaitEventAnimEnd->ReadyForActivation();
 	}
 	else
 	{
@@ -192,4 +206,9 @@ void UHandcuffAbility::OnApplyCuffEvent(FGameplayEventData Payload)
 			}
 		}
 	}
+}
+
+void UHandcuffAbility::OnEndCuffEvent(FGameplayEventData Payload)
+{
+	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }

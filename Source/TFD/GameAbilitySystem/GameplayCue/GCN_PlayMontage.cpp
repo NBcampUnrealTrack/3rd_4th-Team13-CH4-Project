@@ -7,4 +7,5 @@ void AGCN_PlayMontage::HandleGameplayCue(AActor* MyTarget, EGameplayCueEvent::Ty
 	const FGameplayCueParameters& Parameters)
 {
 	Super::HandleGameplayCue(MyTarget, EventType, Parameters);
+	UE_LOG(LogTemp, Log, TEXT("Play Montage, EventType : %d"), EventType);
 }
