@@ -78,10 +78,18 @@ private:
 	void Jump(const FInputActionValue& Value);
 	void StopJumping();
 
+	//===================================================
 	// 스킬 시스템 관련
+
+	// 입력 바인딩 함수
 	void OnSkillInput1(const FInputActionValue& Value);
 	void OnSkillInput2(const FInputActionValue& Value);
 	void OnSkillInput3(const FInputActionValue& Value);
+
+	// Skill input 공통 처리 함수
+	void HandleSkillInput(int32 SlotIndex);
+	//===================================================
+
 	/*
 	void Attack(const FInputActionValue& Value);
 	void TogglePause(const FInputActionValue& Value);

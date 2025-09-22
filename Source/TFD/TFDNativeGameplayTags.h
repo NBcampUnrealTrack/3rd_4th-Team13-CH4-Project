@@ -38,6 +38,13 @@ UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Object_SpawnPoint_Neutral);
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Object_SpawnPoint_Period); 
 
 //5.게임플레이큐 - 이펙트
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_GameplayCue_Character_Arrested); //체포 시 효과
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_GameplayCue_Character_HandCuff); //체포 시도 효과
+
+//6.GameplayEvent
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ability_Cop_HandCuff_Apply); //잡기 발동 시점
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ability_Cop_HandCuff_End);   //잡기 종료.
+
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_GameplayCue_Arrested); //체포 시 효과
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_GameplayCue_Hiding);
 

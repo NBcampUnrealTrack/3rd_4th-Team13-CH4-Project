@@ -70,6 +70,7 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
+	virtual void Logout(AController* Exiting) override;
 
 	//virtual UClass* GetDefaultPawnClassForController_Implementation(AController* InController) override;
 	virtual APawn* SpawnDefaultPawnFor_Implementation(AController* NewPlayer, AActor* StartSpot) override;
@@ -84,8 +85,10 @@ protected:
 	UFUNCTION()
 	void HandleThiefScoreChanged(int32 NewScore);
 
-	FTimerHandle LobbyReturnTimerHandle;
+	UFUNCTION()
+	void CheckGameContinuable();
 
+	FTimerHandle LobbyReturnTimerHandle;
 
 	UFUNCTION()
 	void ReturnToLobby();

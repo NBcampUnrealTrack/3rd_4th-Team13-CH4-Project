@@ -25,31 +25,25 @@ public:
 		const FGameplayEventData* TriggerEventData
 	) override;
 
-	virtual void EndAbility(
-		const FGameplayAbilitySpecHandle Handle,
-		const FGameplayAbilityActorInfo* ActorInfo,
-		const FGameplayAbilityActivationInfo ActivationInfo,
-		bool bReplicateEndAbility,
-		bool bWasCancelled
-	) override;
-
-private:
-
-	//잡힌 대상의 정보 가져오기
-	AActor* FindTarget(const FGameplayAbilityActorInfo* ActorInfo) const;
-
-	//잡힌 대상에게 상태적용
-	void HandcuffToTarget(AActor* TargetActor, const FGameplayAbilityActorInfo* ActorInfo);
+	// virtual void EndAbility(
+	// 	const FGameplayAbilitySpecHandle Handle,
+	// 	const FGameplayAbilityActorInfo* ActorInfo,
+	// 	const FGameplayAbilityActivationInfo ActivationInfo,
+	// 	bool bReplicateEndAbility,
+	// 	bool bWasCancelled
+	// ) override;
 
 protected:
 	//Handcuff 적용 거리
 	UPROPERTY(EditDefaultsOnly, Category = "Handcuff")
-	float GrabRange = 100.f;
+	float GrabRange = 250.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Handcuff")
+	FVector GrabOffset = FVector(175.f, 0, 0);
 
 	//Handcuff 적용 시간
 	UPROPERTY(EditDefaultsOnly, Category = "Handcuff")
-	float CuffDuration = 3.f;
-
+	float CuffDuration = 1.8f;
 
 	// 에디터에서 세팅할 몽타주
 	UPROPERTY(EditDefaultsOnly, Category = "Handcuff|Anim")
@@ -62,19 +56,15 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ability|Effects")
 	TSubclassOf<UGameplayEffect> ArrestedEffect;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ability|Effects")
+	TSubclassOf<UGameplayEffect> HandcuffAnimEffect;
 
 private:
-	// Task 콜백
-	UFUNCTION()
-	void OnHandcuffMontageCompleted();
-
-	UFUNCTION()
-	void OnHandcuffMontageInterrupted();
-
-	UFUNCTION()
-	void OnHandcuffMontageCancelled();
+	//잡힌 대상에게 상태적용
+	void HandcuffToTarget(AActor* TargetActor, const FGameplayAbilityActorInfo* ActorInfo) const;
 
 	UFUNCTION()
 	void OnApplyCuffEvent(FGameplayEventData Payload); // ← AnimNotify로 쏘는 GameplayEvent 수신
-
+	UFUNCTION()
+	void OnEndCuffEvent(FGameplayEventData Payload);
 };
