@@ -21,10 +21,7 @@ class TFD_API UPlayingWidget : public UUserWidget
 
 public:
     virtual void NativeConstruct() override;
-
-    /** HUD 업데이트 */
-    UFUNCTION()
-    void UpdateFromGameState();
+    virtual void NativeDestruct() override;
 
     UFUNCTION(BlueprintCallable)
     void UpdateThiefScore(int32 NewScore);
@@ -36,12 +33,17 @@ public:
     void UpdateThiefArray(const TArray<TWeakObjectPtr<ATFDPlayerState>>& ThiefPlayerStateArray);
 
     UFUNCTION(BlueprintCallable)
-    void UpdateRemainingTime(float RemainingTimeSec);
+    void UpdateRemainingTime();
 
     UFUNCTION(BlueprintCallable)
     void UpdateTeamName();
 
 protected:
+    float StartGameSec;
+    float TotalGameSec;
+
+    FTimerHandle RemainingTimeHandle;
+
     UPROPERTY(meta = (BindWidget))
     UTextBlock* RemainingTimeText;
 
