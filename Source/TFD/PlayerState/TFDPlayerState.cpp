@@ -21,6 +21,8 @@ void ATFDPlayerState::CopyProperties(APlayerState* NewPlayerState)
 	if (ATFDPlayerState* NewPS = Cast<ATFDPlayerState>(NewPlayerState))
 	{
 		NewPS->TeamTag = TeamTag;
+		NewPS->PreferredTeam = PreferredTeam;
+		NewPS->ActualTeam = ActualTeam;
 	}
 }
 
@@ -71,30 +73,28 @@ FGameplayTag ATFDPlayerState::GetPreferredTeam() const
 	return PreferredTeam;
 }
 
+
 void ATFDPlayerState::SetPreferredTeam(const FGameplayTag& InTeamTag)
 {
 	PreferredTeam = InTeamTag;
 }
 
 // ActualTeam ����
-void ATFDPlayerState::SetActualTeam(const FGameplayTag& NewTeamTag)
-{
-	if (ActualTeam != NewTeamTag)
-	{
-		ActualTeam = NewTeamTag;
-		// �������� ���� �� Ŭ���̾�Ʈ�� ����ȭ
-		UE_LOG(LogTemp, Log, TEXT("Player %s assigned ActualTeam: %s (Server)"),
-			*GetPlayerName(),
-			*ActualTeam.GetTagName().ToString());
-	}
-}
-
-// ���� �� ȹ�� �Լ�
 FGameplayTag ATFDPlayerState::GetActualTeam() const
 {
 	return ActualTeam;
 }
 
+void ATFDPlayerState::SetActualTeam(const FGameplayTag& InTeam)
+{
+	if (ActualTeam != InTeam)
+	{
+		ActualTeam = InTeam;
+		UE_LOG(LogTemp, Log, TEXT("Player %s assigned ActualTeam: %s (Server)"),
+			*GetPlayerName(),
+			*ActualTeam.GetTagName().ToString());
+	}
+}
 // ActualTeam ���� �Ϸ� �� ȣ��� (Ŭ���̾�Ʈ)
 void ATFDPlayerState::OnRep_ActualTeam()
 {

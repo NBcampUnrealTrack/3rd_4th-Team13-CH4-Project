@@ -57,6 +57,8 @@ void ATFDGameMode::BeginPlay()
 
 }
 
+
+
 APawn* ATFDGameMode::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, AActor* StartSpot)
 {
 	if (!NewPlayer || !StartSpot) return nullptr;
@@ -65,8 +67,8 @@ APawn* ATFDGameMode::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, 
 
 	if (!PS || PS->GetTeamTag() == FGameplayTag::EmptyTag)
 		return nullptr;
-	
-	// Pawn 클래스 가져오기
+
+	// Pawn Ŭ���� ��������
 	TSubclassOf<APawn> PawnClass = GetDefaultPawnClassForController(NewPlayer);
 	if (!PawnClass) return nullptr;
 
@@ -391,6 +393,7 @@ ATFDSpawnVolume* ATFDGameMode::GetRandomSpawnVolume()
 	return pSpawnVolume;
 }
 
+
 ATFDSpawnVolume* ATFDGameMode::GetRandomSpawnVolumeTag(FGameplayTag InTag)
 {
 	if (SpawnVolumes.Num() == 0)
@@ -483,10 +486,10 @@ void ATFDGameMode::InitializeSpawnVolumes()
 	if (SpawnVolumes.Num() > 0)
 	{
 		UE_LOG(LogTemp, Display, TEXT("IS: SpawnVolumes already "));
-		return; // 이미 초기화되서 종료
+		return; // �̹� �ʱ�ȭ�Ǽ� ����
 	}
 
-	// ATFDSpawnVolume 클래스만 직접 찾기
+	// ATFDSpawnVolume Ŭ������ ���� ã��
 	for (TActorIterator<ATFDSpawnVolume> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 	{
 		ATFDSpawnVolume* SpawnVolume = *ActorItr;
@@ -523,13 +526,13 @@ void ATFDGameMode::OnCatchThief(APawn* Pawn)
 
 	if (CatchPlayerState == nullptr)
 		return;
-	
+
 	if (ATFDPlayerState* PS = Cast<ATFDPlayerState>(CatchPlayerState))
 	{
-		// ATFDPlayerState*로 WeakPtr 생성
+		// ATFDPlayerState*�� WeakPtr ����
 		TWeakObjectPtr<ATFDPlayerState> WeakPS = MakeWeakObjectPtr<ATFDPlayerState>(PS);
 
-		// 배열에 저장 가능
+		// �迭�� ���� ����
 		GetGameState()->CaughtThiefPlayerStateArray.Add(WeakPS);
 
 		GetGameState()->OnThievesChanged.Broadcast();
