@@ -111,20 +111,13 @@ void UHandcuffAbility::HandcuffToTarget(AActor* TargetActor, const FGameplayAbil
 		return;
 	}
 
-	UAbilitySystemComponent* TargetASC = CB->GetAbilitySystemComponent();
-	if (TargetASC->HasMatchingGameplayTag(TAG_Team_Cop) ||
-		TargetASC->HasMatchingGameplayTag(TAG_Character_State_Arrested))
-	{
-		return;
-	}
+	FActiveGameplayEffectHandle Handle =
+		ActorInfo->AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(
+			*SpecHandle.Data.Get(),
+			CB->GetAbilitySystemComponent()
+		);
 
-	// 경찰도 아니고, Arrested 태그도 없는 경우 이펙트 적용
-	ActorInfo->AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(
-		*SpecHandle.Data.Get(),
-		TargetASC
-	);
-
-	if (!TargetASC->HasMatchingGameplayTag(TAG_Team_Thief))
+	if (!Handle.IsValid())
 	{
 		return;
 	}
