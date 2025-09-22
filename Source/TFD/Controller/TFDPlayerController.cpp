@@ -194,27 +194,26 @@ void ATFDPlayerController::AcknowledgePossession(APawn* InPawn)
 
 	if (IsLocalPlayerController())
 	{
-		if (ATFDCharacterBase* CB = Cast<ATFDCharacterBase>(InPawn))
+		ATFDCharacterBase* CB = Cast<ATFDCharacterBase>(InPawn);
+		if (!CB) return;
+		
+		UEnhancedInputLocalPlayerSubsystem* Subsystem =
+			ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer());
+		if(!Subsystem) return;
+
+		if (CB->CharacterData->JobMappingContext)
 		{
-			if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
-				ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
-			{
-				if (CB->CharacterData->JobMappingContext)
-				{
+			Subsystem->AddMappingContext(CB->CharacterData->JobMappingContext, 0);
+		}
 
-					Subsystem->AddMappingContext(CB->CharacterData->JobMappingContext, 0);
-				}
-			}
 
-			//********직업에 따른 능력 입력 바인딩************
-			if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
-			{
-				for (auto& Action : CB->CharacterData->Actions)
-				{
-					EnhancedInputComponent->BindAction(Action.InputAction, ETriggerEvent::Started, this, &ATFDPlayerController::JobAbility, Action.Tag);
-				}
-				
-			}
+		//********직업에 따른 능력 입력 바인딩************
+		UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent);
+		if (!EnhancedInputComponent) return;
+
+		for (auto& Action : CB->CharacterData->Actions)
+		{
+			EnhancedInputComponent->BindAction(Action.InputAction, ETriggerEvent::Started, this, &ATFDPlayerController::JobAbility, Action.Tag);
 		}
 	}
 }

@@ -6,6 +6,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "PlayerState/TFDPlayerState.h"
 #include "GameState/TFDGameState.h"
+#include "Net/UnrealNetwork.h"
 
 ATFDCharacterBase::ATFDCharacterBase()
 {
@@ -27,6 +28,13 @@ void ATFDCharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
 	BaseSetting();
+}
+
+void ATFDCharacterBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_CONDITION(ATFDCharacterBase, CharacterData, COND_InitialOnly);
 }
 
 void ATFDCharacterBase::OnRep_PlayerState()

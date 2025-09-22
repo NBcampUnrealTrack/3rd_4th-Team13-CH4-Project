@@ -31,6 +31,8 @@ public:
 	virtual void BeginPlay() override;
 	virtual void OnRep_PlayerState() override;
 
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 protected:
 	// GAS 기본 생성자
 	void BaseSetting();
@@ -47,7 +49,6 @@ protected:
 	class UTFDAttributeSet* AttributeSet;
 
 public:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GAS")
-	class UTFDPlayerDataAsset* CharacterData;
-
+	UPROPERTY(Replicated, EditDefaultsOnly, BlueprintReadOnly, Category = "GAS")
+	TSoftObjectPtr<UTFDPlayerDataAsset> CharacterData;
 };

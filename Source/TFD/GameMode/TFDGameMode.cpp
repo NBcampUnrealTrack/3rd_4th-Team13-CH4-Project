@@ -654,6 +654,8 @@ void ATFDGameMode::Logout(AController* Exiting)
 	GS->ThiefPlayerStateArray.Remove(PS);
 	GS->CaughtThiefPlayerStateArray.Remove(PS);
 
+	GS->OnThiefArrayChanged.Broadcast(GS->ThiefPlayerStateArray);
+
 	CheckGameContinuable();
 
 }

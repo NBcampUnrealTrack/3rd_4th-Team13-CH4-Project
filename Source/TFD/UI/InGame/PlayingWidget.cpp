@@ -22,6 +22,7 @@ void UPlayingWidget::NativeConstruct()
     // 델리게이트 바인딩
     CachedGameState->OnThiefScoreChanged.AddDynamic(this, &UPlayingWidget::UpdateThiefScore);
     CachedGameState->OnThievesChanged.AddDynamic(this, &UPlayingWidget::UpdateThiefCount);
+    CachedGameState->OnThiefArrayChanged.AddDynamic(this, &UPlayingWidget::UpdateThiefArray);
     StartGameSec = CachedGameState->GetServerWorldTimeSeconds();
     TotalGameSec = CachedGameState->GetRuleData()->PlayTimeSec;
     
