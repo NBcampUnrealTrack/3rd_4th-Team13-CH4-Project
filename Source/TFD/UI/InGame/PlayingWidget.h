@@ -9,6 +9,7 @@
 
 class UTextBlock;
 class ATFDGameState;
+class ATFDPlayerState;
 
 /**
  * 
@@ -30,6 +31,9 @@ public:
 
     UFUNCTION(BlueprintCallable)
     void UpdateThiefCount();
+
+    UFUNCTION()
+    void UpdateThiefArray(const TArray<TWeakObjectPtr<ATFDPlayerState>>& ThiefPlayerStateArray);
 
     UFUNCTION(BlueprintCallable)
     void UpdateRemainingTime(float RemainingTimeSec);

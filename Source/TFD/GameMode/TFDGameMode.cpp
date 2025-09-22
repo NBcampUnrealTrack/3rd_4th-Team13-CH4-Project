@@ -644,3 +644,61 @@ void ATFDGameMode::Tick(float DeltaTime)
 		GameEnd(EGameCompleteType::TimeLimit);
 	}
 }
+
+void ATFDGameMode::Logout(AController* Exiting)
+{
+	Super::Logout(Exiting);
+	
+	UE_LOG(LogTemp, Warning, TEXT("Player Logout Exiting"));
+	ATFDPlayerState* PS = Exiting->GetPlayerState<ATFDPlayerState>();
+	if(!PS) return;
+
+	ATFDGameState* GS = GetGameState();
+	if (!GS) return;
+	
+	// 경찰/도둑/잡힌도둑 배열에서 제거, 각 배열이 변경되면 GameState에서 OnRep_로 UI 변경까지 진행됨
+	GS->PolicePlayerStateArray.Remove(PS);
+	GS->ThiefPlayerStateArray.Remove(PS);
+	GS->CaughtThiefPlayerStateArray.Remove(PS);
+
+	CheckGameContinuable();
+
+}
+
+void ATFDGameMode::CheckGameContinuable()
+{
+	//게임이 지속 가능한지 체크
+	ATFDGameState* GS = GetGameState();
+	if (!GS) return;
+
+	//도둑이 전부 나갔으면 게임 종료
+	if (GS->ThiefPlayerStateArray.Num() == 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No thieves left. Ending game."));
+		GetGameState()->SetWinTeam(TAG_Team_Cop, EGameCompleteType::Aborted);
+		EndMatch();
+		return;
+	}
+
+	//도둑이 나간 경우 살아있는 도둑은 없고 잡힌 도둑만 남아있으면 게임 종료
+	if (GS->ThiefPlayerStateArray.Num() == GS->CaughtThiefPlayerStateArray.Num())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No Alive thieves left. Ending game."));
+		GetGameState()->SetWinTeam(TAG_Team_Cop, EGameCompleteType::Aborted);
+		EndMatch();
+		return;
+	}
+
+	//경찰이 전부 나갔으면 게임 종료
+	if(GS->PolicePlayerStateArray.Num() == 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No police left. Thieves win!"));
+		GetGameState()->SetWinTeam(TAG_Team_Thief, EGameCompleteType::Aborted);
+		EndMatch();
+		return;
+	}
+
+	// 아직 게임 진행 가능 → 그냥 넘어감
+	UE_LOG(LogTemp, Warning, TEXT("Game still playable. Continue..."));
+	
+}
