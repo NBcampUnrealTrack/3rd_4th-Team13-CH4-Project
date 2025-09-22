@@ -9,6 +9,7 @@
 #include "UI/GameUIRouterSubsystem.h"
 #include "UI/InGame/PlayingWidget.h"
 #include "UI/Widget/UHUDLayoutWidget.h"
+#include "UI/InGame/ResultWidget.h"
 
 ATFDGameState::ATFDGameState()
 {
@@ -28,7 +29,7 @@ int32 ATFDGameState::GetReadyPlayerCount() const
 	return ReadyPlayers.Num();
 }
 
-const FGameRuleData& ATFDGameState::GetRuleData() const
+UTFDGameRuleData* ATFDGameState::GetRuleData() const
 {
 	return GameRuleData;
 }
@@ -37,9 +38,12 @@ void ATFDGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(ATFDGameState, GameRemainServerTime);
 	DOREPLIFETIME(ATFDGameState, ThiefTotalScore);
+	DOREPLIFETIME(ATFDGameState, PolicePlayerStateArray);
+	DOREPLIFETIME(ATFDGameState, ThiefPlayerStateArray);
 	DOREPLIFETIME(ATFDGameState, CaughtThiefPlayerStateArray);
+	DOREPLIFETIME(ATFDGameState, PoliceMapItemArray);
+	DOREPLIFETIME(ATFDGameState, ThiefMapItemArray);
 	DOREPLIFETIME(ATFDGameState, WinTeamTag);
 	DOREPLIFETIME(ATFDGameState, CompleteType);
 }
@@ -54,13 +58,6 @@ void ATFDGameState::OnRep_MatchState()
 {
 	Super::OnRep_MatchState();
 
-	APlayerController* PC = GetWorld()->GetFirstLocalPlayerFromController()->GetPlayerController(GetWorld());
-	if (!PC || !PC->IsLocalController())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("[OnRep_MatchState] Not local controller, returning."));
-		return; // 로컬 클라이언트가 아니면 더 이상 진행하지 않음
-	}
-
 	if (MatchState == MatchState::EnteringMap) // 맵 진입 상태
 	{
 		UE_LOG(LogTemp, Warning, TEXT("MatchState: EnteringMap"));
@@ -74,23 +71,8 @@ void ATFDGameState::OnRep_MatchState()
 	else if (MatchState == MatchState::InProgress) //실제 게임 시작 상태
 	{
 		UE_LOG(LogTemp, Warning, TEXT("MatchState: InProgress"));
-		PC->bShowMouseCursor = false;
-		// 게임 시작 UI 처리
-		if (UGameUIRouterSubsystem* UISub = PC->GetLocalPlayer()->GetSubsystem<UGameUIRouterSubsystem>())
-		{
-			if (HUDWidgetClass)
-			{
-				// HUDLayoutClass 세팅 후 생성
-				UISub->SetHUDLayoutClass(HUDWidgetClass);
-				UISub->CreateHUD();
 
-				// PlayingWidgetClass 추가
-				if (PlayingWidgetClass)
-				{
-					UISub->AddWidgetToLayer(EUILayer::GameLayer, PlayingWidgetClass);
-				}
-			}
-		}
+		OnMachInProgress.Broadcast();
 	}
 	else if (MatchState == MatchState::WaitingPostMatch) // 게임 결과 후 상태
 	{
@@ -98,6 +80,8 @@ void ATFDGameState::OnRep_MatchState()
 		// 결과 UI 처리
 		UE_LOG(LogTemp, Warning, TEXT("Win Team Tag : %s"), *WinTeamTag.ToString());
 		UE_LOG(LogTemp, Warning, TEXT("Win CompleteType : %s"), *UEnum::GetValueAsString(CompleteType));
+
+		OnMatchWaitingPostMatch.Broadcast(WinTeamTag, CompleteType);
 	}
 	else if (MatchState == MatchState::LeavingMap) // 맵을 떠나는 상태
 	{
@@ -140,9 +124,40 @@ void ATFDGameState::OnRep_ThiefScore()
 	}
 }
 
-void ATFDGameState::OnRep_GameRemainTime()
+void ATFDGameState::OnRep_PolicePlayerStateArray()
 {
-	OnGameTimeChanged.Broadcast(GameRemainServerTime);
+	OnPoliceArrayChanged.Broadcast(PolicePlayerStateArray);
+}
+
+void ATFDGameState::OnRep_ThiefPlayerStateArray()
+{
+	OnThiefArrayChanged.Broadcast(ThiefPlayerStateArray);
+}
+
+void ATFDGameState::OnRep_PoliceMapItemArray()
+{
+	OnPoliceItemArrayChanged.Broadcast(PoliceMapItemArray);
+}
+
+void ATFDGameState::OnRep_ThiefMapItemArray()
+{
+	OnThiefItemArrayChanged.Broadcast(ThiefMapItemArray);
+}
+
+void ATFDGameState::RemoveAllowedItem(ATFDBaseObject* Object)
+{
+	if (!Object) return;
+
+	const FGameplayTagContainer& ItemTag = Object->GetAllowedTeamTag();
+
+	if (ItemTag.HasTag(TAG_Team_Cop))
+	{
+		PoliceMapItemArray.RemoveSingleSwap(Object);
+	}
+	else if (ItemTag.HasTag(TAG_Team_Thief))
+	{
+		ThiefMapItemArray.RemoveSingleSwap(Object);
+	}
 }
 
 void ATFDGameState::SetWinTeam(FGameplayTag WinTeam, EGameCompleteType InCompleteType)

@@ -5,16 +5,22 @@
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
 #include "TFDNativeGameplayTags.h"
-#include "Blueprint/UserWidget.h"  // OutGame °ü·Ã - Lobby UI À§Á¬ °ü·Ã Çì´õ
+#include "Blueprint/UserWidget.h"  // OutGame ê´€ë ¨ - Lobby UI ìœ„ì ¯ ê´€ë ¨ í—¤ë”
+#include "GameData/EGameEnums.h"
 #include "TFDPlayerController.generated.h"
 
 
 struct FInputActionValue;
 class UInputAction;
 class UInputMappingContext;
+class UPlayingWidget;
+class UResultWidget;
+class UHUDLayoutWidget;
+class UMiniMapWidget;
 
-// Delegate ¼±¾ğ: °øÀÎ IP°¡ ÁØºñµÇ¾úÀ» ¶§ ¾Ë·ÁÁÖ´Â ÀÌº¥Æ®
+// Delegate ì„ ì–¸: ê³µì¸ IPê°€ ì¤€ë¹„ë˜ì—ˆì„ ë•Œ ì•Œë ¤ì£¼ëŠ” ì´ë²¤íŠ¸
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPublicIPReady, const FString&, PublicIP);
+
 /**
  * 
  */
@@ -28,70 +34,85 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetMovemnetWalking(bool bMovement);
 protected:
-	virtual void BeginPlay() override; // OutGame °ü·Ã Ãß°¡
+	virtual void BeginPlay() override; // OutGame ê´€ë ¨ ì¶”ê°€
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual void SetupInputComponent() override;
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void OnUnPossess() override;
 	virtual void AcknowledgePossession(APawn* InPawn) override;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "TFD|Input")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "TFD|Input|Default")
 	TObjectPtr<UInputMappingContext> DefaultMappingContext;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "TFD|Input")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "TFD|Input|Default")
 	TObjectPtr<UInputAction> MoveAction;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="TFD|Input")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="TFD|Input|Default")
 	TObjectPtr<UInputAction> LookAction;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="TFD|Input")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="TFD|Input|Default")
 	TObjectPtr<UInputAction> JumpAction;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="TFD|Input")
 	TObjectPtr<UInputAction> DashAction;
+
+	// ìŠ¤í‚¬ ì‹œìŠ¤í…œ ê´€ë ¨
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "TFD|Input|Skill")
+	TObjectPtr<UInputAction> Skill1Action;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "TFD|Input|Skill")
+	TObjectPtr<UInputAction> Skill2Action;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "TFD|Input|Skill")
+	TObjectPtr<UInputAction> Skill3Action;
+	
 	/*
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "TFD|Input")
 	TObjectPtr<UInputAction> AttackAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "TFD|Input")
 	TObjectPtr<UInputAction> PauseAction;
 	*/
+
 private:
 	void Dash(const FInputActionValue& Value);
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
 	void Jump(const FInputActionValue& Value);
 	void StopJumping();
+
+	// ìŠ¤í‚¬ ì‹œìŠ¤í…œ ê´€ë ¨
+	void OnSkillInput1(const FInputActionValue& Value);
+	void OnSkillInput2(const FInputActionValue& Value);
+	void OnSkillInput3(const FInputActionValue& Value);
 	/*
 	void Attack(const FInputActionValue& Value);
 	void TogglePause(const FInputActionValue& Value);
 	*/
 
-	TWeakObjectPtr<UInputMappingContext> ActiveJobIMC; //OnUnPossess½Ã »èÁ¦ÇÒ Á÷¾÷ IMC ÀúÀå°ø°£
-	TArray<int32> JobBindingHandles; //OnUnPossess½Ã »èÁ¦ÇÒ Á÷¾÷ InputAction ¸®½ºÆ® ÀúÀå°ø°£
-	void JobAbility(const FInputActionValue& Value, FGameplayTag InputTag); //DataAsset¿¡¼­ Ãß°¡ÇÑ ¾×¼Ç°ú ÅÂ±×·Î ÀÚµ¿ ¹ÙÀÎµù
+	TWeakObjectPtr<UInputMappingContext> ActiveJobIMC; //OnUnPossessì‹œ ì‚­ì œí•  ì§ì—… IMC ì €ì¥ê³µê°„
+	TArray<int32> JobBindingHandles; //OnUnPossessì‹œ ì‚­ì œí•  ì§ì—… InputAction ë¦¬ìŠ¤íŠ¸ ì €ì¥ê³µê°„
+	void JobAbility(const FInputActionValue& Value, FGameplayTag InputTag); //DataAssetì—ì„œ ì¶”ê°€í•œ ì•¡ì…˜ê³¼ íƒœê·¸ë¡œ ìë™ ë°”ì¸ë”©
 
 //===================================================
-// ÀÌÇÏ OutGame °ü·Ã - Lobby
+// ì´í•˜ OutGame ê´€ë ¨ - Lobby
 //===================================================
 public:
 	//virtual void BeginPlay() override;
 
-	// ÀÌ ÇÃ·¹ÀÌ¾î°¡ È£½ºÆ®ÀÎÁö È®ÀÎ
+	UFUNCTION(BlueprintCallable)
+	void EnterLobby();
+	// ì´ í”Œë ˆì´ì–´ê°€ í˜¸ìŠ¤íŠ¸ì¸ì§€ í™•ì¸
 	UFUNCTION(BlueprintCallable, Category = "Lobby")
 	bool IsHostPlayer() const;
 
 	UFUNCTION(BlueprintCallable)
 	void LeaveLobby();
 
-
-
 	UFUNCTION(BlueprintCallable)
 	void StartGame();
 
 	void RemoveLobbyUI();
 
-	// ÆÀ Èñ¸Á ¼±ÅÃ ¼­¹ö RPC
+	// ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ RPC
 	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Lobby|TeamSelection")
 	void ServerSetPreferredTeam(const FGameplayTag& TeamTag);
 
-	// ÆÀ Èñ¸Á ¼±ÅÃ Å¬¶óÀÌ¾ğÆ® RPC
+	// ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Å¬ï¿½ï¿½ï¿½Ì¾ï¿½Æ® RPC
 	UFUNCTION(BlueprintCallable)
 	void SendPreferredTeam(FGameplayTag TeamTag);
 
@@ -99,23 +120,28 @@ public:
 	UFUNCTION()
 	FString GetLocalIP() const;
 
-	// ¿äÃ» ½Ãµµ ÇÔ¼ö
+	// ï¿½ï¿½Ã» ï¿½Ãµï¿½ ï¿½Ô¼ï¿½
 	UFUNCTION(BlueprintCallable, Category = "Network")
 	void RequestPublicIP();
 
-	// ÀúÀåµÈ IP¸¦ ¹İÈ¯ÇÏ´Â getter
+	// ì €ì¥ëœ IPë¥¼ ë°˜í™˜í•˜ëŠ” getter
 	UFUNCTION(BlueprintCallable, Category = "Network")
 	FString GetPublicIP() const;
 
-
 public:
-	// °øÀÎ IP ÀúÀå¿ë
+	// ê³µì¸ IP ì €ì¥ìš©
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Network")
 	FString CachedPublicIP;
 
-	// Delegate ÀÎ½ºÅÏ½º
+	// Delegate ì¸ìŠ¤í„´ìŠ¤
 	UPROPERTY(BlueprintAssignable, Category = "Network")
 	FOnPublicIPReady OnPublicIPReady;
+
+	UFUNCTION()
+	void HandleMatchInProgress();
+
+	UFUNCTION()
+	void HandleMatchWaitingPostMatch(FGameplayTag WinTeamTag, EGameCompleteType CompleteType);
 
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
@@ -124,4 +150,16 @@ private:
 	UPROPERTY()
 	TObjectPtr<UUserWidget> LobbyWidgetInstance;
 
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UHUDLayoutWidget> HUDWidgetClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UPlayingWidget> PlayingWidgetClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UResultWidget> ResultWidgetClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UMiniMapWidget> MiniMapWidgetClass;
 };

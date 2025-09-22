@@ -6,14 +6,32 @@
 #include "GameFramework/GameMode.h"
 #include "GameState/TFDGameState.h"
 #include "GameData/EGameEnums.h"
+#include "GameData/TFDGameRuleData.h"
 #include "TFDGameMode.generated.h"
-/**
- * 
- */
+
 class ATFDAICharacter;
 class ATFDCharacter;
 class ATFDSpawnVolume;
+class ATFDSpawnpoint;
 struct FGameplayTag;
+
+
+UENUM(BlueprintType)
+enum class ETeamType : uint8
+{
+	Cop UMETA(DisplayName = "Cop"),
+	Thief UMETA(DisplayName = "Thief"),
+	Neutral UMETA(DisplayName = "Neutral")
+};
+
+USTRUCT(BlueprintType)
+struct FSpawnPointArray
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	TArray<ATFDSpawnpoint*> Points;
+};
 
 UCLASS()
 class TFD_API ATFDGameMode : public AGameMode
@@ -24,39 +42,41 @@ public:
 	ATFDGameMode();
 
 	void OnCatchThief(APawn* Pawn);
-	// °ÔÀÓ Á¾·á½Ã Ã³¸®µÉ ³»¿ëÀÌ ´ã±è.
+	// ê²Œì„ ì¢…ë£Œì‹œ ì²˜ë¦¬ë  ë‚´ìš©ì´ ë‹´ê¹€.
 	void GameEnd(EGameCompleteType CompleteType);
 	ATFDGameState* GetGameState();
 	void GamePause(bool bIsPaused);
 
-	// ÆÀ ¹èÁ¤ ÇÔ¼ö
+	// ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ô¼ï¿½
 	void AssignTeams();
 	
 	UFUNCTION(BlueprintCallable)
 	void AssignTeamsOnGameStart();
 
-#pragma region 
 
-	//StartMatch()°¡ È£ÃâµÆÀ» ¶§ WaitingToStart ¿¡¼­ InProgress ·Î ³Ñ¾î°¡±â Àü¿¡ ³Ñ¾î°¡µµ µÇ´ÂÁö ÆÇ´Ü(bool °ª)
-		virtual bool ReadyToStartMatch_Implementation() override;
+#pragma region ê²Œì„ ìƒíƒœ ë³€í™”ì— ë”°ë¥¸ ë¡œì§
 
-	//MatchState °¡ WaitingToStart·Î ¹Ù²ğ ¶§ È£Ãâ
+	//StartMatch()ê°€ í˜¸ì¶œëì„ ë•Œ WaitingToStart ì—ì„œ InProgress ë¡œ ë„˜ì–´ê°€ê¸° ì „ì— ë„˜ì–´ê°€ë„ ë˜ëŠ”ì§€ íŒë‹¨ (bool ê°’)
+	virtual bool ReadyToStartMatch_Implementation() override;
+
+	//MatchState ê°€ WaitingToStartë¡œ ë°”ë€” ë•Œ í˜¸ì¶œ
 	virtual void HandleMatchIsWaitingToStart() override;
 
-	//StartMatch()°¡ ¼º°øÇØ¼­ MatchState::InProgress ·Î ÁøÀÔÇÒ ¶§ È£Ãâ
+	//StartMatch()ê°€ ì„±ê³µí•´ì„œ MatchState::InProgress ë¡œ ì§„ì…í•  ë•Œ í˜¸ì¶œ
 	virtual void HandleMatchHasStarted() override;
 
-	//EndMatch()°¡ È£ÃâµÇ¾î MatchState::WaitingPostMatch ·Î ¹Ù²ğ ¶§ ½ÇÇà
+	//EndMatch()ê°€ í˜¸ì¶œë˜ì–´ MatchState::WaitingPostMatch ë¡œ ë°”ë€” ë•Œ ì‹¤í–‰
 	virtual void HandleMatchHasEnded() override;
 #pragma endregion
 
-	// SeamlessTravel °ü·Ã
+	// SeamlessTravel ê´€ë ¨
 	virtual void PostSeamlessTravel() override;
 	virtual void HandleSeamlessTravelPlayer(AController*& C) override;
-    
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
+	virtual void Logout(AController* Exiting) override;
 
 	//virtual UClass* GetDefaultPawnClassForController_Implementation(AController* InController) override;
 	virtual APawn* SpawnDefaultPawnFor_Implementation(AController* NewPlayer, AActor* StartSpot) override;
@@ -66,25 +86,60 @@ protected:
 
 	ATFDGameState* GameState;
 
+	UTFDGameRuleData* RuleData;
+
 	UFUNCTION()
 	void HandleThiefScoreChanged(int32 NewScore);
-	
+
+	UFUNCTION()
+	void CheckGameContinuable();
+
+	FTimerHandle LobbyReturnTimerHandle;
+
+	UFUNCTION()
+	void ReturnToLobby();
+
+
+#pragma region ìŠ¤í°ê´€ë ¨
+
+protected:
+	UPROPERTY()
+	TMap<ETeamType, FSpawnPointArray> WorldSpawnPointsByTeam;
+
 public:
 	void SpawnAI();
+	void SpawnItemStart();
+
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Spawn")
 	int32 NumberOfAI;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DataTable")
+	UDataTable* DTAllowedTeamTag;
+
+public:
+	UDataTable* GetDTAllowedTeamTag();
+	FGameplayTagContainer GetDTAllowedTeamTagContainer(FGameplayTag ArgGameplayTag);
+	TSubclassOf<AActor> GetDTAllowedTeamTag_Item(FGameplayTag ArgGameplayTag);
+	float GetDTAllowedTeamTag_Period(FGameplayTag ArgGameplayTag);
+
 private:
+	//íŒ€ enum ë„£ìœ¼ë©´ SpawnPointArray ë°›ëŠ” í•¨ìˆ˜
+	FSpawnPointArray GetSpawnPointArrayTag(ETeamType InEnum);
+
 	FVector GetRandomPointInSpawnArea();
 	FVector GetRandomPointInSpawnAreaTag(FGameplayTag InTag);
 	FVector GetRandomPointInSpawnAreaAI();
-
+	
 	ATFDSpawnVolume* GetRandomSpawnVolume();
 	ATFDSpawnVolume* GetRandomSpawnVolumeTag(FGameplayTag InTag);
+
+	void InitializeSpawnPoints();
 
 	void InitializeSpawnVolumes();
 	void MovePlayerToRandomSpawnPoint(APlayerController* PlayerController);
 
-	// ¸ğµç ÇÃ·¹ÀÌ¾îÀÇ PlayerState¿Í ÆÀ ¼±È£ Á¤º¸¸¦ ¼öÁıÇÏ´Â ÇÔ¼ö
+	// ï¿½ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ï¿½ï¿½ PlayerStateï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½È£ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½Ô¼ï¿½
 	void GatherPreferredTeams(TArray<ATFDPlayerState*>& OutPlayers, TArray<FGameplayTag>& OutPreferredTeams);
 	
+#pragma endregion
 };

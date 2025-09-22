@@ -22,6 +22,20 @@ UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Neutral_RandomMove, "Ability.Neutral.RandomMo
 UE_DEFINE_GAMEPLAY_TAG(TAG_Object_Door,"Object.Door"); //문
 UE_DEFINE_GAMEPLAY_TAG(TAG_Object_Money,"Object.Money"); //돈
 UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SpawnArea,"Object.SpawnArea"); //스폰
+UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SlowItem,"Object.SlowItem"); //스폰
+UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SKillStockItem_00,"Object.SkillStockItem_00"); //스폰
+UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SpawnPoint,"Object.SpawnPoint"); //스폰포인트
+UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SpawnPoint_Cop,"Object.SpawnPoint.Cop"); //스폰포인트
+UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SpawnPoint_Thief,"Object.SpawnPoint.Thief"); //스폰포인트
+UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SpawnPoint_Neutral,"Object.SpawnPoint.Neutral"); //스폰포인트
+UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SpawnPoint_Period,"Object.SpawnPoint.Period"); //스폰포인트
+
+
 
 //5.게임플레이큐 - 이펙트
 UE_DEFINE_GAMEPLAY_TAG(TAG_GameplayCue_Arrested, "GameplayCue.Arrested");
+
+// 6. 입력 - 스킬 슬롯
+UE_DEFINE_GAMEPLAY_TAG(TAG_Input_Skill_Slot1, "Input.Skill.Slot1");
+UE_DEFINE_GAMEPLAY_TAG(TAG_Input_Skill_Slot2, "Input.Skill.Slot2");
+UE_DEFINE_GAMEPLAY_TAG(TAG_Input_Skill_Slot3, "Input.Skill.Slot3");

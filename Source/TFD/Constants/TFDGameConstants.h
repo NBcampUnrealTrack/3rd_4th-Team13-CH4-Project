@@ -9,7 +9,7 @@ public:
 	//===== 레벨 경로 =====
 	static constexpr const TCHAR* TitleLevel = TEXT("/Game/Maps/L_Title");
 	static constexpr const TCHAR* LobbyLevel = TEXT("/Game/Maps/L_Lobby");
-	static constexpr const TCHAR* GameLevel = TEXT("/Game/Cartoon_City_Free/Maps/Demonstration"); // 임시 게임 맵
+	static constexpr const TCHAR* GameLevel = TEXT("/Game/Maps/PlayMap/Demonstration"); // 게임 맵
 
 	//===== 접속 인원 제한 =====
 	static constexpr int32 MaxPlayerCount = 6;

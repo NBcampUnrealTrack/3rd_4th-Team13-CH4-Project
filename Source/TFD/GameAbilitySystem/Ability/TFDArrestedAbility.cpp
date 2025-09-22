@@ -26,7 +26,7 @@ void UTFDArrestedAbility::ActivateAbility(
         EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
         return;
     }
-
+    
     if (ATFDPlayerCharacter* PlayerChar = Cast<ATFDPlayerCharacter>(ActorInfo->AvatarActor.Get()))
     {
         if (UAbilitySystemComponent* ASC = PlayerChar->GetAbilitySystemComponent())
@@ -69,11 +69,6 @@ void UTFDArrestedAbility::ActivateAbility(
         UE_LOG(LogTemp, Warning, TEXT("[GA_Arrested] Unknown AvatarActor type"));
         EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
     }
-
-
-    
-
-    
 }
 
 void UTFDArrestedAbility::EndAbility(
