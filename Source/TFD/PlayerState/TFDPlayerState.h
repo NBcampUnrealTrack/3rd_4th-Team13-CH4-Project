@@ -38,17 +38,16 @@ public:
 	FOnPlayerNameChanged OnPlayerNameChanged;
 
 	//선호 팀 (도둑/경찰) - Lobby 에서 선택, GameState에서 팀 배정시 활용
-	UPROPERTY(Replicated)
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Team")
 	FGameplayTag PreferredTeam;
 
 	//실제 팀 (도둑/경찰) - GameState에서 팀 배정 후 세팅
 	// 복제 및 복제 완료 시 처리 함수 등록
-	UPROPERTY(ReplicatedUsing = OnRep_ActualTeam)
+	UPROPERTY(ReplicatedUsing = OnRep_ActualTeam, VisibleAnywhere, BlueprintReadOnly, Category = "Team")
 	FGameplayTag ActualTeam;
 
-	void SetActualTeam(const FGameplayTag& TeamTag);
-	FGameplayTag GetActualTeam() const;
-
+	UFUNCTION()
+	void OnRep_ActualTeam();
 	
 protected:
 	// 복제되는 플레이어 이름 변수
@@ -60,9 +59,8 @@ protected:
 	//UFUNCTION()
 	void OnRep_PlayerName();
 
-	// ActualTeam 복제 완료 시 호출됨 (클라이언트)
-	UFUNCTION()
-	void OnRep_ActualTeam();
+	
+	
 
 public:
 	// 이름 설정 함수 (서버에서 호출)
@@ -71,8 +69,11 @@ public:
 	// 네트워크 복제에 필요한 함수 재정의
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-	// 선호 팀 설정/획득 함수
-	void SetPreferredTeam(const FGameplayTag& TeamTag);
+	// 실제 팀 설정/획득 함수
 	FGameplayTag GetPreferredTeam() const;
+	void SetPreferredTeam(const FGameplayTag& InTeamTag);
+	// 실제 팀 설정/획득 함수
+	FGameplayTag GetActualTeam() const;
+	void SetActualTeam(const FGameplayTag& InTeam);
 
 };

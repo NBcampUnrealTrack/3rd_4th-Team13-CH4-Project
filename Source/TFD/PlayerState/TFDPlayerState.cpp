@@ -21,6 +21,8 @@ void ATFDPlayerState::CopyProperties(APlayerState* NewPlayerState)
 	if (ATFDPlayerState* NewPS = Cast<ATFDPlayerState>(NewPlayerState))
 	{
 		NewPS->TeamTag = TeamTag;
+		NewPS->PreferredTeam = PreferredTeam;
+		NewPS->ActualTeam = ActualTeam;
 	}
 }
 
@@ -69,30 +71,28 @@ FGameplayTag ATFDPlayerState::GetPreferredTeam() const
 	return PreferredTeam;
 }
 
+
 void ATFDPlayerState::SetPreferredTeam(const FGameplayTag& InTeamTag)
 {
 	PreferredTeam = InTeamTag;
 }
 
 // ActualTeam 관련
-void ATFDPlayerState::SetActualTeam(const FGameplayTag& NewTeamTag)
-{
-	if (ActualTeam != NewTeamTag)
-	{
-		ActualTeam = NewTeamTag;
-		// 서버에서 변경 후 클라이언트에 동기화
-		UE_LOG(LogTemp, Log, TEXT("Player %s assigned ActualTeam: %s (Server)"),
-			*GetPlayerName(),
-			*ActualTeam.GetTagName().ToString());
-	}
-}
-
-// 실제 팀 획득 함수
 FGameplayTag ATFDPlayerState::GetActualTeam() const
 {
 	return ActualTeam;
 }
 
+void ATFDPlayerState::SetActualTeam(const FGameplayTag& InTeam)
+{
+	if (ActualTeam != InTeam)
+	{
+		ActualTeam = InTeam;
+		UE_LOG(LogTemp, Log, TEXT("Player %s assigned ActualTeam: %s (Server)"),
+			*GetPlayerName(),
+			*ActualTeam.GetTagName().ToString());
+	}
+}
 // ActualTeam 복제 완료 시 호출됨 (클라이언트)
 void ATFDPlayerState::OnRep_ActualTeam()
 {

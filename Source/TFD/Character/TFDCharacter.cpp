@@ -82,6 +82,13 @@ void ATFDCharacter::PossessedBy(AController* NewController)
 void ATFDCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	if (ATFDPlayerState* PS = GetPlayerState<ATFDPlayerState>())
+	{
+		UE_LOG(LogTemp, Log, TEXT("Character BeginPlay: Player %s team is %s"),
+			*PS->GetPlayerName(),
+			*PS->GetActualTeam().ToString());
+		
+	}
 }
 
 void ATFDCharacter::BaseSetting()
