@@ -24,6 +24,9 @@
 #include "UI/Widget/UHUDLayoutWidget.h"
 #include "UI/InGame/ResultWidget.h"
 #include "UI/InGame/MiniMapWidget.h"
+#include "UI/InGame/ReleaseWidget.h"
+
+#include "Object/JailCell.h"
 
 // 스킬 시스템 관련
 #include "GameAbilitySystem/Component/TFDSkillManagerComponent.h"
@@ -67,8 +70,6 @@ void ATFDPlayerController::SetMovemnetWalking(bool bMovement)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Movement None"));
 
-			CB->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
-			CB->GetCharacterMovement()->Activate();
 			CB->GetCharacterMovement()->DisableMovement();
 			CB->GetCharacterMovement()->SetMovementMode(MOVE_None);
 			CB->GetCharacterMovement()->StopMovementImmediately();
@@ -554,8 +555,9 @@ void ATFDPlayerController::HandleMatchInProgress()
 	ULocalPlayer* LP = GetLocalPlayer();
 	if (!LP)
 	{
+		UE_LOG(LogTemp, Error, TEXT("[ATFDPlayerController] LP no"));
 		return;
-	}
+	}	
 
 	if (UGameUIRouterSubsystem* UISub = LP->GetSubsystem<UGameUIRouterSubsystem>())
 	{
@@ -594,13 +596,18 @@ void ATFDPlayerController::HandleMatchWaitingPostMatch(FGameplayTag WinTeamTag, 
 {
 	bShowMouseCursor = true;
 
-
+	if (!IsLocalController()) // 서버 전용 PC에서는 UI 건드리지 않음
+	{
+		return;
+	}
 
 	ULocalPlayer* LP = GetLocalPlayer();
 	if (!LP)
 	{
 		return;
 	}
+
+	
 
 	if (UGameUIRouterSubsystem* UISub = LP->GetSubsystem<UGameUIRouterSubsystem>())
 	{
@@ -628,6 +635,64 @@ void ATFDPlayerController::HandleMatchWaitingPostMatch(FGameplayTag WinTeamTag, 
 					UISub->ResultWidget = RW; // Subsystem에 인스턴스 보관
 				}
 			}
+		}
+	}
+	HandleRemoveReleaseWidget();
+}
+
+
+
+void ATFDPlayerController::HandleShowReleaseWidget()
+{
+	if (!IsLocalController()) // 서버 전용 PC에서는 UI 건드리지 않음
+	{
+		return;
+	}
+
+	ULocalPlayer* LP = GetLocalPlayer();
+	if (!LP)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[ATFDPlayerController] LP no"));
+		return;
+	}
+
+	if (UGameUIRouterSubsystem* UISub = LP->GetSubsystem<UGameUIRouterSubsystem>())
+	{
+		if (!ReleaseWidgetClass) return;
+		
+		UE_LOG(LogTemp, Error, TEXT("[ATFDPlayerController] 클래스 있음"));
+		if (UUserWidget* Widget = UISub->AddWidgetToLayer(EUILayer::PopupLayer, ReleaseWidgetClass))
+		{
+			UE_LOG(LogTemp, Error, TEXT("[ATFDPlayerController] 위젯 있음"));
+			if (UReleaseWidget* RW = Cast<UReleaseWidget>(Widget))
+			{
+				UE_LOG(LogTemp, Error, TEXT("[ATFDPlayerController] 캐스트 됨"));
+				ATFDPlayerCharacter* MyCharacter = Cast<ATFDPlayerCharacter>(GetPawn());
+				UISub->ReleaseWidget = RW;
+			}
+		}
+	}
+}
+
+void ATFDPlayerController::HandleRemoveReleaseWidget()
+{
+	if (!IsLocalController()) // 서버 전용 PC에서는 UI 건드리지 않음
+	{
+		return;
+	}
+
+	ULocalPlayer* LP = GetLocalPlayer();
+	if (!LP)
+	{
+		return;
+	}
+
+	if (UGameUIRouterSubsystem* UISub = LP->GetSubsystem<UGameUIRouterSubsystem>())
+	{
+		if (UISub->ReleaseWidget)
+		{
+			UISub->RemoveWidgetFromLayer(EUILayer::PopupLayer, UISub->ReleaseWidget);
+			UISub->ReleaseWidget = nullptr;
 		}
 	}
 }

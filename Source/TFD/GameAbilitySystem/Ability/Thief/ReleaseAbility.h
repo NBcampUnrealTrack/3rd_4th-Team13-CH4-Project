@@ -4,19 +4,18 @@
 
 #include "CoreMinimal.h"
 #include "GameAbilitySystem/Ability/TFDGameplayAbility.h"
-#include "TFDArrestedAbility.generated.h"
+#include "ReleaseAbility.generated.h"
 
-class AJailCell;
 /**
  * 
  */
 UCLASS()
-class TFD_API UTFDArrestedAbility : public UTFDGameplayAbility
+class TFD_API UReleaseAbility : public UTFDGameplayAbility
 {
 	GENERATED_BODY()
 
 public:
-    UTFDArrestedAbility();
+    UReleaseAbility();
 
     virtual void ActivateAbility(
         const FGameplayAbilitySpecHandle Handle,
@@ -30,7 +29,4 @@ public:
         const FGameplayAbilityActivationInfo ActivationInfo,
         bool bReplicateEndAbility,
         bool bWasCancelled) override;
-
-    UPROPERTY(BlueprintReadWrite, Category = "Jail")
-    AJailCell* AssignedJailCell;
 };

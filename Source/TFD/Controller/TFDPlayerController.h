@@ -18,6 +18,7 @@ class UPlayingWidget;
 class UResultWidget;
 class UHUDLayoutWidget;
 class UMiniMapWidget;
+class UReleaseWidget;
 
 // Delegate 선언: 공인 IP가 준비되었을 때 알려주는 이벤트
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPublicIPReady, const FString&, PublicIP);
@@ -145,6 +146,12 @@ public:
 	UFUNCTION()
 	void HandleMatchWaitingPostMatch(FGameplayTag WinTeamTag, EGameCompleteType CompleteType);
 
+	UFUNCTION()
+	void HandleShowReleaseWidget();
+
+	UFUNCTION()
+	void HandleRemoveReleaseWidget();
+
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UUserWidget> LobbyWidgetClass;
@@ -164,4 +171,7 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UMiniMapWidget> MiniMapWidgetClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UReleaseWidget> ReleaseWidgetClass;
 };

@@ -4,19 +4,20 @@
 
 #include "CoreMinimal.h"
 #include "GameAbilitySystem/Ability/TFDGameplayAbility.h"
-#include "TFDArrestedAbility.generated.h"
+#include "InvisibilityAbility.generated.h"
 
-class AJailCell;
-/**
- * 
+/*
+ * 은신 Ability
+ * - 단순히 HideEffect를 적용
+ * - HideDuration으로 지속시간 지정 가능
+ * - 실제 Mesh Visibility 등은 GameplayCue에서 처리
  */
 UCLASS()
-class TFD_API UTFDArrestedAbility : public UTFDGameplayAbility
+class TFD_API UInvisibilityAbility : public UTFDGameplayAbility
 {
 	GENERATED_BODY()
-
 public:
-    UTFDArrestedAbility();
+    UInvisibilityAbility();
 
     virtual void ActivateAbility(
         const FGameplayAbilitySpecHandle Handle,
@@ -31,6 +32,10 @@ public:
         bool bReplicateEndAbility,
         bool bWasCancelled) override;
 
-    UPROPERTY(BlueprintReadWrite, Category = "Jail")
-    AJailCell* AssignedJailCell;
+protected:
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ability|Effects")
+    TSubclassOf<UGameplayEffect> HideEffect;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ability|Effects")
+    float HideDuration;
 };
