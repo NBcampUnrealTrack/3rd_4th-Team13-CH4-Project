@@ -54,6 +54,14 @@ protected:
 	TObjectPtr<UInputAction> JumpAction;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="TFD|Input")
 	TObjectPtr<UInputAction> DashAction;
+
+	// 스킬 시스템 관련
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "TFD|Input|Skill")
+	TObjectPtr<UInputAction> Skill1Action;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "TFD|Input|Skill")
+	TObjectPtr<UInputAction> Skill2Action;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "TFD|Input|Skill")
+	TObjectPtr<UInputAction> Skill3Action;
 	
 	/*
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "TFD|Input")
@@ -68,6 +76,11 @@ private:
 	void Look(const FInputActionValue& Value);
 	void Jump(const FInputActionValue& Value);
 	void StopJumping();
+
+	// 스킬 시스템 관련
+	void OnSkillInput1(const FInputActionValue& Value);
+	void OnSkillInput2(const FInputActionValue& Value);
+	void OnSkillInput3(const FInputActionValue& Value);
 	/*
 	void Attack(const FInputActionValue& Value);
 	void TogglePause(const FInputActionValue& Value);
