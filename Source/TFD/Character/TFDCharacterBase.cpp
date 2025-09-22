@@ -18,7 +18,11 @@ ATFDCharacterBase::ATFDCharacterBase()
 	AbilitySystemComponent->SetIsReplicated(true);
 	//AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed); // or Full
 	// AttributeSet 생성
-	//AttributeSet = CreateDefaultSubobject<UTFDAttributeSet>(TEXT("AttributeSet"));
+	AttributeSet = CreateDefaultSubobject<UTFDAttributeSet>(TEXT("AttributeSet"));
+
+	// 스킬 매니저 컴포넌트 생성
+	SkillManagerComponent = CreateDefaultSubobject<UTFDSkillManagerComponent>(TEXT("SkillManagerComponent"));
+
 }
 
 // Called when the game starts or when spawned
@@ -27,7 +31,16 @@ void ATFDCharacterBase::BeginPlay()
 	Super::BeginPlay();
 	BaseSetting();
 
-	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed); // or Full
+	// 스킬 시스템 관련
+	if (SkillManagerComponent && SkillManagerComponent->IsASCSetup())
+	{
+		UE_LOG(LogTemp, Log, TEXT("[ATFDCharacterBase][BeginPlay] SkillManagerComponent is initialized with ASC."));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("[ATFDCharacterBase][BeginPlay] SkillManagerComponent is NOT initialized or ASC is missing."));
+	}
+
 }
 
 void ATFDCharacterBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -48,6 +61,13 @@ void ATFDCharacterBase::OnRep_PlayerState()
 			// ASC의 Owner는 PlayerState, Avatar는 이 캐릭터(Pawn)
 			AbilitySystemComponent->InitAbilityActorInfo(PS, this);
 		}
+	}
+
+	// 스킬 시스템 관련
+	if (SkillManagerComponent)
+	{
+		SkillManagerComponent->SetupASC();
+		UE_LOG(LogTemp, Log, TEXT("[ATFDCharacterBase][OnRep_PlayerState] SkillManagerComponent initialized."));
 	}
 }
 
@@ -82,6 +102,40 @@ void ATFDCharacterBase::PossessedBy(AController* NewController)
 		SetDAPlayerStat();
 	}
 
+	// 스킬 시스템 관련
+	if (SkillManagerComponent)
+	{
+		SkillManagerComponent->SetupASC();
+		UE_LOG(LogTemp, Log, TEXT("[ATFDCharacterBase][PossessedBy] SkillManagerComponent initialized."));
+	}
+}
+
+void ATFDCharacterBase::ServerUseSkillAtSlot_Implementation(int32 SlotIndex)
+{
+	if (!SkillManagerComponent)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[ATFDCharacterBase][ServerUseSkillAtSlot] SkillManagerComponent is null."));
+		return;
+	}
+
+	SkillManagerComponent->UseSkillAtSlot(SlotIndex); // 서버에서 스킬 사용
+}
+
+bool ATFDCharacterBase::ServerUseSkillAtSlot_Validate(int32 SlotIndex)
+{
+	if (!SkillManagerComponent)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[ATFDCharacterBase][ServerUseSkillAtSlot] SkillManagerComponent is null."));
+		return false;
+	}
+
+	// 슬롯 유효성 검사
+	const bool bIsValidIndex = (SlotIndex >= 0 && SlotIndex < SkillManagerComponent->GetMaxSlotCount());
+	if (!bIsValidIndex)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[ATFDCharacterBase][ServerUseSkillAtSlot] Invalid SlotIndex: %d"), SlotIndex);
+	}
+	return bIsValidIndex;
 }
 
 void ATFDCharacterBase::BaseSetting()

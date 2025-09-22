@@ -289,34 +289,57 @@ void ATFDPlayerController::StopJumping()
 
 void ATFDPlayerController::OnSkillInput1(const FInputActionValue& Value)
 {
-	if (APawn* ControlledPawn = GetPawn())
-	{
-		if (UTFDSkillManagerComponent* SkillManager = ControlledPawn->FindComponentByClass<UTFDSkillManagerComponent>())
-		{
-			SkillManager->UseSkillAtSlot(0);
-		}
-	}
+	HandleSkillInput(0);
 }
 
 void ATFDPlayerController::OnSkillInput2(const FInputActionValue& Value)
 {
-	if (APawn* ControlledPawn = GetPawn())
-	{
-		if (UTFDSkillManagerComponent* SkillManager = ControlledPawn->FindComponentByClass<UTFDSkillManagerComponent>())
-		{
-			SkillManager->UseSkillAtSlot(1);
-		}
-	}
+	HandleSkillInput(1);
 }
 
 void ATFDPlayerController::OnSkillInput3(const FInputActionValue& Value)
+{   
+	HandleSkillInput(2);
+}
+
+void ATFDPlayerController::HandleSkillInput(int32 SlotIndex)
 {
-	if (APawn* ControlledPawn = GetPawn())
+	APawn* ControlledPawn = GetPawn();
+	if (!ControlledPawn) return;
+
+	ATFDCharacterBase* TFDCharacter = Cast<ATFDCharacterBase>(ControlledPawn);
+	if (!TFDCharacter)
 	{
-		if (UTFDSkillManagerComponent* SkillManager = ControlledPawn->FindComponentByClass<UTFDSkillManagerComponent>())
+		UE_LOG(LogTemp, Warning, TEXT("[ATFDPlayerController][HandleSkillInput] Invalid character."));
+		return;
+	}
+
+	UTFDSkillManagerComponent* SkillManager = TFDCharacter->GetSkillManagerComponent();
+	if (!SkillManager)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[ATFDPlayerController][HandleSkillInput] SkillManagerComponent is null."));
+		return;
+	}
+
+	if (!TFDCharacter->HasAuthority())
+	{// 클라이언트 -> 서버 RPC 호출
+		UE_LOG(LogTemp, Log, TEXT("[ATFDPlayerController][HandleSkillInput] Calling ServerUseSkillAtSlot from client"));
+		TFDCharacter->ServerUseSkillAtSlot(SlotIndex);
+	}
+	else
+	{// 서버에서 직접 실행 (리슨 서버 환경 등)
+		UE_LOG(LogTemp, Log, TEXT("[ATFDPlayerController][HandleSkillInput] Server has authority. Using skill directly."));
+
+		// 유효성 검사 추가
+		const int32 MaxSlots = SkillManager->GetMaxSlotCount();
+		if (SlotIndex < 0 || SlotIndex >= MaxSlots)
 		{
-			SkillManager->UseSkillAtSlot(2);
+			UE_LOG(LogTemp, Warning, TEXT("[ATFDPlayerController][HandleSkillInput] Invalid SlotIndex: %d"), SlotIndex);
+			return;
 		}
+
+		// 유효성 검사 통과 후 스킬 사용 호출
+		SkillManager->UseSkillAtSlot(SlotIndex);
 	}
 }
 
