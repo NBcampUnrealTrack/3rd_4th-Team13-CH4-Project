@@ -224,63 +224,6 @@ void ATFDPlayerController::AcknowledgePossession(APawn* InPawn)
 	}
 }
 
-void ATFDPlayerController::TryJobMapping()
-{
-
-	ATFDCharacterBase* CB = Cast<ATFDCharacterBase>(GetPawn());
-	if (!CB)
-	{
-		UE_LOG(LogTemp, Error, TEXT("[ATFDPlayerController] CB is null"));
-		return;
-	}
-
-	ATFDGameState* GS = GetWorld()->GetGameState<ATFDGameState>();
-	if (!GS) return;
-	
-	UE_LOG(LogTemp, Warning, TEXT("[ATFDPlayerController] GS found"));
-	
-	ATFDPlayerState* PS = Cast<ATFDPlayerState>(CB->GetPlayerState());
-	if (!PS)
-	{
-		FTimerHandle RetryTimerHandle;
-		GetWorldTimerManager().SetTimer(RetryTimerHandle, this, &ATFDPlayerController::TryJobMapping, 0.2f, false);
-		UE_LOG(LogTemp, Warning, TEXT("[ATFDPlayerController] Retry JobMapping"));
-		return;
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("[ATFDPlayerController] PS found"));
-		if (PS->GetTeamTag() == TAG_Team_Thief)
-		{
-			CB->CharacterData = GS->GetRuleData()->ThiefDataAsset;
-		}
-		else if (PS->GetTeamTag() == TAG_Team_Cop)
-		{
-			CB->CharacterData = GS->GetRuleData()->PoliceDataAsset;
-		}
-	}
-
-	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
-	{
-		if (CB->CharacterData && CB->CharacterData->JobMappingContext)
-		{
-			Subsystem->AddMappingContext(CB->CharacterData->JobMappingContext, 0);
-		}
-	}
-
-	//********직업에 따른 능력 입력 바인딩************
-	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
-	{
-		if (CB->CharacterData)
-		{
-			for (auto& Action : CB->CharacterData->Actions)
-			{
-				EnhancedInputComponent->BindAction(Action.InputAction, ETriggerEvent::Started, this, &ATFDPlayerController::JobAbility, Action.Tag);
-			}
-		}
-	}
-}
-
 void ATFDPlayerController::Dash(const FInputActionValue& Value)
 {
 	if (APawn* ControlledPawn = GetPawn())
@@ -596,8 +539,6 @@ void ATFDPlayerController::HandleMatchInProgress()
 		UE_LOG(LogTemp, Error, TEXT("[ATFDPlayerController] LP no"));
 		return;
 	}	
-
-	TryJobMapping();
 
 	if (UGameUIRouterSubsystem* UISub = LP->GetSubsystem<UGameUIRouterSubsystem>())
 	{

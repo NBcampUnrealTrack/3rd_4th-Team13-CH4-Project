@@ -43,7 +43,7 @@ protected:
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void OnUnPossess() override;
 	virtual void AcknowledgePossession(APawn* InPawn) override;
-	void TryJobMapping();
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "TFD|Input|Default")
 	TObjectPtr<UInputMappingContext> DefaultMappingContext;
 
