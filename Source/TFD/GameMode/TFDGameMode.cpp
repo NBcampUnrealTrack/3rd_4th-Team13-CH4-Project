@@ -631,13 +631,6 @@ void ATFDGameMode::Tick(float DeltaTime)
 
 	GetGameState()->GameRemainServerTime -= DeltaTime;
 
-	// 호스트용 직접 브로드캐스트
-	if (GetGameState()->HasAuthority())
-	{
-		GetGameState()->OnGameTimeChanged.Broadcast(GetGameState()->GameRemainServerTime);
-	}
-
-
 	// 시간이 종료될 시 게임 종료 로직
 	if (GetGameState()->GameRemainServerTime < 0)
 	{
