@@ -29,7 +29,7 @@ int32 ATFDGameState::GetReadyPlayerCount() const
 	return ReadyPlayers.Num();
 }
 
-const FGameRuleData& ATFDGameState::GetRuleData() const
+UTFDGameRuleData* ATFDGameState::GetRuleData() const
 {
 	return GameRuleData;
 }
@@ -38,7 +38,6 @@ void ATFDGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(ATFDGameState, GameRemainServerTime);
 	DOREPLIFETIME(ATFDGameState, ThiefTotalScore);
 	DOREPLIFETIME(ATFDGameState, PolicePlayerStateArray);
 	DOREPLIFETIME(ATFDGameState, ThiefPlayerStateArray);
@@ -123,11 +122,6 @@ void ATFDGameState::OnRep_ThiefScore()
 		// 클라에서도 점수 변경 이벤트 발행 (UI 갱신 가능)
 		OnThiefScoreChanged.Broadcast(ThiefTotalScore);
 	}
-}
-
-void ATFDGameState::OnRep_GameRemainTime()
-{
-	OnGameTimeChanged.Broadcast(GameRemainServerTime);
 }
 
 void ATFDGameState::OnRep_PolicePlayerStateArray()

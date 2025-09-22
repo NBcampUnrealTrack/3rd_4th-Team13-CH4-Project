@@ -48,3 +48,8 @@ UE_DEFINE_GAMEPLAY_TAG(TAG_GameAbility, "GameAbility");
 UE_DEFINE_GAMEPLAY_TAG(TAG_GameAbilityTask, "GameAbilityTask");
 UE_DEFINE_GAMEPLAY_TAG(TAG_GameAbilityTask_FireProjectile, "GameAbilityTask.FireProjectile");
 UE_DEFINE_GAMEPLAY_TAG(TAG_GameAbilityEffect, "GameAbilityEffect");
+
+// 6. 입력 - 스킬 슬롯
+UE_DEFINE_GAMEPLAY_TAG(TAG_Input_Skill_Slot1, "Input.Skill.Slot1");
+UE_DEFINE_GAMEPLAY_TAG(TAG_Input_Skill_Slot2, "Input.Skill.Slot2");
+UE_DEFINE_GAMEPLAY_TAG(TAG_Input_Skill_Slot3, "Input.Skill.Slot3");

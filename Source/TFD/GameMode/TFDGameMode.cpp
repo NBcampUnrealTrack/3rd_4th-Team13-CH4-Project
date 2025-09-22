@@ -39,6 +39,12 @@ void ATFDGameMode::BeginPlay()
 		// 점수 변경 이벤트 구독
 		GetGameState()->OnThiefScoreChanged.AddDynamic(this, &ATFDGameMode::HandleThiefScoreChanged);
 	}
+
+	RuleData = GetGameState()->GetRuleData();
+	if (RuleData)
+	{
+		NumberOfAI = RuleData->NumberOfAI;
+	}
 }
 
 APawn* ATFDGameMode::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, AActor* StartSpot)
@@ -64,7 +70,6 @@ APawn* ATFDGameMode::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, 
 		nullptr, ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn);
 	if (!Pawn) return nullptr;
 
-	const FGameRuleData& RuleData = GetGameState()->GetRuleData();
 	ATFDPlayerState* PState = Cast<ATFDPlayerState>(NewPlayer->PlayerState);
 	ATFDCharacterBase* TFDPawn = Cast<ATFDCharacterBase>(Pawn);
 	if (PState && TFDPawn)
@@ -72,12 +77,12 @@ APawn* ATFDGameMode::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, 
 		FGameplayTag Tag = PState->GetTeamTag();
 		if (Tag == TAG_Team_Thief)
 		{
-			TFDPawn->CharacterData = RuleData.ThiefDataAsset;
+			TFDPawn->CharacterData = RuleData->ThiefDataAsset;
 			GetGameState()->ThiefPlayerStateArray.Add(PState);
 		}
 		else if (Tag == TAG_Team_Cop)
 		{
-			TFDPawn->CharacterData = RuleData.PoliceDataAsset;
+			TFDPawn->CharacterData = RuleData->PoliceDataAsset;
 			GetGameState()->PolicePlayerStateArray.Add(PState);
 		}
 	}
@@ -105,7 +110,7 @@ void ATFDGameMode::HandleMatchHasStarted()
 	Super::HandleMatchHasStarted();
 	UE_LOG(LogTemp, Warning, TEXT("HandleMatchHasStarted"));
 	//게임 시작 처리
-	GetGameState()->GameRemainServerTime = GetGameState()->GetRuleData().PlayTimeSec;
+	GetGameState()->GameRemainServerTime = RuleData->PlayTimeSec;
 	SetActorTickEnabled(true);
 	GamePause(false);
 }
@@ -119,12 +124,11 @@ void ATFDGameMode::HandleMatchHasEnded()
 
 	SetActorTickEnabled(false);
 
-	const FGameRuleData& RuleData = GetGameState()->GetRuleData();
 	GetWorldTimerManager().SetTimer(
 		LobbyReturnTimerHandle,
 		this,
 		&ATFDGameMode::ReturnToLobby,
-		RuleData.ReturnToLobbySec,
+		RuleData->ReturnToLobbySec,
 		false
 	);
 }
@@ -199,7 +203,7 @@ void ATFDGameMode::SpawnAI()
 	FRotator SpawnRot = FRotator::ZeroRotator;
 
 	FGameplayTag AITag = TAG_Team_Neutral;
-	TSubclassOf<ATFDCharacterBase> AIClass = GetGameState()->GetRuleData().PawnClassAI;
+	TSubclassOf<ATFDCharacterBase> AIClass = RuleData->PawnClassAI;
 	for (int32 i = 0; i < NumberOfAI; ++i)
 	{
 		SpawnLoc = GetRandomPointInSpawnAreaTag(AITag);
@@ -530,7 +534,7 @@ void ATFDGameMode::HandleThiefScoreChanged(int32 NewScore)
 	UE_LOG(LogTemp, Log, TEXT("Thief Score Changed: %d"), NewScore);
 
 	//도둑 승리 점수 체크
-	if (NewScore >= GetGameState()->GetRuleData().ThiefScoreForWin)
+	if (NewScore >= RuleData->ThiefScoreForWin)
 	{
 		//일단은 게임 종료, 이후 점수 달성하면 특정 장소를 스폰할지 뭘할지 생각해보기
 		GameEnd(EGameCompleteType::ThiefWinByScore);
@@ -626,13 +630,6 @@ void ATFDGameMode::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	GetGameState()->GameRemainServerTime -= DeltaTime;
-
-	// 호스트용 직접 브로드캐스트
-	if (GetGameState()->HasAuthority())
-	{
-		GetGameState()->OnGameTimeChanged.Broadcast(GetGameState()->GameRemainServerTime);
-	}
-
 
 	// 시간이 종료될 시 게임 종료 로직
 	if (GetGameState()->GameRemainServerTime < 0)
