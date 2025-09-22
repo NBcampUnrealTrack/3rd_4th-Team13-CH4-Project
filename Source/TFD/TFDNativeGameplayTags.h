@@ -22,6 +22,7 @@ UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Character_State_Release); //풀기 가능
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ability_Cop_Handcuff); //경찰-포획
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ability_Thief_Steal); //도둑-훔치기
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ability_Thief_Release); //도둑-풀어주기
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ability_Thief_Invisibility); //도둑-은신
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ability_Neutral_RandomMove); //도둑-훔치기
 
 //4. object
@@ -38,8 +39,12 @@ UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Object_SpawnPoint_Period);
 
 //5.게임플레이큐 - 이펙트
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_GameplayCue_Arrested); //체포 시 효과
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_GameplayCue_Hiding);
 
 //6.입력 - 스킬 슬롯
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Input_Skill_Slot1);
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Input_Skill_Slot2);
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Input_Skill_Slot3);
+
+//7. 쿨타임 - 어빌리티 쿨타임
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Cooldown_Ability_Invisibility);

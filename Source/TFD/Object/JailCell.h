@@ -25,6 +25,7 @@ public:
 	// Sets default values for this actor's properties
 	AJailCell();
 
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	/** 감옥 입장/퇴장 확인 박스 */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Jail|Collision")
@@ -81,7 +82,7 @@ protected:
 	void OnOpenJailCellBoxOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
-	UPROPERTY()
+	UPROPERTY(Replicated)
 	ATFDGameState* CachedGameState;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ability|Effects")

@@ -13,6 +13,8 @@
 
 #include "TFDNativeGameplayTags.h"
 
+#include "Net/UnrealNetwork.h"
+
 // Sets default values
 AJailCell::AJailCell()
 {
@@ -43,6 +45,13 @@ AJailCell::AJailCell()
 
     WallRight = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("WallRight"));
     WallRight->SetupAttachment(RootComponent);
+}
+
+void AJailCell::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+    DOREPLIFETIME(AJailCell, CachedGameState);
 }
 
 void AJailCell::EnterJail(ATFDCharacterBase* Character)
@@ -180,8 +189,8 @@ void AJailCell::OnOpenJailCellBoxOverlapBegin(UPrimitiveComponent* OverlappedCom
     ATFDPlayerController* PC = Cast<ATFDPlayerController>(Char->GetController());
     if (!PC) return;
 
-    if (CachedGameState && CachedGameState->CaughtThiefPlayerStateArray.Num() < 1) return;
-    
+    if (CachedGameState && CachedGameState->CaughtThiefPlayerStateArray.Num() <= 0) return;
+
     if (!ApplyReleaseAbilityEffect) return;
     
     UAbilitySystemComponent* ASC = Char->GetAbilitySystemComponent();
