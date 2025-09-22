@@ -2,6 +2,8 @@
 #include "TFDNativeGameplayTags.h"
 
 //1. 팀 구분 경찰/도둑/중립
+
+UE_DEFINE_GAMEPLAY_TAG(TAG_Team,"Team");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Team_Cop, "Team.Cop");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Team_Thief, "Team.Thief");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Team_Neutral, "Team.Neutral");
