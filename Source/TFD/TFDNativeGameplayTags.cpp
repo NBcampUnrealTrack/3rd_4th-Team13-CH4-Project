@@ -21,6 +21,7 @@ UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Cop_Handcuff, "Ability.Cop.Handcuff");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Thief_Steal, "Ability.Thief.Steal");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Thief_Release, "Ability.Thief.Release");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Thief_Invisibility, "Ability.Thief.Invisibility");
+UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Thief_Teleport, "Ability.Thief.Teleport");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Neutral_RandomMove, "Ability.Neutral.RandomMove");
 
 
@@ -60,6 +61,8 @@ UE_DEFINE_GAMEPLAY_TAG(TAG_Input_Skill_Slot3, "Input.Skill.Slot3");
 
 //7. 쿨타임 - 어빌리티 쿨타임
 UE_DEFINE_GAMEPLAY_TAG(TAG_Cooldown_Ability_Invisibility, "Cooldown.Ability.Invisibility");
+UE_DEFINE_GAMEPLAY_TAG(TAG_Cooldown_Ability_Teleport, "Cooldown.Ability.Teleport");
+
 
 
 //8.GameAbility Tag
@@ -67,3 +70,4 @@ UE_DEFINE_GAMEPLAY_TAG(TAG_GameAbility, "GameAbility");
 UE_DEFINE_GAMEPLAY_TAG(TAG_GameAbilityTask, "GameAbilityTask");
 UE_DEFINE_GAMEPLAY_TAG(TAG_GameAbilityTask_FireProjectile, "GameAbilityTask.FireProjectile");
 UE_DEFINE_GAMEPLAY_TAG(TAG_GameAbilityEffect, "GameAbilityEffect");
+
