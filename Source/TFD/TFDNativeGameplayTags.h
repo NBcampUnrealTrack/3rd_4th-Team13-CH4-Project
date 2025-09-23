@@ -23,7 +23,12 @@ UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Character_State_Detecting); //수색중
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ability_Cop_Handcuff); //경찰-포획
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ability_Thief_Steal); //도둑-훔치기
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ability_Neutral_RandomMove); //도둑-훔치기
-
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ability_FireProjectile); //도둑-훔치기
+//3-2 쿨타임관련
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ability_Cop_Handcuff_CoolDown);
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ability_Thief_Steal_CoolDown);
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ability_Neutral_RandomMove_CoolDown); //도둑-훔치기
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ability_FireProjectile_CoolDown);
 //4. object
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Object_Door); //문
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Object_Money); //돈
@@ -44,17 +49,11 @@ UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Input_Skill_Slot1);
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Input_Skill_Slot2);
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Input_Skill_Slot3);
 
-//7 쿨타임관련
-UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_CoolDown);
-UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_CoolDown_Duration);
+
 
 //8.GameAbility Tag
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_GameAbility);
-
-
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_GameAbilityTask);
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_GameAbilityTask_FireProjectile);
-
-
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_GameAbilityEffect);
 

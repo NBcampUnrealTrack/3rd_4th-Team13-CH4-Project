@@ -20,6 +20,14 @@ UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Cop_Handcuff, "Ability.Cop.Handcuff");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Thief_Steal, "Ability.Thief.Steal");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Neutral_RandomMove, "Ability.Neutral.RandomMove");
 
+
+UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_FireProjectile,"Ability.FireProjectile"); //도둑-훔치기
+//3-2 쿨타임관련
+UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Cop_Handcuff_CoolDown,"Ability.Cop.Handcuff.CoolDown"); //도둑-훔치기
+UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Thief_Steal_CoolDown,"Ability.Thief.Steal.CoolDown"); //도둑-훔치기
+UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Neutral_RandomMove_CoolDown, "Ability.Neutral.RandomMove.CoolDown");
+UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_FireProjectile_CoolDown,"Ability.FireProjectile.CoolDown"); //도둑-훔치기
+
 //4. object
 UE_DEFINE_GAMEPLAY_TAG(TAG_Object_Door, "Object.Door"); //문
 UE_DEFINE_GAMEPLAY_TAG(TAG_Object_Money, "Object.Money"); //돈
@@ -41,9 +49,6 @@ UE_DEFINE_GAMEPLAY_TAG(TAG_Input_Skill_Slot1, "Input.Skill.Slot1");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Input_Skill_Slot2, "Input.Skill.Slot2");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Input_Skill_Slot3, "Input.Skill.Slot3");
 
-//7. 쿨타임
-UE_DEFINE_GAMEPLAY_TAG(TAG_CoolDown, "CoolDown");
-UE_DEFINE_GAMEPLAY_TAG(TAG_CoolDown_Duration, "CoolDown.Duration");
 
 //8.GameAbility Tag
 UE_DEFINE_GAMEPLAY_TAG(TAG_GameAbility, "GameAbility");
