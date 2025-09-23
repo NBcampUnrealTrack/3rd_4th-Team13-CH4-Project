@@ -40,7 +40,6 @@ UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SpawnPoint_Period,"Object.SpawnPoint.Period");
 UE_DEFINE_GAMEPLAY_TAG(TAG_GameplayCue_Character_Arrested, "GameplayCue.Character.Arrested");
 UE_DEFINE_GAMEPLAY_TAG(TAG_GameplayCue_Character_HandCuff, "GameplayCue.Character.HandCuff");
 
-UE_DEFINE_GAMEPLAY_TAG(TAG_GameplayCue_Arrested, "GameplayCue.Arrested");
 UE_DEFINE_GAMEPLAY_TAG(TAG_GameplayCue_Hiding, "GameplayCue.Hiding");
 
 //GameplayEvent

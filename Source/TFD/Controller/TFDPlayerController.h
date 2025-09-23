@@ -119,6 +119,14 @@ public:
 
 	void RemoveLobbyUI();
 
+	// 팀 희망 선택 서버 RPC
+	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Lobby|TeamSelection")
+	void ServerSetPreferredTeam(const FGameplayTag& TeamTag);
+
+	// 팀 희망 선택 클라이언트 함수
+	UFUNCTION(BlueprintCallable)
+	void SendPreferredTeam(FGameplayTag TeamTag);
+
 public:
 	UFUNCTION()
 	FString GetLocalIP() const;

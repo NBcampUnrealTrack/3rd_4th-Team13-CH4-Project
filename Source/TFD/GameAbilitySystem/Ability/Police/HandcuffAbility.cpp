@@ -32,6 +32,7 @@ void UHandcuffAbility::ActivateAbility(
 	const FGameplayAbilityActivationInfo ActivationInfo, 
 	const FGameplayEventData* TriggerEventData)
 {
+	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 	// 코스트/쿨다운 등 조건 확인 (현재는 없음)
 	if (!CommitAbility(Handle, ActorInfo, ActivationInfo)) 
 	{
@@ -44,6 +45,11 @@ void UHandcuffAbility::ActivateAbility(
 	{
 		UE_LOG(LogTemp, Warning, TEXT("HandcuffAnimEffect is invalid"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
+	}
+	
+	if (HasAuthority(&ActivationInfo) == false)
+	{
 		return;
 	}
 	UAbilitySystemComponent* ASC = GetCurrentActorInfo()->AbilitySystemComponent.Get();
