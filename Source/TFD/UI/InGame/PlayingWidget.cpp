@@ -22,6 +22,7 @@ void UPlayingWidget::NativeConstruct()
     // 델리게이트 바인딩
     CachedGameState->OnThiefScoreChanged.AddDynamic(this, &UPlayingWidget::UpdateThiefScore);
     CachedGameState->OnThievesChanged.AddDynamic(this, &UPlayingWidget::UpdateThiefCount);
+    CachedGameState->OnThiefArrayChanged.AddDynamic(this, &UPlayingWidget::UpdateThiefArray);
     StartGameSec = CachedGameState->GetServerWorldTimeSeconds();
     TotalGameSec = CachedGameState->GetRuleData()->PlayTimeSec;
     
@@ -71,9 +72,13 @@ void UPlayingWidget::UpdateThiefCount()
     ThiefCountText->SetText(FText::FromString(FString::Printf(TEXT("총 도둑 수: %d / 잡힌 도둑 수: %d"), RemainingThieves, CaughtThieves)));
 }
 
+void UPlayingWidget::UpdateThiefArray(const TArray<TWeakObjectPtr<ATFDPlayerState>>& ThiefPlayerStateArray)
+{
+    UpdateThiefCount();
+}
+
 void UPlayingWidget::UpdateRemainingTime()
 {
-
 
     float RemainGameSec = TotalGameSec - (CachedGameState->GetServerWorldTimeSeconds() - StartGameSec);
 

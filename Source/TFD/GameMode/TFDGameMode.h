@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -9,6 +9,8 @@
 #include "GameData/TFDGameRuleData.h"
 #include "TFDGameMode.generated.h"
 
+class ATFDPlayerState;
+class AController;
 class ATFDAICharacter;
 class ATFDCharacter;
 class ATFDSpawnVolume;
@@ -42,10 +44,14 @@ public:
 	ATFDGameMode();
 
 	void OnCatchThief(APawn* Pawn);
+	void OffCatchThief(APawn* Pawn);
 	// 게임 종료시 처리될 내용이 담김.
 	void GameEnd(EGameCompleteType CompleteType);
 	ATFDGameState* GetGameState();
 	void GamePause(bool bIsPaused);
+	void AssignTeams();
+	void GatherPreferredTeams(TArray<ATFDPlayerState*>& OutPlayers, TArray<FGameplayTag>& OutPreferredTeams);
+	void AssignTeamsOnGameStart();
 
 #pragma region 게임 상태 변화에 따른 로직
 
@@ -69,6 +75,7 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
+	virtual void Logout(AController* Exiting) override;
 
 	//virtual UClass* GetDefaultPawnClassForController_Implementation(AController* InController) override;
 	virtual APawn* SpawnDefaultPawnFor_Implementation(AController* NewPlayer, AActor* StartSpot) override;
@@ -83,12 +90,19 @@ protected:
 	UFUNCTION()
 	void HandleThiefScoreChanged(int32 NewScore);
 
-	FTimerHandle LobbyReturnTimerHandle;
+	UFUNCTION()
+	void CheckGameContinuable();
 
+	FTimerHandle LobbyReturnTimerHandle;
 
 	UFUNCTION()
 	void ReturnToLobby();
 
+	//현재 접속해있는 플레이어 수
+	int32 NumPlayers;
+	//현재 맵 이동중인 플레이어 수
+	int32 NumTravellingPlayers;
+	
 
 #pragma region 스폰관련
 

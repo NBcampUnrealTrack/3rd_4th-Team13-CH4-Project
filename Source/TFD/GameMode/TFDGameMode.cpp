@@ -45,6 +45,7 @@ void ATFDGameMode::BeginPlay()
 	{
 		NumberOfAI = RuleData->NumberOfAI;
 	}
+	
 }
 
 APawn* ATFDGameMode::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, AActor* StartSpot)
@@ -136,39 +137,111 @@ void ATFDGameMode::HandleMatchHasEnded()
 void ATFDGameMode::PostSeamlessTravel()
 {
 	Super::PostSeamlessTravel();
-	// 팀 비율 결정
-	TArray<APlayerState*> PlayerArray = GetGameState()->PlayerArray;
-	int32 PlayerCnt = PlayerArray.Num();
-	int32 PoliceCnt = UInGameUtility::GetPoliceRoleCount(PlayerCnt);
+	UE_LOG(LogTemp, Log, TEXT("PostSeamlessTravel called - Assigning Teams"));
+	AssignTeams();
+}
+void ATFDGameMode::AssignTeams()
+{
+	UE_LOG(LogTemp, Log, TEXT("AssignTeams called"));
 
-	// 배열을 랜덤으로 섞기
-	for (int32 i = PlayerArray.Num() - 1; i >= 0; --i)
+	TArray<ATFDPlayerState*> AllPlayers;
+	TArray<FGameplayTag> PreferredTeams;
+
+	// 모든 플레이어의 PlayerState와 선호 팀 수집
+	GatherPreferredTeams(AllPlayers, PreferredTeams);
+
+	const int32 PoliceTeamMax = 2; // 경찰 최대 인원
+
+	TArray<ATFDPlayerState*> PreferredPolicePlayers;
+	TArray<ATFDPlayerState*> OtherPlayers;
+
+	// 선호 경찰과 기타 선호자 분류
+	for (int32 i = 0; i < PreferredTeams.Num(); ++i)
 	{
-		int32 SwapIndex = FMath::RandRange(0, i);
-		PlayerArray.Swap(i, SwapIndex);
-	}
-
-	int32 AssignedPolice = 0;
-
-	for (APlayerState* PState : PlayerArray)
-	{
-		if (!PState) continue;
-
-		ATFDPlayerState* State = Cast<ATFDPlayerState>(PState);
-		if (!State) continue;
-
-		// 랜덤으로 경찰 역할 부여
-		if (AssignedPolice < PoliceCnt)
+		if (PreferredTeams[i] == TAG_Team_Cop)
 		{
-			State->SetTeamTag(TAG_Team_Cop);
-			AssignedPolice++;
+			PreferredPolicePlayers.Add(AllPlayers[i]);
 		}
 		else
 		{
-			State->SetTeamTag(TAG_Team_Thief);
+			OtherPlayers.Add(AllPlayers[i]);
 		}
 	}
-	GamePause(true);
+
+	TArray<ATFDPlayerState*> AssignedPolice;
+
+	// 선호 경찰자가 0명시 처리
+	if (PreferredPolicePlayers.Num() == 0)
+	{
+		int32 NumToAssign = FMath::Min(PoliceTeamMax, OtherPlayers.Num());
+		for (int32 i = 0; i < NumToAssign; ++i)
+		{
+			int32 RandomIndex = FMath::RandRange(0, OtherPlayers.Num() - 1);
+			AssignedPolice.Add(OtherPlayers[RandomIndex]);
+			OtherPlayers[RandomIndex]->SetActualTeam(TAG_Team_Cop);
+			OtherPlayers.RemoveAt(RandomIndex);
+		}
+	}
+	// 경찰선호자 수가 정원 이하일 경우 모두 경찰 배정
+	else if (PreferredPolicePlayers.Num() <= PoliceTeamMax)
+	{
+		for (ATFDPlayerState* Player : PreferredPolicePlayers)
+		{
+			Player->SetActualTeam(TAG_Team_Cop);
+			AssignedPolice.Add(Player);
+		}
+	}
+	else
+	{
+		for (int32 i = PreferredPolicePlayers.Num() - 1; i > 0; --i)
+		{
+			int32 SwapIndex = FMath::RandRange(0, i);
+			PreferredPolicePlayers.Swap(i, SwapIndex);
+		}
+		for (int32 i = 0; i < PoliceTeamMax; ++i)
+		{
+			PreferredPolicePlayers[i]->SetActualTeam(TAG_Team_Cop);
+			AssignedPolice.Add(PreferredPolicePlayers[i]);
+		}
+		for (int32 i = PoliceTeamMax; i < PreferredPolicePlayers.Num(); ++i)
+		{
+			PreferredPolicePlayers[i]->SetActualTeam(TAG_Team_Thief);
+			OtherPlayers.Add(PreferredPolicePlayers[i]);
+		}
+	}
+	// 나머지 플레이어는 모두 도둑 배정
+	for (ATFDPlayerState* Player : OtherPlayers)
+	{
+		Player->SetActualTeam(TAG_Team_Thief);
+	}
+
+	// 최종 배정 로그 출력
+	for (ATFDPlayerState* Player : AllPlayers)
+	{
+		UE_LOG(LogTemp, Log, TEXT("Player %s assigned to team %s"),
+			*Player->GetPlayerName(),
+			*(Player->GetActualTeam().ToString())
+		);
+	}
+}
+
+// 모든 플레이어의 PlayerState와 팀 선호 정보를 수집하는 함수
+void ATFDGameMode::GatherPreferredTeams(TArray<ATFDPlayerState*>& OutPlayers, TArray<FGameplayTag>& OutPreferredTeams)
+{
+	OutPlayers.Empty();
+	OutPreferredTeams.Empty();
+
+	for (APlayerState* PS : GameState->PlayerArray)
+	{
+		ATFDPlayerState* TFDPS = Cast<ATFDPlayerState>(PS);
+		if (TFDPS)
+		{
+			OutPlayers.Add(TFDPS);
+			OutPreferredTeams.Add(TFDPS->GetPreferredTeam());
+		}
+	}
+
+	UE_LOG(LogTemp, Log, TEXT("GatherPreferredTeams: Found %d players"), OutPlayers.Num());
 }
 
 void ATFDGameMode::HandleSeamlessTravelPlayer(AController*& C)
@@ -186,13 +259,24 @@ void ATFDGameMode::HandleSeamlessTravelPlayer(AController*& C)
 	{
 		GetGameState()->MarkPlayerReady(PlayerState);
 
-		// 모든 플레이어가 접속했는지 확인 (GameState의 PlayerArray 사용)
 		if (NumTravellingPlayers == 0 && NumPlayers == GetGameState()->PlayerArray.Num())
 		{
 			UE_LOG(LogTemp, Warning, TEXT("All players are ready. Starting the game."));
+			StartMatch(); // 게임 상태 InProgress로 전환
+		}
+	}
+}
 
-			StartMatch(); //InProgress 상태로 전환
-
+void ATFDGameMode::AssignTeamsOnGameStart()
+{
+	for (APlayerState* PS : GameState->PlayerArray)
+	{
+		if (ATFDPlayerState* TFDPS = Cast<ATFDPlayerState>(PS))
+		{
+			TFDPS->SetActualTeam(TFDPS->GetPreferredTeam());
+			UE_LOG(LogTemp, Log, TEXT("Player %s assigned ActualTeam: %s"),
+				*TFDPS->GetPlayerName(),
+				*TFDPS->GetActualTeam().GetTagName().ToString());
 		}
 	}
 }
@@ -529,6 +613,25 @@ void ATFDGameMode::OnCatchThief(APawn* Pawn)
 	}
 }
 
+void ATFDGameMode::OffCatchThief(APawn* Pawn)
+{
+	APlayerState* OffCatchPlayerState = Pawn->GetPlayerState();
+
+	if (OffCatchPlayerState == nullptr)
+		return;
+
+	if (ATFDPlayerState* PS = Cast<ATFDPlayerState>(OffCatchPlayerState))
+	{
+		// ATFDPlayerState*로 WeakPtr 생성
+		TWeakObjectPtr<ATFDPlayerState> WeakPS = MakeWeakObjectPtr<ATFDPlayerState>(PS);
+
+		// 배열에 저장 가능
+		GetGameState()->CaughtThiefPlayerStateArray.Remove(WeakPS);
+
+		GetGameState()->OnThievesChanged.Broadcast();
+	}
+}
+
 void ATFDGameMode::HandleThiefScoreChanged(int32 NewScore)
 {
 	UE_LOG(LogTemp, Log, TEXT("Thief Score Changed: %d"), NewScore);
@@ -636,4 +739,64 @@ void ATFDGameMode::Tick(float DeltaTime)
 	{
 		GameEnd(EGameCompleteType::TimeLimit);
 	}
+}
+
+void ATFDGameMode::Logout(AController* Exiting)
+{
+	Super::Logout(Exiting);
+	
+	UE_LOG(LogTemp, Warning, TEXT("Player Logout Exiting"));
+	ATFDPlayerState* PS = Exiting->GetPlayerState<ATFDPlayerState>();
+	if(!PS) return;
+
+	ATFDGameState* GS = GetGameState();
+	if (!GS) return;
+	
+	// 경찰/도둑/잡힌도둑 배열에서 제거, 각 배열이 변경되면 GameState에서 OnRep_로 UI 변경까지 진행됨
+	GS->PolicePlayerStateArray.Remove(PS);
+	GS->ThiefPlayerStateArray.Remove(PS);
+	GS->CaughtThiefPlayerStateArray.Remove(PS);
+
+	GS->OnThiefArrayChanged.Broadcast(GS->ThiefPlayerStateArray);
+
+	CheckGameContinuable();
+
+}
+
+void ATFDGameMode::CheckGameContinuable()
+{
+	//게임이 지속 가능한지 체크
+	ATFDGameState* GS = GetGameState();
+	if (!GS) return;
+
+	//도둑이 전부 나갔으면 게임 종료
+	if (GS->ThiefPlayerStateArray.Num() == 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No thieves left. Ending game."));
+		GetGameState()->SetWinTeam(TAG_Team_Cop, EGameCompleteType::Aborted);
+		EndMatch();
+		return;
+	}
+
+	//도둑이 나간 경우 살아있는 도둑은 없고 잡힌 도둑만 남아있으면 게임 종료
+	if (GS->ThiefPlayerStateArray.Num() == GS->CaughtThiefPlayerStateArray.Num())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No Alive thieves left. Ending game."));
+		GetGameState()->SetWinTeam(TAG_Team_Cop, EGameCompleteType::Aborted);
+		EndMatch();
+		return;
+	}
+
+	//경찰이 전부 나갔으면 게임 종료
+	if(GS->PolicePlayerStateArray.Num() == 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No police left. Thieves win!"));
+		GetGameState()->SetWinTeam(TAG_Team_Thief, EGameCompleteType::Aborted);
+		EndMatch();
+		return;
+	}
+
+	// 아직 게임 진행 가능 → 그냥 넘어감
+	UE_LOG(LogTemp, Warning, TEXT("Game still playable. Continue..."));
+	
 }

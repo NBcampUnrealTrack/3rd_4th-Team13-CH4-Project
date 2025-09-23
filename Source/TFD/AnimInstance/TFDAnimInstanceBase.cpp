@@ -38,7 +38,7 @@ void UTFDAnimInstanceBase::PlayHitAnim(EHitDirection Direction)
 {
 	if (!HitMontage) return;
 
-	CurrentHitDirection = Direction;
+	//CurrentHitDirection = Direction;
 	Montage_Play(HitMontage);
 	// FName SectionName = GetSectionNameByDirection(Direction);
 	// Montage_JumpToSection(SectionName, HitMontage);

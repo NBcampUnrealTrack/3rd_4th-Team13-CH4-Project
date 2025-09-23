@@ -18,6 +18,7 @@ class UPlayingWidget;
 class UResultWidget;
 class UHUDLayoutWidget;
 class UMiniMapWidget;
+class UReleaseWidget;
 
 // Delegate 선언: 공인 IP가 준비되었을 때 알려주는 이벤트
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPublicIPReady, const FString&, PublicIP);
@@ -77,10 +78,18 @@ private:
 	void Jump(const FInputActionValue& Value);
 	void StopJumping();
 
+	//===================================================
 	// 스킬 시스템 관련
+
+	// 입력 바인딩 함수
 	void OnSkillInput1(const FInputActionValue& Value);
 	void OnSkillInput2(const FInputActionValue& Value);
 	void OnSkillInput3(const FInputActionValue& Value);
+
+	// Skill input 공통 처리 함수
+	void HandleSkillInput(int32 SlotIndex);
+	//===================================================
+
 	/*
 	void Attack(const FInputActionValue& Value);
 	void TogglePause(const FInputActionValue& Value);
@@ -110,6 +119,14 @@ public:
 
 	void RemoveLobbyUI();
 
+	// 팀 희망 선택 서버 RPC
+	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Lobby|TeamSelection")
+	void ServerSetPreferredTeam(const FGameplayTag& TeamTag);
+
+	// 팀 희망 선택 클라이언트 함수
+	UFUNCTION(BlueprintCallable)
+	void SendPreferredTeam(FGameplayTag TeamTag);
+
 public:
 	UFUNCTION()
 	FString GetLocalIP() const;
@@ -137,6 +154,12 @@ public:
 	UFUNCTION()
 	void HandleMatchWaitingPostMatch(FGameplayTag WinTeamTag, EGameCompleteType CompleteType);
 
+	UFUNCTION()
+	void HandleShowReleaseWidget();
+
+	UFUNCTION()
+	void HandleRemoveReleaseWidget();
+
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UUserWidget> LobbyWidgetClass;
@@ -156,4 +179,7 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UMiniMapWidget> MiniMapWidgetClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UReleaseWidget> ReleaseWidgetClass;
 };

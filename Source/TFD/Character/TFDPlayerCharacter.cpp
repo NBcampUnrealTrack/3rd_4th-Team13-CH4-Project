@@ -27,9 +27,6 @@ ATFDPlayerCharacter::ATFDPlayerCharacter()
 	// Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 	bReplicates = true;
-
-	// 스킬 매니저 컴포넌트 생성
-	SkillManagerComponent = CreateDefaultSubobject<UTFDSkillManagerComponent>(TEXT("SkillManagerComponent"));
 }
 
 void ATFDPlayerCharacter::BeginPlay()
@@ -52,36 +49,4 @@ void ATFDPlayerCharacter::BeginPlay()
 			}
 		}
 	}
-
-	if (SkillManagerComponent && SkillManagerComponent->IsASCSetup())
-	{
-		UE_LOG(LogTemp, Log, TEXT("[ATFDPlayerCharacter][BeginPlay]SkillManagerComponent is initialized with ASC."));
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("[ATFDPlayerCharacter][BeginPlay]SkillManagerComponent is NOT initialized or ASC is missing."));
-	}
 }
-
-void ATFDPlayerCharacter::PossessedBy(AController* NewController)
-{
-	Super::PossessedBy(NewController);
-
-	if (SkillManagerComponent)
-	{
-		SkillManagerComponent->SetupASC();
-		UE_LOG(LogTemp, Log, TEXT("[ATFDPlayerCharacter][PossessedBy] SkillManagerComponent initialized."));
-	}
-}
-
-void ATFDPlayerCharacter::OnRep_PlayerState()
-{
-	Super::OnRep_PlayerState();
-
-	if (SkillManagerComponent)
-	{
-		SkillManagerComponent->SetupASC();
-		UE_LOG(LogTemp, Log, TEXT("[ATFDPlayerCharacter][OnRep_PlayerState] SkillManagerComponent initialized."));
-	}
-}
-

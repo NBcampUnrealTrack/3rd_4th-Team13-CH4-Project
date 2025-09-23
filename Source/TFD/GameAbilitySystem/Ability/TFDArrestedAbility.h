@@ -6,6 +6,7 @@
 #include "GameAbilitySystem/Ability/TFDGameplayAbility.h"
 #include "TFDArrestedAbility.generated.h"
 
+class AJailCell;
 /**
  * 
  */
@@ -29,4 +30,7 @@ public:
         const FGameplayAbilityActivationInfo ActivationInfo,
         bool bReplicateEndAbility,
         bool bWasCancelled) override;
+
+    UPROPERTY(BlueprintReadWrite, Category = "Jail")
+    AJailCell* AssignedJailCell;
 };

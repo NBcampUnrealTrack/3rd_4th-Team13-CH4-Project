@@ -24,6 +24,9 @@
 #include "UI/Widget/UHUDLayoutWidget.h"
 #include "UI/InGame/ResultWidget.h"
 #include "UI/InGame/MiniMapWidget.h"
+#include "UI/InGame/ReleaseWidget.h"
+
+#include "Object/JailCell.h"
 
 // 스킬 시스템 관련
 #include "GameAbilitySystem/Component/TFDSkillManagerComponent.h"
@@ -67,8 +70,6 @@ void ATFDPlayerController::SetMovemnetWalking(bool bMovement)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Movement None"));
 
-			CB->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
-			CB->GetCharacterMovement()->Activate();
 			CB->GetCharacterMovement()->DisableMovement();
 			CB->GetCharacterMovement()->SetMovementMode(MOVE_None);
 			CB->GetCharacterMovement()->StopMovementImmediately();
@@ -85,6 +86,31 @@ void ATFDPlayerController::BeginPlay()
 		check(DefaultMappingContext);
 		Subsystem->AddMappingContext(DefaultMappingContext, 0);
 
+		// 로비 레벨일 때만 UI 생성
+		UWorld* World = GetWorld();
+		if (World)
+		{
+			FString CurrentLevelName = World->GetMapName();
+			CurrentLevelName.RemoveFromStart(World->StreamingLevelsPrefix);
+
+			FString LobbyLevelName = FPaths::GetBaseFilename(TFDGameConstants::LobbyLevel);
+
+			if (CurrentLevelName.Equals(LobbyLevelName))
+			{
+				if (LobbyWidgetClass && LobbyWidgetInstance == nullptr)
+				{
+					LobbyWidgetInstance = CreateWidget<UUserWidget>(this, LobbyWidgetClass);
+					if (LobbyWidgetInstance)
+					{
+						LobbyWidgetInstance->AddToViewport();
+					}
+				}
+			}
+			else
+			{
+				RemoveLobbyUI();
+			}
+		}
 	}
 
 
@@ -194,27 +220,27 @@ void ATFDPlayerController::AcknowledgePossession(APawn* InPawn)
 
 	if (IsLocalPlayerController())
 	{
-		if (ATFDCharacterBase* CB = Cast<ATFDCharacterBase>(InPawn))
+		ATFDCharacterBase* CB = Cast<ATFDCharacterBase>(InPawn);
+		if (!CB) return;
+		
+		UEnhancedInputLocalPlayerSubsystem* Subsystem =
+			ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer());
+		if(!Subsystem) return;
+
+		if (CB->CharacterData->JobMappingContext)
 		{
-			if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
-				ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
-			{
-				if (CB->CharacterData->JobMappingContext)
-				{
+			Subsystem->AddMappingContext(CB->CharacterData->JobMappingContext, 0);
+		}
 
-					Subsystem->AddMappingContext(CB->CharacterData->JobMappingContext, 0);
-				}
-			}
 
-			//********직업에 따른 능력 입력 바인딩************
-			if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
-			{
-				for (auto& Action : CB->CharacterData->Actions)
-				{
-					EnhancedInputComponent->BindAction(Action.InputAction, ETriggerEvent::Started, this, &ATFDPlayerController::JobAbility, Action.Tag);
-				}
-				
-			}
+		//********직업에 따른 능력 입력 바인딩************
+		UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent);
+		if (!EnhancedInputComponent)
+			return;
+
+		for (auto& Action : CB->CharacterData->Actions)
+		{
+			EnhancedInputComponent->BindAction(Action.InputAction, ETriggerEvent::Started, this, &ATFDPlayerController::JobAbility, Action.Tag);
 		}
 	}
 }
@@ -289,34 +315,57 @@ void ATFDPlayerController::StopJumping()
 
 void ATFDPlayerController::OnSkillInput1(const FInputActionValue& Value)
 {
-	if (APawn* ControlledPawn = GetPawn())
-	{
-		if (UTFDSkillManagerComponent* SkillManager = ControlledPawn->FindComponentByClass<UTFDSkillManagerComponent>())
-		{
-			SkillManager->UseSkillAtSlot(0);
-		}
-	}
+	HandleSkillInput(0);
 }
 
 void ATFDPlayerController::OnSkillInput2(const FInputActionValue& Value)
 {
-	if (APawn* ControlledPawn = GetPawn())
-	{
-		if (UTFDSkillManagerComponent* SkillManager = ControlledPawn->FindComponentByClass<UTFDSkillManagerComponent>())
-		{
-			SkillManager->UseSkillAtSlot(1);
-		}
-	}
+	HandleSkillInput(1);
 }
 
 void ATFDPlayerController::OnSkillInput3(const FInputActionValue& Value)
+{   
+	HandleSkillInput(2);
+}
+
+void ATFDPlayerController::HandleSkillInput(int32 SlotIndex)
 {
-	if (APawn* ControlledPawn = GetPawn())
+	APawn* ControlledPawn = GetPawn();
+	if (!ControlledPawn) return;
+
+	ATFDCharacterBase* TFDCharacter = Cast<ATFDCharacterBase>(ControlledPawn);
+	if (!TFDCharacter)
 	{
-		if (UTFDSkillManagerComponent* SkillManager = ControlledPawn->FindComponentByClass<UTFDSkillManagerComponent>())
+		UE_LOG(LogTemp, Warning, TEXT("[ATFDPlayerController][HandleSkillInput] Invalid character."));
+		return;
+	}
+
+	UTFDSkillManagerComponent* SkillManager = TFDCharacter->GetSkillManagerComponent();
+	if (!SkillManager)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[ATFDPlayerController][HandleSkillInput] SkillManagerComponent is null."));
+		return;
+	}
+
+	if (!TFDCharacter->HasAuthority())
+	{// 클라이언트 -> 서버 RPC 호출
+		UE_LOG(LogTemp, Log, TEXT("[ATFDPlayerController][HandleSkillInput] Calling ServerUseSkillAtSlot from client"));
+		TFDCharacter->ServerUseSkillAtSlot(SlotIndex);
+	}
+	else
+	{// 서버에서 직접 실행 (리슨 서버 환경 등)
+		UE_LOG(LogTemp, Log, TEXT("[ATFDPlayerController][HandleSkillInput] Server has authority. Using skill directly."));
+
+		// 유효성 검사 추가
+		const int32 MaxSlots = SkillManager->GetMaxSlotCount();
+		if (SlotIndex < 0 || SlotIndex >= MaxSlots)
 		{
-			SkillManager->UseSkillAtSlot(2);
+			UE_LOG(LogTemp, Warning, TEXT("[ATFDPlayerController][HandleSkillInput] Invalid SlotIndex: %d"), SlotIndex);
+			return;
 		}
+
+		// 유효성 검사 통과 후 스킬 사용 호출
+		SkillManager->UseSkillAtSlot(SlotIndex);
 	}
 }
 
@@ -531,8 +580,9 @@ void ATFDPlayerController::HandleMatchInProgress()
 	ULocalPlayer* LP = GetLocalPlayer();
 	if (!LP)
 	{
+		UE_LOG(LogTemp, Error, TEXT("[ATFDPlayerController] LP no"));
 		return;
-	}
+	}	
 
 	if (UGameUIRouterSubsystem* UISub = LP->GetSubsystem<UGameUIRouterSubsystem>())
 	{
@@ -566,18 +616,48 @@ void ATFDPlayerController::HandleMatchInProgress()
 	}
 }
 
+// 선호 팀 설정 서버 RPC
+void ATFDPlayerController::ServerSetPreferredTeam_Implementation(const FGameplayTag& TeamTag)
+{
+	if (ATFDPlayerState* PS = GetPlayerState<ATFDPlayerState>())
+	{
+		PS->SetPreferredTeam(TeamTag);
+	}
+}
+
+bool ATFDPlayerController::ServerSetPreferredTeam_Validate(const FGameplayTag& TeamTag)
+{
+	// 필요시 유효성 검사 로직 가능
+	return true;
+}
+
+// 클라이언트에서 선호 팀 설정 및 서버로 RPC 호출 함수
+void ATFDPlayerController::SendPreferredTeam(FGameplayTag TeamTag)
+{
+	if (ATFDPlayerState* PS = GetPlayerState<ATFDPlayerState>())
+	{
+		PS->SetPreferredTeam(TeamTag);    // 선호 팀 설정
+		PS->SetActualTeam(TeamTag);       // 실제 팀도 임시 세팅(서버 리플리케이션 필요)
+	}
+}
+
 // 게임 종료/포스트 매치 이벤트 발생 시 처리
 void ATFDPlayerController::HandleMatchWaitingPostMatch(FGameplayTag WinTeamTag, EGameCompleteType CompleteType)
 {
 	bShowMouseCursor = true;
 
-
+	if (!IsLocalController()) // 서버 전용 PC에서는 UI 건드리지 않음
+	{
+		return;
+	}
 
 	ULocalPlayer* LP = GetLocalPlayer();
 	if (!LP)
 	{
 		return;
 	}
+
+	
 
 	if (UGameUIRouterSubsystem* UISub = LP->GetSubsystem<UGameUIRouterSubsystem>())
 	{
@@ -605,6 +685,64 @@ void ATFDPlayerController::HandleMatchWaitingPostMatch(FGameplayTag WinTeamTag, 
 					UISub->ResultWidget = RW; // Subsystem에 인스턴스 보관
 				}
 			}
+		}
+	}
+	HandleRemoveReleaseWidget();
+}
+
+
+
+void ATFDPlayerController::HandleShowReleaseWidget()
+{
+	if (!IsLocalController()) // 서버 전용 PC에서는 UI 건드리지 않음
+	{
+		return;
+	}
+
+	ULocalPlayer* LP = GetLocalPlayer();
+	if (!LP)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[ATFDPlayerController] LP no"));
+		return;
+	}
+
+	if (UGameUIRouterSubsystem* UISub = LP->GetSubsystem<UGameUIRouterSubsystem>())
+	{
+		if (!ReleaseWidgetClass) return;
+		
+		UE_LOG(LogTemp, Error, TEXT("[ATFDPlayerController] 클래스 있음"));
+		if (UUserWidget* Widget = UISub->AddWidgetToLayer(EUILayer::PopupLayer, ReleaseWidgetClass))
+		{
+			UE_LOG(LogTemp, Error, TEXT("[ATFDPlayerController] 위젯 있음"));
+			if (UReleaseWidget* RW = Cast<UReleaseWidget>(Widget))
+			{
+				UE_LOG(LogTemp, Error, TEXT("[ATFDPlayerController] 캐스트 됨"));
+				ATFDPlayerCharacter* MyCharacter = Cast<ATFDPlayerCharacter>(GetPawn());
+				UISub->ReleaseWidget = RW;
+			}
+		}
+	}
+}
+
+void ATFDPlayerController::HandleRemoveReleaseWidget()
+{
+	if (!IsLocalController()) // 서버 전용 PC에서는 UI 건드리지 않음
+	{
+		return;
+	}
+
+	ULocalPlayer* LP = GetLocalPlayer();
+	if (!LP)
+	{
+		return;
+	}
+
+	if (UGameUIRouterSubsystem* UISub = LP->GetSubsystem<UGameUIRouterSubsystem>())
+	{
+		if (UISub->ReleaseWidget)
+		{
+			UISub->RemoveWidgetFromLayer(EUILayer::PopupLayer, UISub->ReleaseWidget);
+			UISub->ReleaseWidget = nullptr;
 		}
 	}
 }
