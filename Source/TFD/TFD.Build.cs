@@ -18,7 +18,7 @@ public class TFD : ModuleRules
 				"GameplayAbilities",      // 추가!
                 "GameplayTags",           // 추가!
                 "GameplayTasks",           // 추가!
-
+                "Niagara", //나이아가라 추가
 				"AIModule",
 				"NavigationSystem",
 
