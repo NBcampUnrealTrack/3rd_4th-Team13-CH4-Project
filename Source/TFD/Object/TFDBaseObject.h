@@ -42,7 +42,7 @@ struct FTFDBaseObjectParam
 {
 	GENERATED_BODY()
 
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "TFD|Projectile|Move",
 		meta = (DisplayName = "Moveflag", EditConditionHides))
 	bool bMoveFlag = false;
@@ -50,16 +50,16 @@ struct FTFDBaseObjectParam
 	// 투사체의 이동 방식을 결정
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "TFD|Projectile|Movement", meta = (DisplayName = "이동 방식"))
 	EProjectileMovementType MovementType = EProjectileMovementType::Straight;
-	
-	
+
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "TFD|Projectile|Move",
 		meta = (DisplayName = "가속도", EditConditionHides))
 	float ProjectileSpeed = 1500.f;
-	
+
 	// true이면 비행 중 주변의 적을 탐지하고 유도
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "TFD|Projectile|Homing", meta = (DisplayName = "유도 기능 활성화"))
 	bool bEnableHoming = false;
-	
+
 	// 발사 시 재생할 사운드
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "TFD|Projectile|Effects|Muzzle",
 		meta = (DisplayName = "발사 사운드"))
@@ -110,12 +110,13 @@ struct FTFDBaseObjectParam
 		meta = (DisplayName = "충돌 이펙트 오프셋", EditCondition = "ImpactVFX != nullptr"))
 	float ImpactOffset = 0.0f;
 };
+
 UCLASS()
 class TFD_API ATFDBaseObject : public AActor
 {
 	GENERATED_BODY()
-	
-public:	
+
+public:
 	// Sets default values for this actor's properties
 	ATFDBaseObject();
 
@@ -123,12 +124,14 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-UFUNCTION()
+	UFUNCTION()
 	void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
-						UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
-						bool bFromSweep, const FHitResult& SweepResult);
-	
+	                    UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
+	                    bool bFromSweep, const FHitResult& SweepResult);
+
 	void DefaultCreater();
+	void SetMovementComponent();
+
 protected:
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	USphereComponent* CollisionComp;
@@ -139,15 +142,15 @@ protected:
 	// 적용할 GameplayEffect (블루프린트에서 할당)
 	UPROPERTY(EditAnywhere, Category = "GAS")
 	TSubclassOf<UGameplayEffect> CollisionEffect;
-	
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "TFD|Components")
 	TObjectPtr<UTFDProjectileMovementComponent> ProjectileMovementComponent;
 
 	UPROPERTY(EditAnywhere, Category="GAS")
-	FGameplayTag		ItemTag;
+	FGameplayTag ItemTag;
 
-	UPROPERTY(VisibleAnywhere,BlueprintReadOnly, Category="GAS")
-	FGameplayTagContainer		AllowedTeamTag;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="GAS")
+	FGameplayTagContainer AllowedTeamTag;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (ShowOnlyInnerProperties))
 	FTFDBaseObjectParam BaseObjectParam;
@@ -155,18 +158,15 @@ protected:
 
 	FGameplayEffectContextHandle CachedContext;
 	TSubclassOf<UGameplayEffect> DamageEffectClass;
-	
-public:	
+
+public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 	const FGameplayTagContainer& GetAllowedTeamTag() const { return AllowedTeamTag; }
 
-	void SetBaseObjectParam(const FTFDBaseObjectParam&  InBaseObjectParams) {BaseObjectParam = InBaseObjectParams; }
-	// void InitEffectContext(FGameplayEffectContextHandle InContext, TSubclassOf<UGameplayEffect> InDamageEffect);
-	// void OnHit(AActor* OtherActor);
+	void SetBaseObjectParam(const FTFDBaseObjectParam& InBaseObjectParams);
 
-	
 private:
 	void SetAllowedTeamTag();
 
