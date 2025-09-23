@@ -23,6 +23,7 @@ UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ability_Cop_Handcuff); //경찰-포획
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ability_Thief_Steal); //도둑-훔치기
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ability_Thief_Release); //도둑-풀어주기
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ability_Thief_Invisibility); //도둑-은신
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ability_Thief_Teleport); //도둑-텔레포트
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ability_Neutral_RandomMove); //도둑-훔치기
 
 //4. object
@@ -55,3 +56,4 @@ UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Input_Skill_Slot3);
 
 //7. 쿨타임 - 어빌리티 쿨타임
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Cooldown_Ability_Invisibility);
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Cooldown_Ability_Teleport);
