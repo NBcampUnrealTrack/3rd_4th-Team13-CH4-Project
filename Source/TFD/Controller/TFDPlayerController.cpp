@@ -86,6 +86,31 @@ void ATFDPlayerController::BeginPlay()
 		check(DefaultMappingContext);
 		Subsystem->AddMappingContext(DefaultMappingContext, 0);
 
+		// 로비 레벨일 때만 UI 생성
+		UWorld* World = GetWorld();
+		if (World)
+		{
+			FString CurrentLevelName = World->GetMapName();
+			CurrentLevelName.RemoveFromStart(World->StreamingLevelsPrefix);
+
+			FString LobbyLevelName = FPaths::GetBaseFilename(TFDGameConstants::LobbyLevel);
+
+			if (CurrentLevelName.Equals(LobbyLevelName))
+			{
+				if (LobbyWidgetClass && LobbyWidgetInstance == nullptr)
+				{
+					LobbyWidgetInstance = CreateWidget<UUserWidget>(this, LobbyWidgetClass);
+					if (LobbyWidgetInstance)
+					{
+						LobbyWidgetInstance->AddToViewport();
+					}
+				}
+			}
+			else
+			{
+				RemoveLobbyUI();
+			}
+		}
 	}
 
 
@@ -588,6 +613,31 @@ void ATFDPlayerController::HandleMatchInProgress()
 				UISub->MiniMapWidget->SetOwnerPawn(GetPawn());
 			}
 		}
+	}
+}
+
+// 선호 팀 설정 서버 RPC
+void ATFDPlayerController::ServerSetPreferredTeam_Implementation(const FGameplayTag& TeamTag)
+{
+	if (ATFDPlayerState* PS = GetPlayerState<ATFDPlayerState>())
+	{
+		PS->SetPreferredTeam(TeamTag);
+	}
+}
+
+bool ATFDPlayerController::ServerSetPreferredTeam_Validate(const FGameplayTag& TeamTag)
+{
+	// 필요시 유효성 검사 로직 가능
+	return true;
+}
+
+// 클라이언트에서 선호 팀 설정 및 서버로 RPC 호출 함수
+void ATFDPlayerController::SendPreferredTeam(FGameplayTag TeamTag)
+{
+	if (ATFDPlayerState* PS = GetPlayerState<ATFDPlayerState>())
+	{
+		PS->SetPreferredTeam(TeamTag);    // 선호 팀 설정
+		PS->SetActualTeam(TeamTag);       // 실제 팀도 임시 세팅(서버 리플리케이션 필요)
 	}
 }
 

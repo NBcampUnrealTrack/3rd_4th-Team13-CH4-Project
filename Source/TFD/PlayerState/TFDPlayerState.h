@@ -38,6 +38,15 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "PlayerState")
 	FOnPlayerNameChanged OnPlayerNameChanged;
 
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Team")
+	FGameplayTag PreferredTeam;
+
+	UPROPERTY(ReplicatedUsing = OnRep_ActualTeam, VisibleAnywhere, BlueprintReadOnly, Category = "Team")
+	FGameplayTag ActualTeam;
+
+	UFUNCTION()
+	void OnRep_ActualTeam();
+
 protected:
 	// 복제되는 플레이어 이름 변수
 	UPROPERTY(ReplicatedUsing = OnRep_PlayerName)
@@ -54,4 +63,10 @@ public:
 
 	// 네트워크 복제에 필요한 함수 재정의
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	FGameplayTag GetPreferredTeam() const;
+	void SetPreferredTeam(const FGameplayTag& InTeamTag);
+
+	FGameplayTag GetActualTeam() const;
+	void SetActualTeam(const FGameplayTag& InTeam);
 };
