@@ -9,8 +9,6 @@
 #include "GameData/TFDGameRuleData.h"
 #include "TFDGameMode.generated.h"
 
-class ATFDPlayerState;
-class AController;
 class ATFDAICharacter;
 class ATFDCharacter;
 class ATFDSpawnVolume;
@@ -49,9 +47,6 @@ public:
 	void GameEnd(EGameCompleteType CompleteType);
 	ATFDGameState* GetGameState();
 	void GamePause(bool bIsPaused);
-	void AssignTeams();
-	void GatherPreferredTeams(TArray<ATFDPlayerState*>& OutPlayers, TArray<FGameplayTag>& OutPreferredTeams);
-	void AssignTeamsOnGameStart();
 
 #pragma region 게임 상태 변화에 따른 로직
 
@@ -98,11 +93,6 @@ protected:
 	UFUNCTION()
 	void ReturnToLobby();
 
-	//현재 접속해있는 플레이어 수
-	int32 NumPlayers;
-	//현재 맵 이동중인 플레이어 수
-	int32 NumTravellingPlayers;
-	
 
 #pragma region 스폰관련
 
