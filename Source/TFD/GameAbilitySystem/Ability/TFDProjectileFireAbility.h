@@ -24,12 +24,13 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "TFD|Cooldown")
 	TSubclassOf<class UGameplayEffect> CooldownGEClass; // 적용할 쿨다운 GE 클래스
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "TFD|CoolDown")
+	FGameplayTag CooldownTag; // GE에서 부여하는 쿨다운태그
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "TFD|Cost")
 	TSubclassOf<class UGameplayEffect> CostGEClass; // Ability 사용 시 소모할 GE
 	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "TFD|Cooldown")
 	
-	FGameplayTag CooldownTag; // GE에서 부여하는 태그
 
 	
 	virtual void ActivateAbility(
@@ -44,6 +45,7 @@ public:
 		const FGameplayAbilityActivationInfo ActivationInfo,
 		bool bReplicateEndAbility,
 		bool bWasCancelled) override;
+
 
 	FGameplayTagContainer GetCoolDownTags() const;
 

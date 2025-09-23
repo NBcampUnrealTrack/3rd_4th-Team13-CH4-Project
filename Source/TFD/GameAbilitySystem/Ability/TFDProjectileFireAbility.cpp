@@ -23,27 +23,22 @@ void UTFDProjectileFireAbility::ActivateAbility(const FGameplayAbilitySpecHandle
 	// 1. 쿨다운 체크
 	if (ASC->HasMatchingGameplayTag(CooldownTag))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("아직 쿨다운 중!"));
+		UE_LOG(LogTemp, Warning, TEXT("쿨다운 중!"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 		return;
+	}
+
+	//1-2쿨타임적용
+	if (CooldownGEClass)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("쿨다운 시작!"));
+		FGameplayEffectSpecHandle SpecHandle = MakeOutgoingGameplayEffectSpec(CooldownGEClass, GetAbilityLevel());
+		SpecHandle.Data->DynamicGrantedTags.AddTag(CooldownTag);
+		ApplyGameplayEffectSpecToOwner(Handle, ActorInfo, ActivationInfo, SpecHandle);
 	}
 
 	// 2. Cost 적용
-	FGameplayEffectSpecHandle CostSpecHandle = ASC->MakeOutgoingSpec(CostGEClass, GetAbilityLevel(Handle, ActorInfo),
-	                                                                 ASC->MakeEffectContext());
-	if (!CostSpecHandle.IsValid())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Cost 부족!"));
-		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
-		return;
-	}
-
-	// 3. 쿨다운 GE 적용
-	FGameplayEffectSpecHandle CooldownSpecHandle = ASC->MakeOutgoingSpec(
-		CooldownGEClass, GetAbilityLevel(Handle, ActorInfo), ASC->MakeEffectContext());
-	ASC->ApplyGameplayEffectSpecToSelf(*CooldownSpecHandle.Data.Get());
-
-
+	
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 	// EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 }
@@ -56,6 +51,7 @@ void UTFDProjectileFireAbility::EndAbility(const FGameplayAbilitySpecHandle Hand
 	UE_LOG(LogTemp, Warning, TEXT("FFF 엔드2"));
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
+
 
 FGameplayTagContainer UTFDProjectileFireAbility::GetCoolDownTags() const
 {
