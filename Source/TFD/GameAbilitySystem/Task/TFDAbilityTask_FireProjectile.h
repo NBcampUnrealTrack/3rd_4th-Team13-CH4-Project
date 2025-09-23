@@ -33,13 +33,14 @@ struct FTFDFireProjectileParams
 	// 투사체가 파괴되기까지의 시간(초). 사거리 역할
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "TFD|Task|Spawning",
 		meta = (DisplayName = "투사체 수명 (초)", ClampMin = "0.01", UIMin = "0.01"))
-	float ProjectileLifeSpan = 3.0f;
+	float ProjectileLifeSpan = 1.5f;
 
 	// 투사체 구조체
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "TFD|Task")
 	FTFDBaseObjectParam BaseObjectParam;
 };
-
+//어빌리티에게 알리는 용도
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnProjectileFired);
 /**
  * 
  */
@@ -57,13 +58,15 @@ public:
 		const FTFDFireProjectileParams& Params
 	);
 
+	UPROPERTY(BlueprintAssignable)
+	FOnProjectileFired OnProjectileFired;
 	//
 	// // 모든 발사가 끝났을 때 실행
 	// UPROPERTY(BlueprintAssignable)
 	// FFireProjectileFinishedDelegate OnFinished;
 protected:
 	virtual void Activate() override;
-
+	virtual void EndTask() ;
 private:
 	//투사체 운동 처리
 	void ShootProjectile();

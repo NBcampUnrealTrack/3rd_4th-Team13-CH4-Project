@@ -4,6 +4,7 @@
 #include "GameAbilitySystem/Task/TFDAbilityTask_FireProjectile.h"
 
 #include "Character/TFDCharacterBase.h"
+#include "GameAbilitySystem/Ability/TFDProjectileFireAbility.h"
 #include "Kismet/GameplayStatics.h"
 
 UTFDAbilityTask_FireProjectile* UTFDAbilityTask_FireProjectile::FireProjectile(UGameplayAbility* OwningAbility,
@@ -11,7 +12,19 @@ UTFDAbilityTask_FireProjectile* UTFDAbilityTask_FireProjectile::FireProjectile(U
 {
 	UTFDAbilityTask_FireProjectile* Task = NewAbilityTask<UTFDAbilityTask_FireProjectile>(OwningAbility);
 
+	if (!Task)
+	{
+		return nullptr;
+	}
+	
+	if (UTFDProjectileFireAbility* MyAbility = Cast<UTFDProjectileFireAbility>(OwningAbility))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("FFF 엔드세팅"));
+		Task->OnProjectileFired.AddDynamic(MyAbility, &UTFDProjectileFireAbility::OnProjectileFired);
+	}
 	Task->TaskParams = Params;
+	Task->ReadyForActivation();
+
 
 
 	return Task;
@@ -35,15 +48,26 @@ void UTFDAbilityTask_FireProjectile::Activate()
 	// 서버 권한에서만 실제 Projectile 생성
 	if (Ability->GetCurrentActorInfo()->IsNetAuthority())
 	{
-		ShootProjectile(); // 실제 스폰 (Replication 됨)
+		ShootProjectile(); // 실제 스폰 
 	}
+}
+
+void UTFDAbilityTask_FireProjectile::EndTask()
+{
+	UE_LOG(LogTemp, Warning, TEXT("FFF 엔드테스크"));
+	OnProjectileFired.Broadcast(); // Ability에게 알림
+	Super::EndTask();
 }
 
 void UTFDAbilityTask_FireProjectile::ShootProjectile()
 {
 	AActor* AvatarActor = Ability->GetCurrentActorInfo()->AvatarActor.Get();
 	UAbilitySystemComponent* SourceASC = Ability->GetAbilitySystemComponentFromActorInfo();
-	CheckProjectile(*AvatarActor, *SourceASC);
+	if (!CheckProjectile(*AvatarActor, *SourceASC))
+	{
+		EndTask();
+		return;
+	}
 
 	// 스폰 준비: 액터를 월드에 바로 만들지 않고, 추가 설정을 할 수 있도록 메모리에만 준비.
 	ATFDBaseObject* SpawnedProjectile = Cast<ATFDBaseObject>(
@@ -82,7 +106,7 @@ void UTFDAbilityTask_FireProjectile::ShootProjectile()
 		UE_LOG(LogTemp, Error, TEXT(" 발사체 스폰에 실패했습니다."));
 	}
 
-	// EndTask();
+	EndTask();
 }
 
 bool UTFDAbilityTask_FireProjectile::CheckProjectile(AActor& pActor, UAbilitySystemComponent& SourceASC)
@@ -103,7 +127,7 @@ bool UTFDAbilityTask_FireProjectile::CheckProjectile(AActor& pActor, UAbilitySys
 	{
 		UE_LOG(LogTemp, Error, TEXT("[AbilityTask_FireProjectile] : 아바타 액터가 유효하지 않습니다!"));
 		// OnFinished.Broadcast();
-		EndTask();
+		// EndTask();
 		return result;
 	}
 
@@ -111,14 +135,14 @@ bool UTFDAbilityTask_FireProjectile::CheckProjectile(AActor& pActor, UAbilitySys
 
 	if (!Character || !CalcSpawnTransform(Character, SpawnWorldTransform))
 	{
-		EndTask();
+		// EndTask();
 		return result;
 	}
 
 
 	if (!IsValid(&SourceASC))
 	{
-		EndTask();
+		// EndTask();
 		return result;
 	}
 	
@@ -126,6 +150,7 @@ bool UTFDAbilityTask_FireProjectile::CheckProjectile(AActor& pActor, UAbilitySys
 
 
 	result = true;
+	// EndTask();
 	return result;
 }
 
