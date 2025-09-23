@@ -2,6 +2,8 @@
 #include "TFDNativeGameplayTags.h"
 
 //1. 팀 구분 경찰/도둑/중립
+
+UE_DEFINE_GAMEPLAY_TAG(TAG_Team,"Team");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Team_Cop, "Team.Cop");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Team_Thief, "Team.Thief");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Team_Neutral, "Team.Neutral");
@@ -22,18 +24,25 @@ UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Thief_Invisibility, "Ability.Thief.Invisibili
 UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Thief_Teleport, "Ability.Thief.Teleport");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Neutral_RandomMove, "Ability.Neutral.RandomMove");
 
-//4. object
-UE_DEFINE_GAMEPLAY_TAG(TAG_Object_Door,"Object.Door"); //문
-UE_DEFINE_GAMEPLAY_TAG(TAG_Object_Money,"Object.Money"); //돈
-UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SpawnArea,"Object.SpawnArea"); //스폰
-UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SlowItem,"Object.SlowItem"); //스폰
-UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SKillStockItem_00,"Object.SkillStockItem_00"); //스폰
-UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SpawnPoint,"Object.SpawnPoint"); //스폰포인트
-UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SpawnPoint_Cop,"Object.SpawnPoint.Cop"); //스폰포인트
-UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SpawnPoint_Thief,"Object.SpawnPoint.Thief"); //스폰포인트
-UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SpawnPoint_Neutral,"Object.SpawnPoint.Neutral"); //스폰포인트
-UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SpawnPoint_Period,"Object.SpawnPoint.Period"); //스폰포인트
 
+UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_FireProjectile,"Ability.FireProjectile"); //도둑-훔치기
+//3-2 쿨타임관련
+UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Cop_Handcuff_CoolDown,"Ability.Cop.Handcuff.CoolDown"); //도둑-훔치기
+UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Thief_Steal_CoolDown,"Ability.Thief.Steal.CoolDown"); //도둑-훔치기
+UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Neutral_RandomMove_CoolDown, "Ability.Neutral.RandomMove.CoolDown");
+UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_FireProjectile_CoolDown,"Ability.FireProjectile.CoolDown"); //도둑-훔치기
+
+//4. object
+UE_DEFINE_GAMEPLAY_TAG(TAG_Object_Door, "Object.Door"); //문
+UE_DEFINE_GAMEPLAY_TAG(TAG_Object_Money, "Object.Money"); //돈
+UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SpawnArea, "Object.SpawnArea"); //스폰
+UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SlowItem, "Object.SlowItem"); //스폰
+UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SKillStockItem_00, "Object.SkillStockItem_00"); //스폰
+UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SpawnPoint, "Object.SpawnPoint"); //스폰포인트
+UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SpawnPoint_Cop, "Object.SpawnPoint.Cop"); //스폰포인트
+UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SpawnPoint_Thief, "Object.SpawnPoint.Thief"); //스폰포인트
+UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SpawnPoint_Neutral, "Object.SpawnPoint.Neutral"); //스폰포인트
+UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SpawnPoint_Period, "Object.SpawnPoint.Period"); //스폰포인트
 
 
 //5.게임플레이큐 - 이펙트
@@ -53,3 +62,12 @@ UE_DEFINE_GAMEPLAY_TAG(TAG_Input_Skill_Slot3, "Input.Skill.Slot3");
 //7. 쿨타임 - 어빌리티 쿨타임
 UE_DEFINE_GAMEPLAY_TAG(TAG_Cooldown_Ability_Invisibility, "Cooldown.Ability.Invisibility");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Cooldown_Ability_Teleport, "Cooldown.Ability.Teleport");
+
+
+
+//8.GameAbility Tag
+UE_DEFINE_GAMEPLAY_TAG(TAG_GameAbility, "GameAbility");
+UE_DEFINE_GAMEPLAY_TAG(TAG_GameAbilityTask, "GameAbilityTask");
+UE_DEFINE_GAMEPLAY_TAG(TAG_GameAbilityTask_FireProjectile, "GameAbilityTask.FireProjectile");
+UE_DEFINE_GAMEPLAY_TAG(TAG_GameAbilityEffect, "GameAbilityEffect");
+

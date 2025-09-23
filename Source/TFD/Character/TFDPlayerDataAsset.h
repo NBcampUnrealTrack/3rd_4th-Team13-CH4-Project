@@ -85,5 +85,7 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Tags")
 	FGameplayTagContainer InitialStateTags;
-
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Material")
+	UMaterialInstance* MaterialInstance;
 };

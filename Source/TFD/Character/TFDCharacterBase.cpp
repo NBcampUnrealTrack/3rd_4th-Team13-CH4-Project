@@ -10,7 +10,6 @@
 
 ATFDCharacterBase::ATFDCharacterBase()
 {
-
 	PrimaryActorTick.bCanEverTick = true;
 
 	// ASC 생성
@@ -22,7 +21,6 @@ ATFDCharacterBase::ATFDCharacterBase()
 
 	// 스킬 매니저 컴포넌트 생성
 	SkillManagerComponent = CreateDefaultSubobject<UTFDSkillManagerComponent>(TEXT("SkillManagerComponent"));
-
 }
 
 // Called when the game starts or when spawned
@@ -38,7 +36,16 @@ void ATFDCharacterBase::BeginPlay()
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("[ATFDCharacterBase][BeginPlay] SkillManagerComponent is NOT initialized or ASC is missing."));
+		UE_LOG(LogTemp, Error,
+		       TEXT("[ATFDCharacterBase][BeginPlay] SkillManagerComponent is NOT initialized or ASC is missing."));
+	}
+
+	// 캐릭터별 머터리얼 설정.
+	USkeletalMeshComponent* SkeletalMesh = GetMesh();
+	UTFDPlayerDataAsset* Data = CharacterData.Get();
+	if ( Data && Data->MaterialInstance && SkeletalMesh)
+	{
+		SkeletalMesh->SetMaterial(0, CharacterData->MaterialInstance);
 	}
 
 }
@@ -98,7 +105,7 @@ void ATFDCharacterBase::PossessedBy(AController* NewController)
 				AbilitySystemComponent->InitAbilityActorInfo(PS, this);
 			}
 		}
-		
+
 		SetDAPlayerStat();
 	}
 
@@ -160,58 +167,54 @@ void ATFDCharacterBase::BaseSetting()
 
 void ATFDCharacterBase::SetDAPlayerStat()
 {
-	if (!HasAuthority()) return;
-
-	if (CharacterData)
+	if (!HasAuthority() || !CharacterData.Get()) return;
+	// AttributeSet의 초기값을 데이터 에셋의 값으로 설정
+	// AttributeSet->SetHealth(CharacterData->Health);
+	// AttributeSet->SetMaxHealth(CharacterData->MaxHealth);
+	// AttributeSet->SetMana(CharacterData->Mana);
+	// AttributeSet->SetMaxMana(CharacterData->MaxMana);
+	// AttributeSet->SetSpeed(CharacterData->Speed);
+	
+	if (GetCharacterMovement())
 	{
-		// AttributeSet의 초기값을 데이터 에셋의 값으로 설정
-		// AttributeSet->SetHealth(CharacterData->Health);
-		// AttributeSet->SetMaxHealth(CharacterData->MaxHealth);
-		// AttributeSet->SetMana(CharacterData->Mana);
-		// AttributeSet->SetMaxMana(CharacterData->MaxMana);
-		// AttributeSet->SetSpeed(CharacterData->Speed);
+		GetCharacterMovement()->MaxWalkSpeed = AttributeSet->GetSpeed();
 
-		if (GetCharacterMovement())
+		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(
+			UTFDAttributeSet::GetSpeedAttribute()).AddUObject(this, &ATFDCharacterBase::OnSpeedAttributeChanged);
+	}
+
+	//JobDataAsset - Give Ability
+	for (const TSubclassOf<UGameplayAbility>& AbilityClass : CharacterData->StartupAbilities)
+	{
+		if (AbilityClass)
 		{
-			GetCharacterMovement()->MaxWalkSpeed = AttributeSet->GetSpeed();
-
-			AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(
-				UTFDAttributeSet::GetSpeedAttribute()).AddUObject(this, &ATFDCharacterBase::OnSpeedAttributeChanged);
+			AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(AbilityClass, 1, 0, this));
 		}
+	}
 
-		//JobDataAsset - Give Ability
-		for (const auto& AbilityClass : CharacterData->StartupAbilities)
+	//JobDataAsset - 팀태그 넘겨주는 코드
+	if (CharacterData->GiveTeamtagEffect)
+	{
+		FGameplayEffectContextHandle ContextHandle = AbilitySystemComponent->MakeEffectContext();
+		ContextHandle.AddSourceObject(this);
+
+		FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(
+			CharacterData->GiveTeamtagEffect,
+			1.0f,
+			ContextHandle
+		);
+
+		if (SpecHandle.IsValid())
 		{
-			if (AbilityClass)
-			{
-				AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(AbilityClass, 1, 0, this));
-			}
+			AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 		}
+	}
 
-		//JobDataAsset - 팀태그 넘겨주는 코드
-		if (CharacterData && CharacterData->GiveTeamtagEffect)
-		{
-			FGameplayEffectContextHandle ContextHandle = AbilitySystemComponent->MakeEffectContext();
-			ContextHandle.AddSourceObject(this);
-
-			FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(
-				CharacterData->GiveTeamtagEffect,
-				1.0f,
-				ContextHandle
-			);
-
-			if (SpecHandle.IsValid())
-			{
-				AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
-			}
-		}
-
-		//도둑일 경우 골드 습득 시 OnGoldAttributeChanged 연결
-		if (AbilitySystemComponent && CharacterData && CharacterData->TeamTag == TAG_Team_Thief)
-		{
-			AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(
-				UTFDAttributeSet::GetGoldAttribute()).AddUObject(this, &ATFDCharacterBase::OnGoldAttributeChanged);
-		}
+	//도둑일 경우 골드 습득 시 OnGoldAttributeChanged 연결
+	if (AbilitySystemComponent && CharacterData->TeamTag == TAG_Team_Thief)
+	{
+		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(
+			UTFDAttributeSet::GetGoldAttribute()).AddUObject(this, &ATFDCharacterBase::OnGoldAttributeChanged);
 	}
 }
 
@@ -228,10 +231,9 @@ void ATFDCharacterBase::OnGoldAttributeChanged(const FOnAttributeChangeData& Dat
 	if (HasAuthority())
 	{
 		ATFDGameState* GS = Cast<ATFDGameState>(GetWorld()->GetGameState());
-		if(!GS) return;
-		
+		if (!GS) return;
+
 		float AddScore = Data.NewValue - Data.OldValue;
 		GS->AddThiefScore(AddScore);
 	}
 }
-
