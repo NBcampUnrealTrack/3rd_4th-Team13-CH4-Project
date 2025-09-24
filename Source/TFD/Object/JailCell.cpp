@@ -200,13 +200,7 @@ void AJailCell::OnOpenJailCellBoxOverlapBegin(UPrimitiveComponent* OverlappedCom
     UAbilitySystemComponent* ASC = Char->GetAbilitySystemComponent();
     if (!ASC) return;
 
-    if (ASC->HasMatchingGameplayTag(TAG_Team_Cop) || ASC->HasMatchingGameplayTag(TAG_Character_State_Arrested)) return;
-
-    if (PC->IsLocalController())
-    {
-        PC->HandleShowReleaseWidget();
-    }
-            
+    if (ASC->HasMatchingGameplayTag(TAG_Team_Cop) || ASC->HasMatchingGameplayTag(TAG_GameplayCue_Character_Arrested)) return;
 
     FGameplayEffectContextHandle Context = ASC->MakeEffectContext();
     Context.AddSourceObject(this);
@@ -218,6 +212,11 @@ void AJailCell::OnOpenJailCellBoxOverlapBegin(UPrimitiveComponent* OverlappedCom
     {
         ASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
         UE_LOG(LogTemp, Log, TEXT("%s: Release Ability Effect applied"), *Char->GetName());
+
+        if (PC->IsLocalController())
+        {
+            PC->HandleShowReleaseWidget();
+        }
     }
 }
 
