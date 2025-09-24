@@ -167,13 +167,14 @@ void ATFDCharacterBase::BaseSetting()
 
 void ATFDCharacterBase::SetDAPlayerStat()
 {
-	if (!HasAuthority() || !CharacterData.Get()) return;
+	if (!HasAuthority() || !CharacterData.Get())
+		return;
 	// AttributeSet의 초기값을 데이터 에셋의 값으로 설정
-	// AttributeSet->SetHealth(CharacterData->Health);
-	// AttributeSet->SetMaxHealth(CharacterData->MaxHealth);
-	// AttributeSet->SetMana(CharacterData->Mana);
-	// AttributeSet->SetMaxMana(CharacterData->MaxMana);
-	// AttributeSet->SetSpeed(CharacterData->Speed);
+	AttributeSet->SetHealth(CharacterData->Health);
+	AttributeSet->SetMaxHealth(CharacterData->MaxHealth);
+	AttributeSet->SetMana(CharacterData->Mana);
+	AttributeSet->SetMaxMana(CharacterData->MaxMana);
+	AttributeSet->SetSpeed(CharacterData->Speed);
 	
 	if (GetCharacterMovement())
 	{
