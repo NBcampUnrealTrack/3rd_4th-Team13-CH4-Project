@@ -4,10 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "Abilities/Tasks/AbilityTask.h"
-#include "TFD/Object/TFDBaseObject.h"
+#include "TFD/Object/TFDBaseProjectile.h"
 #include "TFDAbilityTask_FireProjectile.generated.h"
 
-class ATFDBaseObject;
+class ATFDBaseProjectile;
 class ATFDCharacterBase;
 
 USTRUCT(BlueprintType)
@@ -17,7 +17,7 @@ struct FTFDFireProjectileParams
 
 	// 발사할 투사체의 블루프린트 클래스
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "TFD|Task|Core", meta = (DisplayName = "투사체 클래스"))
-	TSubclassOf<ATFDBaseObject> ProjectileClass;
+	TSubclassOf<ATFDBaseProjectile> ProjectileClass;
 
 
 	// --- 스폰 설정 ---

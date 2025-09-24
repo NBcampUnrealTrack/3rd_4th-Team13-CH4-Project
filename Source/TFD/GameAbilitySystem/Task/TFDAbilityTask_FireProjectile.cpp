@@ -6,6 +6,7 @@
 #include "Character/TFDCharacterBase.h"
 #include "GameAbilitySystem/Ability/TFDProjectileFireAbility.h"
 #include "Kismet/GameplayStatics.h"
+#include "Object/TFDBaseProjectile.h"
 
 UTFDAbilityTask_FireProjectile* UTFDAbilityTask_FireProjectile::FireProjectile(UGameplayAbility* OwningAbility,
                                                                                const FTFDFireProjectileParams& Params)
@@ -70,7 +71,7 @@ void UTFDAbilityTask_FireProjectile::ShootProjectile()
 	}
 
 	// 스폰 준비: 액터를 월드에 바로 만들지 않고, 추가 설정을 할 수 있도록 메모리에만 준비.
-	ATFDBaseObject* SpawnedProjectile = Cast<ATFDBaseObject>(
+	ATFDBaseProjectile* SpawnedProjectile = Cast<ATFDBaseProjectile>(
 		UGameplayStatics::BeginDeferredActorSpawnFromClass(
 			GetWorld(),
 			TaskParams.ProjectileClass,
