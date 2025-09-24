@@ -52,6 +52,7 @@ void AJailCell::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetim
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
     DOREPLIFETIME(AJailCell, CachedGameState);
+    DOREPLIFETIME(AJailCell, InCharacters);
 }
 
 void AJailCell::EnterJail(ATFDCharacterBase* Character)
@@ -185,6 +186,9 @@ void AJailCell::OnOpenJailCellBoxOverlapBegin(UPrimitiveComponent* OverlappedCom
 {
     ATFDCharacterBase* Char = Cast<ATFDCharacterBase>(OtherActor);
     if (!Char) return;
+
+    if (InCharacters.Contains(Char)) return;
+
 
     ATFDPlayerController* PC = Cast<ATFDPlayerController>(Char->GetController());
     if (!PC) return;
