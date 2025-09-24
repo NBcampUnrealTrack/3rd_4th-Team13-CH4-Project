@@ -54,4 +54,24 @@ public:
 
 	// 네트워크 복제에 필요한 함수 재정의
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+public:
+
+// 플레이어가 선택한 선호 팀
+UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Team")
+FGameplayTag PreferredTeam;
+// 실제 배정된 팀 (복제 시 OnRep 호출)
+UPROPERTY(ReplicatedUsing = OnRep_ActualTeam, VisibleAnywhere, BlueprintReadOnly, Category = "Team")
+FGameplayTag ActualTeam;
+
+// 실제 팀 복제 시 호출 (클라이언트)
+UFUNCTION()
+void OnRep_ActualTeam();
+
+// 접근자 함수
+FGameplayTag GetPreferredTeam() const { return PreferredTeam; }
+void SetPreferredTeam(const FGameplayTag& InTeamTag) { PreferredTeam = InTeamTag; }
+
+FGameplayTag GetActualTeam() const { return ActualTeam; }
+void SetActualTeam(const FGameplayTag& InTeam) { ActualTeam = InTeam; }
 };

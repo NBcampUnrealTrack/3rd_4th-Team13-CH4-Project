@@ -119,6 +119,14 @@ public:
 
 	void RemoveLobbyUI();
 
+	// 클라이언트에서 선호 팀을 서버에 요청하는 함수
+	UFUNCTION(BlueprintCallable, Category = "Lobby|TeamSelection")
+	void SendPreferredTeam(FGameplayTag PreferredTeam);
+
+	// 서버에서 선호 팀을 PlayerState에 적용하는 RPC 함수
+	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Lobby|TeamSelection")
+	void ServerSetPreferredTeam(const FGameplayTag& TeamTag);
+
 public:
 	UFUNCTION()
 	FString GetLocalIP() const;

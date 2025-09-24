@@ -48,6 +48,17 @@ public:
 	ATFDGameState* GetGameState();
 	void GamePause(bool bIsPaused);
 
+	// 모든 플레이어의 팀 선호/실제팀을 수집(내부 구현용)
+	void GatherPreferredTeams(TArray<class ATFDPlayerState*>& OutPlayers, TArray<FGameplayTag>& OutPreferredTeams);
+
+	// 선호 팀 기반 자동 팀 배정 함수 (주요 호출용)
+	UFUNCTION(BlueprintCallable)
+	void AssignTeams();
+
+	// 실제 게임 시작 시, 선호 팀을 바로 실제팀에 복사
+	UFUNCTION(BlueprintCallable)
+	void AssignTeamsOnGameStart();
+
 #pragma region 게임 상태 변화에 따른 로직
 
 	//StartMatch()가 호출됐을 때 WaitingToStart 에서 InProgress 로 넘어가기 전에 넘어가도 되는지 판단 (bool 값)
