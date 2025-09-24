@@ -47,9 +47,8 @@ public:
 	ATFDGameState* GetGameState();
 	void GamePause(bool bIsPaused);
 
-	// �� ���� �Լ�
 	void AssignTeams();
-	
+
 	UFUNCTION(BlueprintCallable)
 	void AssignTeamsOnGameStart();
 
@@ -138,7 +137,7 @@ private:
 	void InitializeSpawnVolumes();
 	void MovePlayerToRandomSpawnPoint(APlayerController* PlayerController);
 
-	// ��� �÷��̾��� PlayerState�� �� ��ȣ ������ �����ϴ� �Լ�
+	// 선호 팀 수집 함수
 	void GatherPreferredTeams(TArray<ATFDPlayerState*>& OutPlayers, TArray<FGameplayTag>& OutPreferredTeams);
 	
 #pragma endregion

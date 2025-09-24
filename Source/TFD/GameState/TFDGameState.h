@@ -46,6 +46,13 @@ public:
 
 	EGameCompleteType GetInCompleteType() const { return CompleteType; }
 	FGameplayTag GetWinTeamTag() const { return WinTeamTag; }
+
+	void SetTeamTag(FGameplayTag Tag);
+	FGameplayTag GetTeamTag() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Team")
+	void AssignTeamsBasedOnPreference();
+
 protected:
 
 	virtual void OnRep_MatchState() override;

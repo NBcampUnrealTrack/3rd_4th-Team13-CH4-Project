@@ -34,6 +34,86 @@ UTFDGameRuleData* ATFDGameState::GetRuleData() const
 	return GameRuleData;
 }
 
+void ATFDGameState::AssignTeamsBasedOnPreference()
+{
+	TArray<ATFDPlayerState*> PreferredPolicePlayers;
+	TArray<ATFDPlayerState*> OtherPlayers;
+	const int32 PoliceTeamMax = 2;
+
+	// 전체 플레이어를 추출
+	for (APlayerState* PS : PlayerArray)
+	{
+		if (ATFDPlayerState* TFDPS = Cast<ATFDPlayerState>(PS))
+		{
+			if (TFDPS->GetPreferredTeam() == TAG_Team_Cop)
+			{
+				PreferredPolicePlayers.Add(TFDPS);
+			}
+			else
+			{
+				OtherPlayers.Add(TFDPS);
+			}
+		}
+	}
+
+	// 경찰 선호자 수에 따라 팀 배정
+	TArray<ATFDPlayerState*> AssignedPolice;
+	if (PreferredPolicePlayers.Num() == 0)
+	{
+		int32 NumToAssign = FMath::Min(PoliceTeamMax, OtherPlayers.Num());
+		for (int32 i = 0; i < NumToAssign; ++i)
+		{
+			int32 RandomIndex = FMath::RandRange(0, OtherPlayers.Num() - 1);
+			AssignedPolice.Add(OtherPlayers[RandomIndex]);
+			OtherPlayers[RandomIndex]->SetActualTeam(TAG_Team_Cop);
+			OtherPlayers.RemoveAt(RandomIndex);
+		}
+	}
+	else if (PreferredPolicePlayers.Num() <= PoliceTeamMax)
+	{
+		for (ATFDPlayerState* Player : PreferredPolicePlayers)
+		{
+			Player->SetActualTeam(TAG_Team_Cop);
+			AssignedPolice.Add(Player);
+		}
+	}
+	else
+	{
+		for (int32 i = PreferredPolicePlayers.Num() - 1; i > 0; --i)
+		{
+			int32 SwapIndex = FMath::RandRange(0, i);
+			PreferredPolicePlayers.Swap(i, SwapIndex);
+		}
+		for (int32 i = 0; i < PoliceTeamMax; ++i)
+		{
+			PreferredPolicePlayers[i]->SetActualTeam(TAG_Team_Cop);
+			AssignedPolice.Add(PreferredPolicePlayers[i]);
+		}
+		for (int32 i = PoliceTeamMax; i < PreferredPolicePlayers.Num(); ++i)
+		{
+			PreferredPolicePlayers[i]->SetActualTeam(TAG_Team_Thief);
+			OtherPlayers.Add(PreferredPolicePlayers[i]);
+		}
+	}
+
+	// 나머지 플레이어 도둑 배정
+	for (ATFDPlayerState* Player : OtherPlayers)
+	{
+		Player->SetActualTeam(TAG_Team_Thief);
+	}
+
+	// 로그 출력
+	for (APlayerState* PS : PlayerArray)
+	{
+		if (ATFDPlayerState* TFDPS = Cast<ATFDPlayerState>(PS))
+		{
+			UE_LOG(LogTemp, Log, TEXT("Player %s assigned to team %s"),
+				*TFDPS->GetPlayerName(),
+				*TFDPS->GetActualTeam().ToString());
+		}
+	}
+}
+
 void ATFDGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
