@@ -48,7 +48,7 @@ void UTFDProjectileFireAbility::EndAbility(const FGameplayAbilitySpecHandle Hand
                                            const FGameplayAbilityActivationInfo ActivationInfo,
                                            bool bReplicateEndAbility, bool bWasCancelled)
 {
-	UE_LOG(LogTemp, Warning, TEXT("FFF 엔드2"));
+	// UE_LOG(LogTemp, Warning, TEXT("FFF 엔드2"));
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
 
@@ -62,6 +62,6 @@ FGameplayTagContainer UTFDProjectileFireAbility::GetCoolDownTags() const
 
 void UTFDProjectileFireAbility::OnProjectileFired()
 {
-	UE_LOG(LogTemp, Warning, TEXT("FFF 엔드!"));
+	// UE_LOG(LogTemp, Warning, TEXT("FFF 엔드!"));
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, false);
 }

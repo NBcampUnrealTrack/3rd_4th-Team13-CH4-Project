@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include  "GameplayEffect.h"
+#include "GameplayEffect.h"
 #include "GameAbilitySystem/Ability/TFDGameplayAbility.h"
 #include "TFDProjectileFireAbility.generated.h"
 
