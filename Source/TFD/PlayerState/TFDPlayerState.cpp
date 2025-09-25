@@ -5,22 +5,11 @@
 
 #include "Net/UnrealNetwork.h"
 
-void ATFDPlayerState::SetTeamTag(FGameplayTag Tag)
-{
-	this->TeamTag = Tag;
-}
-
-FGameplayTag ATFDPlayerState::GetTeamTag() const
-{
-	return this->TeamTag;
-}
-
 void ATFDPlayerState::CopyProperties(APlayerState* NewPlayerState)
 {
 	Super::CopyProperties(NewPlayerState);
 	if (ATFDPlayerState* NewPS = Cast<ATFDPlayerState>(NewPlayerState))
 	{
-		NewPS->TeamTag = TeamTag;
 		NewPS->PreferredTeam = PreferredTeam;
 		NewPS->ActualTeam = ActualTeam;
 	}
@@ -64,7 +53,6 @@ void ATFDPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(ATFDPlayerState, ReplicatedPlayerName);
-	DOREPLIFETIME(ATFDPlayerState, TeamTag);
 	DOREPLIFETIME(ATFDPlayerState, PreferredTeam);
 	DOREPLIFETIME(ATFDPlayerState, ActualTeam);
 }

@@ -392,7 +392,9 @@ void ATFDPlayerController::EnterLobby()
 			if(ATFDPlayerState* State = Cast<ATFDPlayerState>(PS))
 			{
 				//플레이어의 팀 태그 초기화
-				State->SetTeamTag(FGameplayTag::EmptyTag);
+				//State->SetTeamTag(FGameplayTag::EmptyTag);
+				State->SetActualTeam(FGameplayTag::EmptyTag);
+				State->SetPreferredTeam(FGameplayTag::EmptyTag);
 			}
 		}
 

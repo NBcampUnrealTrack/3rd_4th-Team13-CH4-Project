@@ -25,7 +25,7 @@ void UResultWidget::InitResult(FGameplayTag WinTeamTag, EGameCompleteType InComp
         return;
     }
 
-    FGameplayTag PlayerTeamTag = PS->GetTeamTag();
+    FGameplayTag PlayerTeamTag = PS->GetActualTeam();
     FString ResultStr = TEXT("결과 없음");
 
 

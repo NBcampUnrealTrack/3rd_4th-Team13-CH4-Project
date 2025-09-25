@@ -17,15 +17,7 @@ UCLASS()
 class TFD_API ATFDPlayerState : public APlayerState
 {
 	GENERATED_BODY()
-
-protected:
-	// DataAsset 설정 
-	UPROPERTY(EditDefaultsOnly, Replicated, BlueprintReadOnly, Category = "GAS")
-	FGameplayTag TeamTag;
-
 public:
-	void SetTeamTag(FGameplayTag Tag);
-	FGameplayTag GetTeamTag() const;
 	virtual void CopyProperties(APlayerState* NewPlayerState) override;
 //===================================================
 // 이하 OutGame 관련 - Lobby
@@ -69,9 +61,9 @@ UFUNCTION()
 void OnRep_ActualTeam();
 
 // 접근자 함수
-FGameplayTag GetPreferredTeam() const { return PreferredTeam; }
+FORCEINLINE FGameplayTag GetPreferredTeam() const { return PreferredTeam; }
 void SetPreferredTeam(const FGameplayTag& InTeamTag) { PreferredTeam = InTeamTag; }
 
-FGameplayTag GetActualTeam() const { return ActualTeam; }
+FORCEINLINE FGameplayTag GetActualTeam() const { return ActualTeam; }
 void SetActualTeam(const FGameplayTag& InTeam) { ActualTeam = InTeam; }
 };
