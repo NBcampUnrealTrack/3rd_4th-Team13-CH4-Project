@@ -281,7 +281,7 @@ void ATFDGameMode::HandleSeamlessTravelPlayer(AController*& C)
 		// 모든 플레이어가 접속했는지 확인 (GameState의 PlayerArray 사용)
 		if (NumTravellingPlayers == 0 && NumPlayers == GetGameState()->PlayerArray.Num())
 		{
-			AssignTeams();
+		
 			UE_LOG(LogTemp, Warning, TEXT("All players are ready. Starting the game."));
 			StartMatch(); //InProgress 상태로 전환
 
