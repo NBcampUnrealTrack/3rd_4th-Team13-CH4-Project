@@ -19,6 +19,7 @@ class UResultWidget;
 class UHUDLayoutWidget;
 class UMiniMapWidget;
 class UReleaseWidget;
+class UUW_SkillSlot;
 
 // Delegate 선언: 공인 IP가 준비되었을 때 알려주는 이벤트
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPublicIPReady, const FString&, PublicIP);
@@ -182,4 +183,7 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UReleaseWidget> ReleaseWidgetClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UUW_SkillSlot> SkillSlotClass;
 };
