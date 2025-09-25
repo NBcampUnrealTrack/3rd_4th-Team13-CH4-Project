@@ -45,7 +45,6 @@ void ATFDGameMode::BeginPlay()
 	{
 		NumberOfAI = RuleData->NumberOfAI;
 	}
-	AssignTeamsOnGameStart();
 }
 void ATFDGameMode::AssignTeams()
 {
@@ -162,8 +161,18 @@ APawn* ATFDGameMode::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, 
 
 	ATFDPlayerState* PS = NewPlayer->GetPlayerState<ATFDPlayerState>();
 
-	if (!PS || PS->GetTeamTag() == FGameplayTag::EmptyTag)
+	if (!PS)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Spawn failed: PlayerState is null"));
 		return nullptr;
+	}
+
+	if (PS->GetActualTeam() == FGameplayTag::EmptyTag)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Spawn blocked: ActualTeam is empty for player %s"), *PS->GetPlayerName());
+		return nullptr;
+	}
+
 
 	// Pawn 클래스 가져오기
 	TSubclassOf<APawn> PawnClass = GetDefaultPawnClassForController(NewPlayer);
@@ -272,8 +281,8 @@ void ATFDGameMode::HandleSeamlessTravelPlayer(AController*& C)
 		// 모든 플레이어가 접속했는지 확인 (GameState의 PlayerArray 사용)
 		if (NumTravellingPlayers == 0 && NumPlayers == GetGameState()->PlayerArray.Num())
 		{
+			AssignTeams();
 			UE_LOG(LogTemp, Warning, TEXT("All players are ready. Starting the game."));
-
 			StartMatch(); //InProgress 상태로 전환
 
 		}
@@ -433,6 +442,11 @@ FVector ATFDGameMode::GetRandomPointInSpawnAreaTag(FGameplayTag InTag)
 		ATFDSpawnVolume* SpawnVolume = GetRandomSpawnVolumeTag(InTag);
 		if (SpawnVolume)
 			RandomPoint = SpawnVolume->GetRandomPointInVolume();
+		if (!SpawnVolume)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("No SpawnVolume found for tag: %s"), *InTag.ToString());
+		}
+
 	}
 
 	return RandomPoint;
