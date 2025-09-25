@@ -171,7 +171,7 @@ APawn* ATFDGameMode::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, 
 
 	// SpawnTransform 설정
 	FTransform SpawnTransform = StartSpot->GetActorTransform();
-	FVector SpawnLocation = GetRandomPointInSpawnAreaTag(PS->GetTeamTag());
+	FVector SpawnLocation = GetRandomPointInSpawnAreaTag(PS->GetActualTeam());
 	SpawnTransform.SetLocation(SpawnLocation);
 
 	// SpawnActorDeferred로 Pawn 생성
@@ -183,7 +183,7 @@ APawn* ATFDGameMode::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, 
 	ATFDCharacterBase* TFDPawn = Cast<ATFDCharacterBase>(Pawn);
 	if (PState && TFDPawn)
 	{
-		FGameplayTag Tag = PState->GetTeamTag();
+		FGameplayTag Tag = PState->GetActualTeam();
 		if (Tag == TAG_Team_Thief)
 		{
 			TFDPawn->CharacterData = RuleData->ThiefDataAsset;
@@ -252,7 +252,6 @@ void ATFDGameMode::PostSeamlessTravel()
 
 	// 선호 팀 기반 배정 함수 호출
 	AssignTeams();
-	GamePause(true);
 }
 
 void ATFDGameMode::HandleSeamlessTravelPlayer(AController*& C)
