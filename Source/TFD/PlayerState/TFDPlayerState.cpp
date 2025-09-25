@@ -21,6 +21,8 @@ void ATFDPlayerState::CopyProperties(APlayerState* NewPlayerState)
 	if (ATFDPlayerState* NewPS = Cast<ATFDPlayerState>(NewPlayerState))
 	{
 		NewPS->TeamTag = TeamTag;
+		NewPS->PreferredTeam = PreferredTeam;
+		NewPS->ActualTeam = ActualTeam;
 	}
 }
 
@@ -49,10 +51,20 @@ void ATFDPlayerState::OnRep_PlayerName()
 	OnPlayerNameChanged.Broadcast();
 }
 
+void ATFDPlayerState::OnRep_ActualTeam()
+{
+	// 클라이언트 실제 팀 동기화 시 작동 (UI 등 갱신 가능)
+	UE_LOG(LogTemp, Log, TEXT("Player %s ActualTeam replicated: %s"),
+		*GetPlayerName(),
+		*ActualTeam.GetTagName().ToString());
+}
+
 void ATFDPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(ATFDPlayerState, ReplicatedPlayerName);
 	DOREPLIFETIME(ATFDPlayerState, TeamTag);
+	DOREPLIFETIME(ATFDPlayerState, PreferredTeam);
+	DOREPLIFETIME(ATFDPlayerState, ActualTeam);
 }

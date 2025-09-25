@@ -45,7 +45,114 @@ void ATFDGameMode::BeginPlay()
 	{
 		NumberOfAI = RuleData->NumberOfAI;
 	}
-	
+}
+void ATFDGameMode::AssignTeams()
+{
+	// 모든 플레이어의 PlayerState와 선호팀 정보 수집
+	TArray<ATFDPlayerState*> AllPlayers;
+	TArray<FGameplayTag> PreferredTeams;
+
+	GatherPreferredTeams(AllPlayers, PreferredTeams);
+
+	const int32 PoliceTeamMax = UInGameUtility::GetPoliceRoleCount(AllPlayers.Num());
+
+	TArray<ATFDPlayerState*> PreferredPolicePlayers;
+	TArray<ATFDPlayerState*> OtherPlayers;
+
+	for (int32 i = 0; i < PreferredTeams.Num(); ++i)
+	{
+		if (PreferredTeams[i] == TAG_Team_Cop)
+		{
+			PreferredPolicePlayers.Add(AllPlayers[i]);
+		}
+		else
+		{
+			OtherPlayers.Add(AllPlayers[i]);
+		}
+	}
+
+	TArray<ATFDPlayerState*> AssignedPolice;
+
+	// 0명 -> 랜덤
+	if (PreferredPolicePlayers.Num() == 0)
+	{
+		int32 NumToAssign = FMath::Min(PoliceTeamMax, OtherPlayers.Num());
+		for (int32 i = 0; i < NumToAssign; ++i)
+		{
+			int32 RandomIndex = FMath::RandRange(0, OtherPlayers.Num() - 1);
+			AssignedPolice.Add(OtherPlayers[RandomIndex]);
+			OtherPlayers[RandomIndex]->SetActualTeam(TAG_Team_Cop);
+			OtherPlayers.RemoveAt(RandomIndex);
+		}
+	}
+	else if (PreferredPolicePlayers.Num() <= PoliceTeamMax)
+	{
+		for (ATFDPlayerState* Player : PreferredPolicePlayers)
+		{
+			Player->SetActualTeam(TAG_Team_Cop);
+			AssignedPolice.Add(Player);
+		}
+	}
+	else
+	{
+		for (int32 i = PreferredPolicePlayers.Num() - 1; i > 0; --i)
+		{
+			int32 SwapIndex = FMath::RandRange(0, i);
+			PreferredPolicePlayers.Swap(i, SwapIndex);
+		}
+		for (int32 i = 0; i < PoliceTeamMax; ++i)
+		{
+			PreferredPolicePlayers[i]->SetActualTeam(TAG_Team_Cop);
+			AssignedPolice.Add(PreferredPolicePlayers[i]);
+		}
+		for (int32 i = PoliceTeamMax; i < PreferredPolicePlayers.Num(); ++i)
+		{
+			PreferredPolicePlayers[i]->SetActualTeam(TAG_Team_Thief);
+			OtherPlayers.Add(PreferredPolicePlayers[i]);
+		}
+	}
+
+	for (ATFDPlayerState* Player : OtherPlayers)
+	{
+		Player->SetActualTeam(TAG_Team_Thief);
+	}
+
+	for (ATFDPlayerState* Player : AllPlayers)
+	{
+		UE_LOG(LogTemp, Log, TEXT("Player %s assigned to team %s"),
+			*Player->GetPlayerName(),
+			*Player->GetActualTeam().ToString());
+	}
+}
+
+void ATFDGameMode::GatherPreferredTeams(TArray<ATFDPlayerState*>& OutPlayers, TArray<FGameplayTag>& OutPreferredTeams)
+{
+	OutPlayers.Empty();
+	OutPreferredTeams.Empty();
+
+	for (APlayerState* PS : GetGameState()->PlayerArray)
+	{
+		ATFDPlayerState* TFDPS = Cast<ATFDPlayerState>(PS);
+		if (TFDPS)
+		{
+			OutPlayers.Add(TFDPS);
+			OutPreferredTeams.Add(TFDPS->GetPreferredTeam());
+		}
+	}
+}
+
+void ATFDGameMode::AssignTeamsOnGameStart()
+{
+	for (APlayerState* PS : GetGameState()->PlayerArray)
+	{
+		if (ATFDPlayerState* TFDPS = Cast<ATFDPlayerState>(PS))
+		{
+			TFDPS->SetActualTeam(TFDPS->GetPreferredTeam());
+			UE_LOG(LogTemp, Log, TEXT("Player %s assigned ActualTeam: %s"),
+				*TFDPS->GetPlayerName(),
+				*TFDPS->GetActualTeam().GetTagName().ToString());
+		}
+	}
 }
 
 APawn* ATFDGameMode::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, AActor* StartSpot)
@@ -54,8 +161,18 @@ APawn* ATFDGameMode::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, 
 
 	ATFDPlayerState* PS = NewPlayer->GetPlayerState<ATFDPlayerState>();
 
-	if (!PS || PS->GetTeamTag() == FGameplayTag::EmptyTag)
+	if (!PS)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Spawn failed: PlayerState is null"));
 		return nullptr;
+	}
+
+	if (PS->GetActualTeam() == FGameplayTag::EmptyTag)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Spawn blocked: ActualTeam is empty for player %s"), *PS->GetPlayerName());
+		return nullptr;
+	}
+
 
 	// Pawn 클래스 가져오기
 	TSubclassOf<APawn> PawnClass = GetDefaultPawnClassForController(NewPlayer);
@@ -63,7 +180,7 @@ APawn* ATFDGameMode::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, 
 
 	// SpawnTransform 설정
 	FTransform SpawnTransform = StartSpot->GetActorTransform();
-	FVector SpawnLocation = GetRandomPointInSpawnAreaTag(PS->GetTeamTag());
+	FVector SpawnLocation = GetRandomPointInSpawnAreaTag(PS->GetActualTeam());
 	SpawnTransform.SetLocation(SpawnLocation);
 
 	// SpawnActorDeferred로 Pawn 생성
@@ -75,7 +192,7 @@ APawn* ATFDGameMode::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, 
 	ATFDCharacterBase* TFDPawn = Cast<ATFDCharacterBase>(Pawn);
 	if (PState && TFDPawn)
 	{
-		FGameplayTag Tag = PState->GetTeamTag();
+		FGameplayTag Tag = PState->GetActualTeam();
 		if (Tag == TAG_Team_Thief)
 		{
 			TFDPawn->CharacterData = RuleData->ThiefDataAsset;
@@ -137,39 +254,13 @@ void ATFDGameMode::HandleMatchHasEnded()
 void ATFDGameMode::PostSeamlessTravel()
 {
 	Super::PostSeamlessTravel();
-	// 팀 비율 결정
-	TArray<APlayerState*> PlayerArray = GetGameState()->PlayerArray;
-	int32 PlayerCnt = PlayerArray.Num();
-	int32 PoliceCnt = UInGameUtility::GetPoliceRoleCount(PlayerCnt);
 
-	// 배열을 랜덤으로 섞기
-	for (int32 i = PlayerArray.Num() - 1; i >= 0; --i)
-	{
-		int32 SwapIndex = FMath::RandRange(0, i);
-		PlayerArray.Swap(i, SwapIndex);
-	}
+	UE_LOG(LogTemp, Log, TEXT("PostSeamlessTravel called - Assigning Teams"));
 
-	int32 AssignedPolice = 0;
+	// 기존 랜덤 배정 로직 삭제함
 
-	for (APlayerState* PState : PlayerArray)
-	{
-		if (!PState) continue;
-
-		ATFDPlayerState* State = Cast<ATFDPlayerState>(PState);
-		if (!State) continue;
-
-		// 랜덤으로 경찰 역할 부여
-		if (AssignedPolice < PoliceCnt)
-		{
-			State->SetTeamTag(TAG_Team_Cop);
-			AssignedPolice++;
-		}
-		else
-		{
-			State->SetTeamTag(TAG_Team_Thief);
-		}
-	}
-	GamePause(true);
+	// 선호 팀 기반 배정 함수 호출
+	AssignTeams();
 }
 
 void ATFDGameMode::HandleSeamlessTravelPlayer(AController*& C)
@@ -190,8 +281,8 @@ void ATFDGameMode::HandleSeamlessTravelPlayer(AController*& C)
 		// 모든 플레이어가 접속했는지 확인 (GameState의 PlayerArray 사용)
 		if (NumTravellingPlayers == 0 && NumPlayers == GetGameState()->PlayerArray.Num())
 		{
+			AssignTeams();
 			UE_LOG(LogTemp, Warning, TEXT("All players are ready. Starting the game."));
-
 			StartMatch(); //InProgress 상태로 전환
 
 		}
@@ -351,6 +442,11 @@ FVector ATFDGameMode::GetRandomPointInSpawnAreaTag(FGameplayTag InTag)
 		ATFDSpawnVolume* SpawnVolume = GetRandomSpawnVolumeTag(InTag);
 		if (SpawnVolume)
 			RandomPoint = SpawnVolume->GetRandomPointInVolume();
+		if (!SpawnVolume)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("No SpawnVolume found for tag: %s"), *InTag.ToString());
+		}
+
 	}
 
 	return RandomPoint;

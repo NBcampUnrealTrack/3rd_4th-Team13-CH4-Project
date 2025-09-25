@@ -418,6 +418,30 @@ void ATFDPlayerController::LeaveLobby()
 	ClientTravel(TFDGameConstants::TitleLevel, ETravelType::TRAVEL_Absolute);
 }
 
+// 클라이언트에서 선호 팀 선택 후 서버에 RPC 호출 함수
+void ATFDPlayerController::SendPreferredTeam(FGameplayTag TeamTag)
+{
+	ServerSetPreferredTeam(TeamTag);
+}
+
+// 서버에서 클라이언트가 보낸 선호 팀을 PlayerState에 설정
+void ATFDPlayerController::ServerSetPreferredTeam_Implementation(const FGameplayTag& TeamTag)
+{
+	if (ATFDPlayerState* PS = GetPlayerState<ATFDPlayerState>())
+	{
+		PS->SetPreferredTeam(TeamTag);
+		UE_LOG(LogTemp, Log, TEXT("ServerSetPreferredTeam: Player %s set preferred team %s"),
+			*PS->GetPlayerName(),
+			*TeamTag.GetTagName().ToString());
+	}
+}
+
+bool ATFDPlayerController::ServerSetPreferredTeam_Validate(const FGameplayTag& TeamTag)
+{
+	// 필요에 따라 입력 검사 추가 가능
+	return true;
+}
+
 void ATFDPlayerController::StartGame()
 {
 	if (!IsLocalController() || !HasAuthority())
