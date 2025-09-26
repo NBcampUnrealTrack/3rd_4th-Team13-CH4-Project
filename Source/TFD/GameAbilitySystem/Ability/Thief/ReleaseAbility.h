@@ -29,4 +29,9 @@ public:
         const FGameplayAbilityActivationInfo ActivationInfo,
         bool bReplicateEndAbility,
         bool bWasCancelled) override;
+    UFUNCTION()
+    void OnHoldFinished();
+
+    UFUNCTION()
+    void OnInputReleasedEarly(float TimeHeld);
 };

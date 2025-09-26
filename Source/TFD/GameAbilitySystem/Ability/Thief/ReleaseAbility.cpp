@@ -6,6 +6,12 @@
 #include "GameState/TFDGameState.h"
 #include "Object/JailCell.h"
 
+#include "Abilities/Tasks/AbilityTask_WaitInputRelease.h"
+#include "Abilities/Tasks/AbilityTask_WaitDelay.h"
+#include "Abilities/Tasks/AbilityTask_WaitInputPress.h"
+
+#include "Controller/TFDPlayerController.h"
+
 UReleaseAbility::UReleaseAbility()
 {
 }
@@ -28,18 +34,21 @@ void UReleaseAbility::ActivateAbility(
         return;
     }
 
-    UE_LOG(LogTemp, Warning, TEXT("ReleaseAbility go"));
-    // 게임스테이트에서 감옥 가져와서 벽 숨기기 실행
-    if (ATFDGameState* GS = ActorInfo->AvatarActor->GetWorld()->GetGameState<ATFDGameState>())
+    // 3초 Delay Task
+    UAbilityTask_WaitDelay* WaitDelay = UAbilityTask_WaitDelay::WaitDelay(this, 3.0f);
+    if (WaitDelay)
     {
-        if (AJailCell* JailCell = GS->GetWorldJailCell())
-        {
-            JailCell->HideWallsTemporarily();
-            UE_LOG(LogTemp, Warning, TEXT("Jail walls temporarily hidden via ReleaseAbility"));
-        }
+        WaitDelay->OnFinish.AddDynamic(this, &UReleaseAbility::OnHoldFinished);
+        WaitDelay->ReadyForActivation();
     }
 
-    EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
+    // Release 감지 Task
+    UAbilityTask_WaitInputRelease* WaitRelease = UAbilityTask_WaitInputRelease::WaitInputRelease(this, false);
+    if (WaitRelease)
+    {
+        WaitRelease->OnRelease.AddDynamic(this, &UReleaseAbility::OnInputReleasedEarly);
+        WaitRelease->ReadyForActivation();
+    }
 }
 
 void UReleaseAbility::EndAbility(
@@ -52,4 +61,30 @@ void UReleaseAbility::EndAbility(
     UE_LOG(LogTemp, Warning, TEXT("ReleaseAbility end"));
 
     Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
+}
+
+void UReleaseAbility::OnHoldFinished()
+{
+    if (ATFDGameState* GS = GetWorld()->GetGameState<ATFDGameState>())
+    {
+        if (AJailCell* JailCell = GS->GetWorldJailCell())
+        {
+            JailCell->HideWallsTemporarily();
+            UE_LOG(LogTemp, Warning, TEXT("Jail walls temporarily hidden via ReleaseAbility"));
+        }
+        ATFDPlayerController* GenericPC = Cast<ATFDPlayerController>(GetActorInfo().PlayerController.Get());
+        if (GenericPC->IsLocalController())
+        {
+            GenericPC->HandleRemoveReleaseWidget();
+        }
+    }
+
+    EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
+}
+
+void UReleaseAbility::OnInputReleasedEarly(float TimeHeld)
+{
+    // 3초 전에 키를 뗐으므로 취소
+    UE_LOG(LogTemp, Warning, TEXT("ReleaseAbility: Released early after %.2f seconds, cancelling"), TimeHeld);
+    CancelAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true);
 }
