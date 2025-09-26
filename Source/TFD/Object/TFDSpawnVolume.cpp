@@ -3,6 +3,7 @@
 
 #include "Object/TFDSpawnVolume.h"
 
+#include "NavigationSystem.h"
 #include "Components/BoxComponent.h"
 #include "Engine/World.h"
 #include "GameFramework/Actor.h"
@@ -10,17 +11,15 @@
 // Sets default values
 ATFDSpawnVolume::ATFDSpawnVolume()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 
 	// 박스 컴포넌트를 생성하고, 이 액터의 루트로 설정
 	Scene = CreateDefaultSubobject<USceneComponent>(TEXT("Scene"));
 	SetRootComponent(Scene);
-    
+
 	SpawningBox = CreateDefaultSubobject<UBoxComponent>(TEXT("SpawningBox"));
 	SpawningBox->SetupAttachment(Scene);
-
-
 }
 
 bool ATFDSpawnVolume::CheckTeamTag(FGameplayTag InTag)
@@ -33,71 +32,150 @@ bool ATFDSpawnVolume::CheckTeamTag(FGameplayTag InTag)
 
 FVector ATFDSpawnVolume::GetRandomPointInVolume() const
 {
-
 	FVector BoxExtent = SpawningBox->GetScaledBoxExtent();
 	// 2) 박스 중심 위치
 	FVector BoxOrigin = SpawningBox->GetComponentLocation();
-	
+
 	// 3) 각 축별로 -Extent ~ +Extent 범위의 무작위 값 생성
-	return BoxOrigin + FVector(
+	// return BoxOrigin + FVector(
+	// 	FMath::FRandRange(-BoxExtent.X, BoxExtent.X),
+	// 	FMath::FRandRange(-BoxExtent.Y, BoxExtent.Y),
+	// 	0.f
+	// );
+	FVector RandomLocation = BoxOrigin + FVector(
 		FMath::FRandRange(-BoxExtent.X, BoxExtent.X),
 		FMath::FRandRange(-BoxExtent.Y, BoxExtent.Y),
-		FMath::FRandRange(-BoxExtent.Z, BoxExtent.Z)
+		0.0f // Z는 빼버리고
 	);
+
+	FNavLocation ProjectedLocation;
+	if (UNavigationSystemV1* NavSys = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld()))
+	{
+		if (NavSys->ProjectPointToNavigation(RandomLocation, ProjectedLocation, FVector(500, 500, 500)))
+		{
+			return ProjectedLocation.Location;
+		}
+	}
+
+	return RandomLocation; // NavMesh 투영 실패 시 그냥 리턴
 }
+
 
 FVector ATFDSpawnVolume::GetRandomPointInVolumeLineTrace() const
 {
-	FVector BoxExtent = SpawningBox->GetScaledBoxExtent();
-	FVector BoxOrigin = SpawningBox->GetComponentLocation();
-	   
-	// 박스 범위 내에서 랜덤 포인트 생성
-	FVector RandomPoint = BoxOrigin + FVector(
-		FMath::FRandRange(-BoxExtent.X, BoxExtent.X),
-		FMath::FRandRange(-BoxExtent.Y, BoxExtent.Y),
-		FMath::FRandRange(-BoxExtent.Z, BoxExtent.Z)
-	);
-	   
-	// 라인트레이스를 위한 설정
-	FHitResult HitResult;
-	FVector TraceStart = FVector(RandomPoint.X, RandomPoint.Y, BoxOrigin.Z + BoxExtent.Z); // 박스 상단에서 시작
-	FVector TraceEnd = FVector(RandomPoint.X, RandomPoint.Y, BoxOrigin.Z - BoxExtent.Z);   // 박스 하단까지
-	   
-	// 라인트레이스 파라미터 설정
-	FCollisionQueryParams CollisionParams;
-	CollisionParams.bTraceComplex = true;
-	CollisionParams.AddIgnoredActor(GetOwner()); // 자신은 무시
-	   
-	// 월드에서 라인트레이스 실행
-	UWorld* World = GetWorld();
-	if (World && World->LineTraceSingleByChannel(
-		HitResult,
-		TraceStart,
-		TraceEnd,
-		ECollisionChannel::ECC_WorldStatic, // 또는 ECC_Visibility 사용 가능
-		CollisionParams))
+	FVector BoxExtent = SpawningBox->GetScaledBoxExtent(); 
+	FVector BoxOrigin = SpawningBox->GetComponentLocation(); 
+ 
+	UWorld* World = GetWorld(); 
+	if (!World) 
 	{
-		// 바닥에 히트했을 경우 해당 위치 반환
-		return HitResult.Location;
+		UE_LOG(LogTemp, Warning, TEXT("World is null, returning safe position"));
+		return BoxOrigin + FVector(0, 0, 100.f); 
 	}
-	   
-	// 바닥을 찾지 못했을 경우 박스 하단 중앙 반환 (fallback)
-	return FVector(RandomPoint.X, RandomPoint.Y, BoxOrigin.Z - BoxExtent.Z);
-
+ 
+	const float SpawnHeightOffset = 50.f; // 스폰 높이 오프셋
+	const int32 MaxAttempts = 10; // 최대 시도 횟수
+    
+	for (int32 Attempt = 0; Attempt < MaxAttempts; Attempt++)
+	{
+		// 박스 내 랜덤 XY 좌표 생성
+		FVector RandomXY(
+			BoxOrigin.X + FMath::FRandRange(-BoxExtent.X, BoxExtent.X), 
+			BoxOrigin.Y + FMath::FRandRange(-BoxExtent.Y, BoxExtent.Y), 
+			BoxOrigin.Z
+		); 
+        
+		// LineTrace로 바닥 찾기
+		FHitResult Hit; 
+		FVector TraceStart = FVector(RandomXY.X, RandomXY.Y, BoxOrigin.Z + BoxExtent.Z + 500.f); 
+		FVector TraceEnd   = FVector(RandomXY.X, RandomXY.Y, BoxOrigin.Z - BoxExtent.Z - 500.f); 
+     
+		FCollisionQueryParams Params(SCENE_QUERY_STAT(SpawnTrace), true); 
+		Params.AddIgnoredActor(GetOwner()); 
+     
+		if (World->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_WorldStatic, Params)) 
+		{ 
+			FVector GroundLocation = Hit.Location + FVector(0, 0, SpawnHeightOffset);
+			UE_LOG(LogTemp, Log, TEXT("Attempt %d: LineTrace spawn at: %s"), Attempt + 1, *GroundLocation.ToString());
+			return GroundLocation; 
+		}
+        
+		UE_LOG(LogTemp, Warning, TEXT("Attempt %d: LineTrace failed at XY(%.1f, %.1f)"), Attempt + 1, RandomXY.X, RandomXY.Y);
+	}
+ 
+	// 모든 시도 실패시 안전한 위치 (박스 상단 위)
+	FVector SafeLocation = BoxOrigin + FVector(0, 0, BoxExtent.Z + SpawnHeightOffset);
+	UE_LOG(LogTemp, Error, TEXT("All spawn attempts failed! Using safe position: %s"), *SafeLocation.ToString());
+	return SafeLocation;
 	
+	 // FVector BoxExtent = SpawningBox->GetScaledBoxExtent(); 
+  //   FVector BoxOrigin = SpawningBox->GetComponentLocation(); 
+  //
+  //   UWorld* World = GetWorld(); 
+  //   if (!World) 
+  //   {
+  //       UE_LOG(LogTemp, Warning, TEXT("World is null, returning safe position"));
+  //       return BoxOrigin + FVector(0, 0, 100.f); 
+  //   }
+  //
+  //   const float SpawnHeightOffset = 50.f; // 오프셋을 50으로 증가
+  //   const int32 MaxAttempts = 10; // 최대 시도 횟수
+  //   
+  //   for (int32 Attempt = 0; Attempt < MaxAttempts; Attempt++)
+  //   {
+  //       // 박스 내 랜덤 XY 좌표 생성
+  //       FVector RandomXY(
+  //           BoxOrigin.X + FMath::FRandRange(-BoxExtent.X, BoxExtent.X), 
+  //           BoxOrigin.Y + FMath::FRandRange(-BoxExtent.Y, BoxExtent.Y), 
+  //           BoxOrigin.Z
+  //       ); 
+  //       
+  //       // 1. 먼저 LineTrace로 확실한 바닥 찾기
+  //       FHitResult Hit; 
+  //       FVector TraceStart = FVector(RandomXY.X, RandomXY.Y, BoxOrigin.Z + BoxExtent.Z + 500.f); 
+  //       FVector TraceEnd   = FVector(RandomXY.X, RandomXY.Y, BoxOrigin.Z - BoxExtent.Z - 500.f); 
+  //    
+  //       FCollisionQueryParams Params(SCENE_QUERY_STAT(SpawnTrace), true); 
+  //       Params.AddIgnoredActor(GetOwner()); 
+  //    
+  //       if (World->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_WorldStatic, Params)) 
+  //       { 
+  //           FVector GroundLocation = Hit.Location + FVector(0, 0, SpawnHeightOffset);
+  //           
+  //           // 2. NavMesh 확인 (옵션)
+  //           if (UNavigationSystemV1* NavSys = FNavigationSystem::GetCurrent<UNavigationSystemV1>(World)) 
+  //           { 
+  //               FNavLocation NavLocation; 
+  //               if (NavSys->ProjectPointToNavigation(GroundLocation, NavLocation, FVector(100, 100, 100))) 
+  //               { 
+  //                   FVector FinalLocation = NavLocation.Location + FVector(0, 0, SpawnHeightOffset);
+  //                   UE_LOG(LogTemp, Log, TEXT("Attempt %d: NavMesh+LineTrace spawn at: %s"), Attempt + 1, *FinalLocation.ToString());
+  //                   return FinalLocation; 
+  //               }
+  //           }
+  //           
+  //           // NavMesh 없어도 바닥 위면 OK
+  //           UE_LOG(LogTemp, Log, TEXT("Attempt %d: LineTrace spawn at: %s"), Attempt + 1, *GroundLocation.ToString());
+  //           return GroundLocation; 
+  //       }
+  //       
+  //       UE_LOG(LogTemp, Warning, TEXT("Attempt %d: LineTrace failed"), Attempt + 1);
+  //   }
+  //
+  //   // 모든 시도 실패시 안전한 위치
+  //   FVector SafeLocation = BoxOrigin + FVector(0, 0, BoxExtent.Z + SpawnHeightOffset);
+  //   UE_LOG(LogTemp, Error, TEXT("All spawn attempts failed! Using safe position: %s"), *SafeLocation.ToString());
+  //   return SafeLocation; 
 }
 
 // Called when the game starts or when spawned
 void ATFDSpawnVolume::BeginPlay()
 {
 	Super::BeginPlay();
-	
 }
 
 // Called every frame
 void ATFDSpawnVolume::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
-
