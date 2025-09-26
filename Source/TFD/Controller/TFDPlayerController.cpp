@@ -216,7 +216,17 @@ void ATFDPlayerController::AcknowledgePossession(APawn* InPawn)
 
 		for (auto& Action : CB->CharacterData->Actions)
 		{
-			EnhancedInputComponent->BindAction(Action.InputAction, ETriggerEvent::Started, this, &ATFDPlayerController::JobAbility, Action.Tag);
+
+
+				// Pressed 이벤트
+			EnhancedInputComponent->BindAction(
+				Action.InputAction,
+				Action.TriggerEvent,
+				this,
+				&ATFDPlayerController::JobAbility,
+				Action.Tag
+			);
+
 		}
 	}
 }

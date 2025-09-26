@@ -11,6 +11,9 @@
 #include "Abilities/Tasks/AbilityTask_WaitInputPress.h"
 
 #include "Controller/TFDPlayerController.h"
+#include "AbilitySystemComponent.h"
+#include "GameFramework/Actor.h"
+#include "Engine/Engine.h"
 
 UReleaseAbility::UReleaseAbility()
 {
@@ -42,13 +45,7 @@ void UReleaseAbility::ActivateAbility(
         WaitDelay->ReadyForActivation();
     }
 
-    // Release 감지 Task
-    UAbilityTask_WaitInputRelease* WaitRelease = UAbilityTask_WaitInputRelease::WaitInputRelease(this, false);
-    if (WaitRelease)
-    {
-        WaitRelease->OnRelease.AddDynamic(this, &UReleaseAbility::OnInputReleasedEarly);
-        WaitRelease->ReadyForActivation();
-    }
+
 }
 
 void UReleaseAbility::EndAbility(
@@ -70,21 +67,9 @@ void UReleaseAbility::OnHoldFinished()
         if (AJailCell* JailCell = GS->GetWorldJailCell())
         {
             JailCell->HideWallsTemporarily();
-            UE_LOG(LogTemp, Warning, TEXT("Jail walls temporarily hidden via ReleaseAbility"));
-        }
-        ATFDPlayerController* GenericPC = Cast<ATFDPlayerController>(GetActorInfo().PlayerController.Get());
-        if (GenericPC->IsLocalController())
-        {
-            GenericPC->HandleRemoveReleaseWidget();
         }
     }
 
     EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
-void UReleaseAbility::OnInputReleasedEarly(float TimeHeld)
-{
-    // 3초 전에 키를 뗐으므로 취소
-    UE_LOG(LogTemp, Warning, TEXT("ReleaseAbility: Released early after %.2f seconds, cancelling"), TimeHeld);
-    CancelAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true);
-}
