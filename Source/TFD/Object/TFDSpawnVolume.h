@@ -24,14 +24,14 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Spawning")
 	UBoxComponent* SpawningBox;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Spawning")
+	int32 SpawnNum = 10;
 
 	UPROPERTY(EditDefaultsOnly, Category="GAS")
 	FGameplayTag ObjectTag;
 	
 	UPROPERTY(EditDefaultsOnly, Category="GAS")
 	FGameplayTag AllowedTeamTag;
-	
-	
 public:
 	UFUNCTION()
 	bool CheckTeamTag(FGameplayTag InTag);

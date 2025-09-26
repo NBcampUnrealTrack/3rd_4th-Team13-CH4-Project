@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "GameMode/TFDGameMode.h"
@@ -39,12 +39,7 @@ void ATFDGameMode::BeginPlay()
 		// 점수 변경 이벤트 구독
 		GetGameState()->OnThiefScoreChanged.AddDynamic(this, &ATFDGameMode::HandleThiefScoreChanged);
 	}
-
 	RuleData = GetGameState()->GetRuleData();
-	if (RuleData)
-	{
-		NumberOfAI = RuleData->NumberOfAI;
-	}
 }
 void ATFDGameMode::AssignTeams()
 {
@@ -291,16 +286,38 @@ void ATFDGameMode::HandleSeamlessTravelPlayer(AController*& C)
 
 void ATFDGameMode::SpawnAI()
 {
+	if (SpawnVolumes.Num() == 0)
+		return;
+	
+	FGameplayTag AITag = TAG_Team_Neutral;
+	TArray<ATFDSpawnVolume*> AIVolumes;
+	AIVolumes.Reserve( SpawnVolumes.Num());
+	for (ATFDSpawnVolume* SpawnVolume : SpawnVolumes)
+	{
+		if (SpawnVolume && SpawnVolume->CheckTeamTag(AITag))
+		{
+			AIVolumes.Add(SpawnVolume);
+		}
+	}
+
+	if (AIVolumes.Num() < 1)
+		return;
+
 	FVector SpawnLoc = GetRandomPointInSpawnArea();
 	FRotator SpawnRot = FRotator::ZeroRotator;
+	
 
-	FGameplayTag AITag = TAG_Team_Neutral;
 	TSubclassOf<ATFDCharacterBase> AIClass = RuleData->PawnClassAI;
-	for (int32 i = 0; i < NumberOfAI; ++i)
+	
+	for (ATFDSpawnVolume* SpawnVolume : AIVolumes)
 	{
-		SpawnLoc = GetRandomPointInSpawnAreaTag(AITag);
-		UE_LOG(LogTemp, Display, TEXT("Spawning Player X:%.f,Y:%.f,Z:%.f"), SpawnLoc.X, SpawnLoc.Y, SpawnLoc.Z);
-		GetWorld()->SpawnActor(AIClass, &SpawnLoc, &SpawnRot);
+		for (int32 i = 0; i < SpawnVolume->SpawnNum; i++)
+		{
+			SpawnLoc = SpawnVolume->GetRandomPointInVolumeLineTrace();
+			SpawnRot =  FRotator(0.f, FMath::FRandRange(-180.f, 180.f), 0.f);
+			//UE_LOG(LogTemp, Display, TEXT("Spawning Player X:%.f,Y:%.f,Z:%.f"), SpawnLoc.X, SpawnLoc.Y, SpawnLoc.Z);
+			GetWorld()->SpawnActor(AIClass, &SpawnLoc, &SpawnRot);
+		}
 	}
 }
 
@@ -447,21 +464,6 @@ FVector ATFDGameMode::GetRandomPointInSpawnAreaTag(FGameplayTag InTag)
 			UE_LOG(LogTemp, Warning, TEXT("No SpawnVolume found for tag: %s"), *InTag.ToString());
 		}
 
-	}
-
-	return RandomPoint;
-}
-
-FVector ATFDGameMode::GetRandomPointInSpawnAreaAI()
-{
-	FVector RandomPoint = FVector::ZeroVector;
-	if (SpawnVolumes.Num() == 0)
-		return RandomPoint;
-
-	if (SpawnVolumes.Num() > 1)
-	{
-		int32 RandomIndex = FMath::RandRange(0, SpawnVolumes.Num() - 1);
-		RandomPoint = SpawnVolumes[RandomIndex]->GetRandomPointInVolume();
 	}
 
 	return RandomPoint;

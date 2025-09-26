@@ -25,10 +25,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rule")
 	float PlayTimeSec = 90.f;
 
-	//스폰할 AI 마릿수
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rule")
-	int32 NumberOfAI = 10;
-
 	//도둑팀 승리 조건 점수 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rule")
 	int32 ThiefScoreForWin = 500;

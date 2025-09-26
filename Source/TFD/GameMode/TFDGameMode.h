@@ -114,10 +114,7 @@ protected:
 public:
 	void SpawnAI();
 	void SpawnItemStart();
-
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Spawn")
-	int32 NumberOfAI;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DataTable")
 	UDataTable* DTAllowedTeamTag;
 
@@ -133,7 +130,6 @@ private:
 
 	FVector GetRandomPointInSpawnArea();
 	FVector GetRandomPointInSpawnAreaTag(FGameplayTag InTag);
-	FVector GetRandomPointInSpawnAreaAI();
 
 	ATFDSpawnVolume* GetRandomSpawnVolume();
 	ATFDSpawnVolume* GetRandomSpawnVolumeTag(FGameplayTag InTag);
