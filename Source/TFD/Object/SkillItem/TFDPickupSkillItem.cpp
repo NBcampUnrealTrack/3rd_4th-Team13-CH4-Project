@@ -5,6 +5,7 @@
 #include "GameFramework/Actor.h"
 #include "Object/SkillItem/Subsystem/TFDSkillEventSubsystem.h" // 서브시스템 헤더 추가
 #include "Controller/TFDAIController.h"
+#include "Engine/World.h" // GetWorld() 사용을 위해 추가
 
 ATFDPickupSkillItem::ATFDPickupSkillItem()
 {
@@ -12,6 +13,11 @@ ATFDPickupSkillItem::ATFDPickupSkillItem()
 
 	// 투명화 스킬 태그 설정 (에디터에서 수정 가능)
 	PickupSkillItemSkillTag = FGameplayTag::RequestGameplayTag(FName("Ability.Thief.Invisibility"));
+
+	// 초기화
+	bIsPickedUp = false;
+	bIsDestroyed = false;
+	bIsProcessingPickup = false;
 }
 
 void ATFDPickupSkillItem::BeginPlay()
@@ -38,7 +44,7 @@ void ATFDPickupSkillItem::OnItemPickedUp()
 	// 이미 아이템이 획득되었거나, 이미 파괴된 상태라면 아무것도 하지 않음
 	if (bIsPickedUp || bIsDestroyed)
 	{
-		UE_LOG(LogTemp, Log, TEXT("[ATFDPickupSkillItem][OnItemPickedUp] Item already picked up or destroyed, skipping."));
+		UE_LOG(LogTemp, Log, TEXT("[ATFDPickupSkillItem][OnItemPickedUp] Item already picked up, destroyed, or being processed, skipping."));
 		return;
 	}
 
@@ -64,15 +70,34 @@ void ATFDPickupSkillItem::OnItemPickedUp()
 	// 아이템 파괴 상태로 설정
 	bIsDestroyed = true;
 
-	// 콜리전 이벤트 제거 (아이템 파괴 시 오버랩 이벤트가 더 이상 발생하지 않도록)
+	// 즉시 콜리전 비활성화 (추가 오버랩 방지)
 	if (CollisionComp)
 	{
 		CollisionComp->OnComponentBeginOverlap.RemoveAll(this);
 	}
 
-	// 아이템 제거
-	Destroy();
+	// 딜레이를 두고 아이템 제거 (즉시 제거하면 로직이 완전히 끝나지 않을 수 있음)
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().SetTimer(
+			DestroyTimerHandle,
+			this,
+			&ATFDPickupSkillItem::DelayedDestroy,
+			0.1f, // 0.1초 후 제거
+			false
+		);
+	}
+	else
+	{// World가 없으면 즉시 제거
+		Destroy();
+	}
 	UE_LOG(LogTemp, Log, TEXT("[ATFDPickupSkillItem][OnItemPickedUp] Item destroyed"));
+}
+
+void ATFDPickupSkillItem::DelayedDestroy()
+{
+	UE_LOG(LogTemp, Log, TEXT("[ATFDPickupSkillItem][DelayedDestroy] Item destroyed"));
+	Destroy();
 }
 
 void ATFDPickupSkillItem::OnOverlapSkill(
@@ -83,35 +108,74 @@ void ATFDPickupSkillItem::OnOverlapSkill(
 	bool bFromSweep,
 	const FHitResult& SweepResult)
 {
-	// 오버랩이 발생했지만 이미 아이템을 획득하거나, 이미 파괴된 상태라면 처리하지 않음
-	if (bIsPickedUp || bIsDestroyed)
+	// 서버에서만 처리
+	if (!HasAuthority())
 	{
-		UE_LOG(LogTemp, Log, TEXT("[ATFDPickupSkillItem][OnOverlapSkill] Item already picked up or destroyed, ignoring overlap."));
+		UE_LOG(LogTemp, Log, TEXT("[ATFDPickupSkillItem][OnOverlapSkill] No authority, ignoring overlap on client. Actor: %s"), OtherActor ? *OtherActor->GetName() : TEXT("NULL"));
 		return;
 	}
 
-	UE_LOG(LogTemp, Log, TEXT("[ATFDPickupSkillItem][OnOverlapBegin] Overlap!!!"));
+	// 오버랩이 발생했지만 이미 아이템을 획득하거나, 이미 파괴된 상태라면 처리하지 않음
+	if (bIsPickedUp || bIsDestroyed || bIsProcessingPickup)
+	{
+		UE_LOG(LogTemp, Log, TEXT("[ATFDPickupSkillItem][OnOverlapSkill] Item already picked up, destroyed, or being processed, ignoring overlap. Flags: PickedUp=%d, Destroyed=%d, Processing=%d"),
+			bIsPickedUp, bIsDestroyed, bIsProcessingPickup);
+		return;
+	}
+
+	UE_LOG(LogTemp, Log, TEXT("[ATFDPickupSkillItem][OnOverlapBegin] Overlap!!! Actor: %s, Setting bIsProcessingPickup=true, Authority: %d"),
+		OtherActor ? *OtherActor->GetName() : TEXT("NULL"), HasAuthority());
 
 	// 다른 액터가 아이템과 오버랩 시 아이템을 주운 것으로 간주
 	if (OtherActor && OtherActor != this && OtherComp)
 	{
 		APawn* Pawn = Cast<APawn>(OtherActor);
-		if (Pawn && Pawn->GetController() && Pawn->GetController()->IsPlayerController())
+		if (Pawn)
 		{
-			// 오버랩한 플레이어 저장
-			LastOverlapPawn = Pawn;
+			// Controller 체크를 더 정확하게
+			AController* Controller = Pawn->GetController();
+			if (Controller && Controller->IsPlayerController())
+			{
+				// 즉시 처리 플래그 설정
+				bIsProcessingPickup = true;
 
-			// 아이템을 주운 것으로 간주
-			OnItemPickedUp();
+				// 콜리전을 즉시 비활성화
+				if (CollisionComp)
+				{
+					CollisionComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+					CollisionComp->OnComponentBeginOverlap.RemoveAll(this);
+				}
+
+				UE_LOG(LogTemp, Log, TEXT("[ATFDPickupSkillItem][OnOverlapBegin] Valid player found: %s, Controller: %s"), *Pawn->GetName(), *Controller->GetName());
+
+				// 오버랩한 플레이어 저장
+				LastOverlapPawn = Pawn;
+
+				// 아이템을 주운 것으로 간주
+				OnItemPickedUp();
+			}
+			else
+			{
+				UE_LOG(LogTemp, Log, TEXT("[ATFDPickupSkillItem][OnOverlapBegin] AI or non-player actor ignored: %s (Controller: %s)"),
+					*OtherActor->GetName(), Controller ? *Controller->GetName() : TEXT("NULL"));
+				// 유효하지 않은 액터면 플래그 되돌리기
+				bIsProcessingPickup = false;
+			}
 		}
 		else
 		{
-			UE_LOG(LogTemp, Log, TEXT("[ATFDPickupSkillItem][OnOverlapBegin] AI or non-player actor ignored: %s"), OtherActor ? *OtherActor->GetName() : TEXT("NULL"));
+			UE_LOG(LogTemp, Log, TEXT("[ATFDPickupSkillItem][OnOverlapBegin] Non-pawn actor ignored: %s"), *OtherActor->GetName());
+
+			// 유효하지 않은 액터면 플래그 되돌리기
+			bIsProcessingPickup = false;
 		}
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[ATFDPickupSkillItem][OnOverlapBegin] Invalid overlap with: %s"), *OtherActor->GetName());
+		UE_LOG(LogTemp, Warning, TEXT("[ATFDPickupSkillItem][OnOverlapBegin] Invalid overlap with: %s"), OtherActor ? *OtherActor->GetName() : TEXT("NULL"));
+
+		// 유효하지 않은 오버랩이면 플래그 되돌리기
+		bIsProcessingPickup = false;
 	}
 }
 
@@ -139,3 +203,28 @@ void ATFDPickupSkillItem::BroadcastSkillItemObtainedToPlayer(FGameplayTag SkillT
 		SkillEventSubsystem->BroadcastSkillItemObtained(SkillTag, TargetPawn);
 	}
 }
+
+//void ATFDPickupSkillItem::ServerRequestPickup_Implementation(APawn* RequestingPawn)
+//{
+//	UE_LOG(LogTemp, Log, TEXT("[ATFDPickupSkillItem][ServerRequestPickup] Server received pickup request from %s"),
+//		RequestingPawn ? *RequestingPawn->GetName() : TEXT("NULL"));
+//
+//	// 서버에서 다시 한번 유효성 검사
+//	if (bIsPickedUp || bIsDestroyed || bIsProcessingPickup)
+//	{
+//		UE_LOG(LogTemp, Log, TEXT("[ATFDPickupSkillItem][ServerRequestPickup] Item already processed on server, ignoring request"));
+//		return;
+//	}
+//
+//	if (RequestingPawn && RequestingPawn->GetController() && RequestingPawn->GetController()->IsPlayerController())
+//	{
+//		LastOverlapPawn = RequestingPawn;
+//		OnItemPickedUp();
+//	}
+//}
+//
+//bool ATFDPickupSkillItem::ServerRequestPickup_Validate(APawn* RequestingPawn)
+//{
+//	// 기본적인 유효성 검사
+//	return RequestingPawn != nullptr;
+//}
