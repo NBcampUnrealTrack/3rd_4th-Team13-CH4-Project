@@ -1,10 +1,11 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "GameplayCue_Arrested.h"
 
 #include "AnimInstance/TFDAnimInstanceBase.h"
 #include "Character/TFDCharacterBase.h"
+#include "Character/TFDAICharacter.h"
 
 void AGameplayCue_HitReact::HandleGameplayCue(AActor* MyTarget, EGameplayCueEvent::Type EventType,
                                                const FGameplayCueParameters& Parameters)
@@ -31,7 +32,25 @@ void AGameplayCue_HitReact::HandleGameplayCue(AActor* MyTarget, EGameplayCueEven
 		}
 	case EGameplayCueEvent::Removed:
 		{
-			AnimInstance->HitAnimEnd();
+			if (ATFDAICharacter* AIChar = Cast<ATFDAICharacter>(Character))
+			{
+				// AI면 10초 뒤 AnimInstance::HitAnimEnd + StartMovemnetWalking 실행
+				FTimerHandle TimerHandle;
+				Character->GetWorldTimerManager().SetTimer(
+					TimerHandle,
+					FTimerDelegate::CreateLambda([AnimInstance, AIChar]()
+						{
+							AnimInstance->HitAnimEnd();
+						}),
+					10.0f,
+					false
+			);
+			}
+			else
+			{
+				// AI가 아니면 즉시 HitAnimEnd 실행
+				AnimInstance->HitAnimEnd();
+			}
 			break;
 		}
 	default:

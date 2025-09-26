@@ -50,19 +50,6 @@ void UTFDAnimInstanceBase::PlayHitAnim(EHitDirection Direction)
 
 void UTFDAnimInstanceBase::HitAnimEnd()
 {
-	if (OwnerCharacter)
-	{
-		if (UAbilitySystemComponent* ASC = OwnerCharacter->GetAbilitySystemComponent())
-		{
-			// AI 전용 태그를 가지고 있으면 return
-			if (ASC->HasMatchingGameplayTag(TAG_Team_Neutral))
-			{
-				return;
-			}
-		}
-	}
-
-	
 	if (bIsHitPlaying)
 	{
 		Montage_Stop(0.1f, HitMontage);

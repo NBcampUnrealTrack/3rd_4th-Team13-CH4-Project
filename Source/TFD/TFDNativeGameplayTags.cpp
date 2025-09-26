@@ -16,7 +16,7 @@ UE_DEFINE_GAMEPLAY_TAG(TAG_Character_State_Stun, "Character.State.Stun");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Character_State_Detecting, "Character.State.Detecting");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Character_State_Release, "Character.State.Release");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Character_State_StopMovement, "Character.State.StopMovement");
-
+UE_DEFINE_GAMEPLAY_TAG(TAG_Character_State_RestartRandomMove, "Character.State.RestartRandomMove");
 //3.캐릭터 능력 
 UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Cop_Handcuff, "Ability.Cop.Handcuff");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Thief_Steal, "Ability.Thief.Steal");
