@@ -25,6 +25,7 @@
 #include "UI/InGame/ResultWidget.h"
 #include "UI/InGame/MiniMapWidget.h"
 #include "UI/InGame/ReleaseWidget.h"
+#include "UI/InGame/UW_SkillSlot.h"
 
 #include "Object/JailCell.h"
 
@@ -612,6 +613,15 @@ void ATFDPlayerController::HandleMatchInProgress()
 					UISub->AddWidgetToLayer(EUILayer::GameLayer, MiniMapWidgetClass)
 				);
 				UISub->MiniMapWidget->SetOwnerPawn(GetPawn());
+			}
+		}
+		if (SkillSlotClass)
+		{
+			if (!UISub->SkillSlotWidget)
+			{
+				UISub->SkillSlotWidget = Cast<UUW_SkillSlot>(
+					UISub->AddWidgetToLayer(EUILayer::GameLayer, SkillSlotClass)
+				);
 			}
 		}
 	}
