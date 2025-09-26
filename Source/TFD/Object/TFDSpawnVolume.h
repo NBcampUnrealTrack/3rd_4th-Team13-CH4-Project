@@ -24,7 +24,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Spawning")
 	UBoxComponent* SpawningBox;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Spawning")
+	UPROPERTY(EditAnywhere, Category="Spawning")
 	int32 SpawnNum = 10;
 
 	UPROPERTY(EditDefaultsOnly, Category="GAS")
