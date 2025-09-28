@@ -311,7 +311,7 @@ void ATFDGameMode::SpawnAI()
 	
 	for (ATFDSpawnVolume* SpawnVolume : AIVolumes)
 	{
-		for (int32 i = 0; i < SpawnVolume->SpawnNum; i++)
+		for (int32 i = 0; i <= SpawnVolume->SpawnNum; i++)
 		{
 			SpawnLoc = SpawnVolume->GetRandomPointInVolumeLineTrace();
 			SpawnRot =  FRotator(0.f, FMath::FRandRange(-180.f, 180.f), 0.f);
