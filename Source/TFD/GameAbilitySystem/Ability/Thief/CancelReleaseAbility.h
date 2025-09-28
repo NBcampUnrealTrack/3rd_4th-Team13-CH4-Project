@@ -4,18 +4,18 @@
 
 #include "CoreMinimal.h"
 #include "GameAbilitySystem/Ability/TFDGameplayAbility.h"
-#include "ReleaseAbility.generated.h"
+#include "CancelReleaseAbility.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class TFD_API UReleaseAbility : public UTFDGameplayAbility
+class TFD_API UCancelReleaseAbility : public UTFDGameplayAbility
 {
 	GENERATED_BODY()
 
 public:
-    UReleaseAbility();
+    UCancelReleaseAbility();
 
     virtual void ActivateAbility(
         const FGameplayAbilitySpecHandle Handle,
@@ -29,7 +29,4 @@ public:
         const FGameplayAbilityActivationInfo ActivationInfo,
         bool bReplicateEndAbility,
         bool bWasCancelled) override;
-
-    UFUNCTION()
-    void OnHoldFinished();
 };

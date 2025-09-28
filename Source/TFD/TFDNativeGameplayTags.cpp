@@ -21,6 +21,7 @@ UE_DEFINE_GAMEPLAY_TAG(TAG_Character_State_RestartRandomMove, "Character.State.R
 UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Cop_Handcuff, "Ability.Cop.Handcuff");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Thief_Steal, "Ability.Thief.Steal");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Thief_Release, "Ability.Thief.Release");
+UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Thief_CancelRelease, "Ability.Thief.CancelRelease");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Thief_Invisibility, "Ability.Thief.Invisibility");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Thief_Teleport, "Ability.Thief.Teleport");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Neutral_RandomMove, "Ability.Neutral.RandomMove");
