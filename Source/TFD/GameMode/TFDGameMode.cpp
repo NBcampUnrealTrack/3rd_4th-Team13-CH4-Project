@@ -3,7 +3,7 @@
 
 #include "GameMode/TFDGameMode.h"
 
-
+#include "GameInstance/TFDGameInstance.h"
 #include "AIController.h"
 #include "EngineUtils.h"
 #include "TFDNativeGameplayTags.h"
@@ -13,7 +13,6 @@
 #include "GameState/TFDGameState.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameplayTagContainer.h"
-#include "GameFramework/PlayerStart.h"
 #include "Object/AllowTeamTag.h"
 #include "Object/TFDSpawnVolume.h"
 #include "Object/TFDSpawnpoint.h"
@@ -34,6 +33,16 @@ void ATFDGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 
+	
+	if (UWorld* World = GetWorld())
+	{
+		if (UTFDGameInstance* GI = Cast<UTFDGameInstance>(World->GetGameInstance()))
+		{
+			FString MapString = World->GetMapName();
+			GI->HandleLevelChanged(FName(*MapString));
+		}
+	}
+	
 	if (GetGameState())
 	{
 		// 점수 변경 이벤트 구독
