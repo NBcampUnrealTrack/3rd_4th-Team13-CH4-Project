@@ -669,6 +669,11 @@ void ATFDPlayerController::HandleMatchWaitingPostMatch(FGameplayTag WinTeamTag, 
 			UISub->MiniMapWidget = nullptr;
 		}
 
+		if (UISub->SkillSlotWidget)
+		{
+			UISub->RemoveWidgetFromLayer(EUILayer::GameLayer, UISub->SkillSlotWidget);
+			UISub->SkillSlotWidget = nullptr;
+		}
 
 		if (ResultWidgetClass)
 		{
