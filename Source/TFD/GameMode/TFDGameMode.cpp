@@ -18,6 +18,7 @@
 #include "Object/TFDSpawnpoint.h"
 #include "Utility/InGameUtility.h"
 #include "Constants/TFDGameConstants.h"
+#include "Utility/TFDBGMSubsystem.h"
 
 
 ATFDGameMode::ATFDGameMode()
@@ -33,16 +34,19 @@ void ATFDGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 
-	
+
 	if (UWorld* World = GetWorld())
 	{
 		if (UTFDGameInstance* GI = Cast<UTFDGameInstance>(World->GetGameInstance()))
 		{
-			FString MapString = World->GetMapName();
-			GI->HandleLevelChanged(FName(*MapString));
+			FName CurrentLevel = *UGameplayStatics::GetCurrentLevelName(this);
+			if (UTFDBGMSubsystem* BGMSub = GI->GetSubsystem<UTFDBGMSubsystem>())
+			{
+				BGMSub->OnLevelChanged(CurrentLevel); // 첫 맵 재생
+			}
 		}
 	}
-	
+
 	if (GetGameState())
 	{
 		// 점수 변경 이벤트 구독
@@ -50,6 +54,7 @@ void ATFDGameMode::BeginPlay()
 	}
 	RuleData = GetGameState()->GetRuleData();
 }
+
 void ATFDGameMode::AssignTeams()
 {
 	// 모든 플레이어의 PlayerState와 선호팀 정보 수집
@@ -124,8 +129,8 @@ void ATFDGameMode::AssignTeams()
 	for (ATFDPlayerState* Player : AllPlayers)
 	{
 		UE_LOG(LogTemp, Log, TEXT("Player %s assigned to team %s"),
-			*Player->GetPlayerName(),
-			*Player->GetActualTeam().ToString());
+		       *Player->GetPlayerName(),
+		       *Player->GetActualTeam().ToString());
 	}
 }
 
@@ -153,8 +158,8 @@ void ATFDGameMode::AssignTeamsOnGameStart()
 		{
 			TFDPS->SetActualTeam(TFDPS->GetPreferredTeam());
 			UE_LOG(LogTemp, Log, TEXT("Player %s assigned ActualTeam: %s"),
-				*TFDPS->GetPlayerName(),
-				*TFDPS->GetActualTeam().GetTagName().ToString());
+			       *TFDPS->GetPlayerName(),
+			       *TFDPS->GetActualTeam().GetTagName().ToString());
 		}
 	}
 }
@@ -285,10 +290,8 @@ void ATFDGameMode::HandleSeamlessTravelPlayer(AController*& C)
 		// 모든 플레이어가 접속했는지 확인 (GameState의 PlayerArray 사용)
 		if (NumTravellingPlayers == 0 && NumPlayers == GetGameState()->PlayerArray.Num())
 		{
-		
 			UE_LOG(LogTemp, Warning, TEXT("All players are ready. Starting the game."));
 			StartMatch(); //InProgress 상태로 전환
-
 		}
 	}
 }
@@ -297,10 +300,10 @@ void ATFDGameMode::SpawnAI()
 {
 	if (SpawnVolumes.Num() == 0)
 		return;
-	
+
 	FGameplayTag AITag = TAG_Team_Neutral;
 	TArray<ATFDSpawnVolume*> AIVolumes;
-	AIVolumes.Reserve( SpawnVolumes.Num());
+	AIVolumes.Reserve(SpawnVolumes.Num());
 	for (ATFDSpawnVolume* SpawnVolume : SpawnVolumes)
 	{
 		if (SpawnVolume && SpawnVolume->CheckTeamTag(AITag))
@@ -314,16 +317,16 @@ void ATFDGameMode::SpawnAI()
 
 	FVector SpawnLoc = GetRandomPointInSpawnArea();
 	FRotator SpawnRot = FRotator::ZeroRotator;
-	
+
 
 	TSubclassOf<ATFDCharacterBase> AIClass = RuleData->PawnClassAI;
-	
+
 	for (ATFDSpawnVolume* SpawnVolume : AIVolumes)
 	{
 		for (int32 i = 0; i <= SpawnVolume->SpawnNum; i++)
 		{
 			SpawnLoc = SpawnVolume->GetRandomPointInVolumeLineTrace();
-			SpawnRot =  FRotator(0.f, FMath::FRandRange(-180.f, 180.f), 0.f);
+			SpawnRot = FRotator(0.f, FMath::FRandRange(-180.f, 180.f), 0.f);
 			//UE_LOG(LogTemp, Display, TEXT("Spawning Player X:%.f,Y:%.f,Z:%.f"), SpawnLoc.X, SpawnLoc.Y, SpawnLoc.Z);
 			GetWorld()->SpawnActor(AIClass, &SpawnLoc, &SpawnRot);
 		}
@@ -346,7 +349,6 @@ void ATFDGameMode::SpawnItemStart()
 }
 
 
-
 UDataTable* ATFDGameMode::GetDTAllowedTeamTag()
 {
 	return DTAllowedTeamTag;
@@ -361,7 +363,7 @@ FGameplayTagContainer ATFDGameMode::GetDTAllowedTeamTagContainer(FGameplayTag Ar
 		UE_LOG(LogTemp, Warning, TEXT("AllowTeamDataTable is not set."));
 		return ResultContainer;
 	}
-	
+
 	TArray<FAllowTeamTag*> AllRows;
 	DTAllowedTeamTag->GetAllRows<FAllowTeamTag>(TEXT("GetAllRows"), AllRows);
 
@@ -369,7 +371,7 @@ FGameplayTagContainer ATFDGameMode::GetDTAllowedTeamTagContainer(FGameplayTag Ar
 	{
 		if (Row && Row->ItemTag == ArgGameplayTag)
 		{
-			ResultContainer = Row->AllowedTeamTag; 
+			ResultContainer = Row->AllowedTeamTag;
 			break;
 		}
 	}
@@ -390,7 +392,7 @@ TSubclassOf<AActor> ATFDGameMode::GetDTAllowedTeamTag_Item(FGameplayTag ArgGamep
 	{
 		return ResultItem;
 	}
-	
+
 	TArray<FAllowTeamTag*> AllRows;
 	DTAllowedTeamTag->GetAllRows<FAllowTeamTag>(TEXT("GetAllRows"), AllRows);
 
@@ -402,7 +404,7 @@ TSubclassOf<AActor> ATFDGameMode::GetDTAllowedTeamTag_Item(FGameplayTag ArgGamep
 			break;
 		}
 	}
-	
+
 	return ResultItem;
 }
 
@@ -414,7 +416,7 @@ float ATFDGameMode::GetDTAllowedTeamTag_Period(FGameplayTag ArgGameplayTag)
 	{
 		return result;
 	}
-	
+
 	TArray<FAllowTeamTag*> AllRows;
 	DTAllowedTeamTag->GetAllRows<FAllowTeamTag>(TEXT("GetAllRows"), AllRows);
 
@@ -426,7 +428,7 @@ float ATFDGameMode::GetDTAllowedTeamTag_Period(FGameplayTag ArgGameplayTag)
 			break;
 		}
 	}
-	
+
 	return result;
 }
 
@@ -436,7 +438,7 @@ FSpawnPointArray ATFDGameMode::GetSpawnPointArrayTag(ETeamType InEnum)
 	{
 		return *FoundArray;
 	}
-    
+
 	// 키가 존재하지 않을 경우 빈 배열 반환
 	return FSpawnPointArray();
 }
@@ -472,7 +474,6 @@ FVector ATFDGameMode::GetRandomPointInSpawnAreaTag(FGameplayTag InTag)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("No SpawnVolume found for tag: %s"), *InTag.ToString());
 		}
-
 	}
 
 	return RandomPoint;
@@ -562,8 +563,8 @@ void ATFDGameMode::InitializeSpawnPoints()
 	for (auto& Pair : WorldSpawnPointsByTeam)
 	{
 		UE_LOG(LogTemp, Display, TEXT("%s: %d spawn points found."),
-			*UEnum::GetValueAsString(Pair.Key),
-			Pair.Value.Points.Num());
+		       *UEnum::GetValueAsString(Pair.Key),
+		       Pair.Value.Points.Num());
 	}
 
 	// FSpawnPointArray* CopSpawns = WorldSpawnPointsByTeam.Find(ETeamType::Cop);
@@ -768,14 +769,14 @@ void ATFDGameMode::Tick(float DeltaTime)
 void ATFDGameMode::Logout(AController* Exiting)
 {
 	Super::Logout(Exiting);
-	
+
 	UE_LOG(LogTemp, Warning, TEXT("Player Logout Exiting"));
 	ATFDPlayerState* PS = Exiting->GetPlayerState<ATFDPlayerState>();
-	if(!PS) return;
+	if (!PS) return;
 
 	ATFDGameState* GS = GetGameState();
 	if (!GS) return;
-	
+
 	// 경찰/도둑/잡힌도둑 배열에서 제거, 각 배열이 변경되면 GameState에서 OnRep_로 UI 변경까지 진행됨
 	GS->PolicePlayerStateArray.Remove(PS);
 	GS->ThiefPlayerStateArray.Remove(PS);
@@ -784,7 +785,6 @@ void ATFDGameMode::Logout(AController* Exiting)
 	GS->OnThiefArrayChanged.Broadcast(GS->ThiefPlayerStateArray);
 
 	CheckGameContinuable();
-
 }
 
 void ATFDGameMode::CheckGameContinuable()
@@ -812,7 +812,7 @@ void ATFDGameMode::CheckGameContinuable()
 	}
 
 	//경찰이 전부 나갔으면 게임 종료
-	if(GS->PolicePlayerStateArray.Num() == 0)
+	if (GS->PolicePlayerStateArray.Num() == 0)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("No police left. Thieves win!"));
 		GetGameState()->SetWinTeam(TAG_Team_Thief, EGameCompleteType::Aborted);
@@ -822,5 +822,4 @@ void ATFDGameMode::CheckGameContinuable()
 
 	// 아직 게임 진행 가능 → 그냥 넘어감
 	UE_LOG(LogTemp, Warning, TEXT("Game still playable. Continue..."));
-	
 }
