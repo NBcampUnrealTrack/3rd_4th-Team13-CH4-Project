@@ -66,4 +66,6 @@ private:
 
 	// Host IP 문자열 저장용
 	FString HostIP;
+
+	FTimerHandle RefreshTimerHandle;
 };

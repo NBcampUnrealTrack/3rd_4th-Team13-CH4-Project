@@ -41,6 +41,9 @@ public:
 	UFUNCTION(Server, Reliable)
 	void ServerSetNickname(const FString& NewNickname);
 
+	UFUNCTION(BlueprintCallable, Category = "PlayerState")
+	FString GetNickname() const { return Nickname; }
+
 
 protected:
 	// 복제되는 플레이어 이름 변수

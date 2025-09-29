@@ -105,18 +105,14 @@ void UUW_Lobby::NativeConstruct()
 {
 	Super::NativeConstruct();
 
+	// 버튼 바인딩
 	if (Btn_Leave)
-	{
 		Btn_Leave->OnClicked.AddDynamic(this, &UUW_Lobby::OnLeaveClicked);
-	}
 
 	if (Btn_Play)
-	{
 		Btn_Play->OnClicked.AddDynamic(this, &UUW_Lobby::OnPlayClicked);
-	}
 
-
-	// IP관련: Delegate 바인딩
+	// IP 델리게이트
 	if (ATFDPlayerController* PC = Cast<ATFDPlayerController>(GetOwningPlayer()))
 	{
 		if (PC->IsHostPlayer())
@@ -125,16 +121,14 @@ void UUW_Lobby::NativeConstruct()
 		}
 	}
 
-
-
-	// Host 여부에 따른 UI 제어
 	InitHostIP();
 	UpdateUIByRole();
 
-	// GameState 델리게이트 바인딩
+	// GameState 델리게이트
 	if (ATFDGameStateBase_Lobby* GS = GetWorld()->GetGameState<ATFDGameStateBase_Lobby>())
 	{
 		GS->OnPlayerListChanged.AddDynamic(this, &UUW_Lobby::HandlePlayerListChanged);
+
 		for (APlayerState* PS : GS->PlayerArray)
 		{
 			if (ATFDPlayerState* TFDPS = Cast<ATFDPlayerState>(PS))
@@ -143,9 +137,18 @@ void UUW_Lobby::NativeConstruct()
 			}
 		}
 
-		// 초기 한번 갱신
 		HandlePlayerListChanged();
 	}
+
+	//  Timer 설정 (괄호 닫기 포함)
+	GetWorld()->GetTimerManager().SetTimer(
+		RefreshTimerHandle,
+		this,
+		&UUW_Lobby::HandlePlayerListChanged,
+		1.0f, // 반복 간격
+		true, // 반복 여부
+		0.5f  // 최초 호출 지연
+	);
 }
 
 void UUW_Lobby::NativeDestruct()
