@@ -41,7 +41,7 @@ class TFD_API ATFDGameMode : public AGameMode
 public:
 	ATFDGameMode();
 
-	void OnCatchThief(APawn* Pawn);
+	bool OnCatchThief(APawn* Pawn);
 	void OffCatchThief(APawn* Pawn);
 	// 게임 종료시 처리될 내용이 담김.
 	void GameEnd(EGameCompleteType CompleteType);

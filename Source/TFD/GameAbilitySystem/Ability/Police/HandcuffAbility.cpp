@@ -56,6 +56,9 @@ void UHandcuffAbility::ActivateAbility(
 	{
 		return;
 	}
+
+	bCatchThief = true;
+
 	UAbilitySystemComponent* ASC = GetCurrentActorInfo()->AbilitySystemComponent.Get();
 
 	if (!ASC) return;
@@ -90,7 +93,7 @@ void UHandcuffAbility::ActivateAbility(
 }
 
 
-void UHandcuffAbility::HandcuffToTarget(AActor* TargetActor, const FGameplayAbilityActorInfo* ActorInfo) const
+void UHandcuffAbility::HandcuffToTarget(AActor* TargetActor, const FGameplayAbilityActorInfo* ActorInfo)
 {
 	// 잡힌 대상에게 상태 부여
 	if (!GetCurrentActorInfo()->IsNetAuthority())
@@ -141,9 +144,11 @@ void UHandcuffAbility::HandcuffToTarget(AActor* TargetActor, const FGameplayAbil
 		{
 			if (APawn* TargetPawn = Cast<APawn>(TargetActor))
 			{
-				GM->OnCatchThief(TargetPawn);
-				UE_LOG(LogTemp, Warning, TEXT("OnCatchThief called for %s"),
-					   *TargetPawn->GetName());
+				bCatchThief = GM->OnCatchThief(TargetPawn);
+
+				UE_LOG(LogTemp, Warning, TEXT("OnCatchThief called for %s | Result: %s"),
+					*TargetPawn->GetName(),
+					bCatchThief ? TEXT("true") : TEXT("false"));
 			}
 		}
 	}
@@ -215,5 +220,37 @@ void UHandcuffAbility::OnApplyCuffEvent(FGameplayEventData Payload)
 
 void UHandcuffAbility::OnEndCuffEvent(FGameplayEventData Payload)
 {
+	if (bCatchThief)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("도둑 잡았거나 AI 안잡음"));
+	}
+	else
+	{
+		ApplyDemeritEffect(DemeritTime);
+		UE_LOG(LogTemp, Warning, TEXT("AI 잡음"));
+	}
+
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
+}
+
+void UHandcuffAbility::ApplyDemeritEffect(float Duration)
+{
+	if (!DemeritEffect) return;
+
+	// 대상의 AbilitySystemComponent 가져오기
+	ATFDCharacterBase* TargetCH = Cast<ATFDCharacterBase>(CurrentActorInfo->AvatarActor.Get());
+
+	if (!TargetCH) return;
+
+	UAbilitySystemComponent* ASC = TargetCH->GetAbilitySystemComponent();
+	if (!ASC) return;
+
+	FGameplayEffectContextHandle Context = ASC->MakeEffectContext();
+	Context.AddSourceObject(this);
+
+	FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(DemeritEffect, 1.0f, Context);
+	if (!SpecHandle.IsValid()) return;
+	UE_LOG(LogTemp, Warning, TEXT("DemeritEffect Excution"));
+	SpecHandle.Data->SetDuration(Duration, true);
+	ASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data);
 }
