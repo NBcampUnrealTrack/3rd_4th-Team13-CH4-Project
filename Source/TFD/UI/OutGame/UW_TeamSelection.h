@@ -7,6 +7,8 @@
 
 class UButton;
 class UTextBlock;
+class UEditableTextBox;
+
 
 UCLASS()
 class TFD_API UUW_TeamSelection : public UUserWidget
@@ -29,6 +31,12 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* Txt_Thief;
 
+	UPROPERTY(meta = (BindWidget))
+	UEditableTextBox* NicknameTextBox;
+
+
+
+
 private:
 	UFUNCTION()
 	void OnClickTeamCop();
@@ -36,5 +44,11 @@ private:
 	UFUNCTION()
 	void OnClickTeamThief();
 
+	UFUNCTION()
+	void OnNicknameChanged(const FText& Text);
+
 	void UpdateSelectedTeamText(FGameplayTag NewTeam);
+
+	FGameplayTag SelectedTeam;
+
 };

@@ -40,6 +40,23 @@ void ATFDPlayerState::OnRep_PlayerName()
 	OnPlayerNameChanged.Broadcast();
 }
 
+void ATFDPlayerState::ServerSetNickname_Implementation(const FString& NewNickname)
+{
+    Nickname = NewNickname;
+    SetPlayerName(NewNickname); // ✅ PlayerName도 같이 설정
+    OnRep_Nickname(); // 서버에서도 즉시 반영
+}
+
+
+void ATFDPlayerState::OnRep_Nickname()
+{
+	UE_LOG(LogTemp, Log, TEXT("Nickname replicated: %s"), *Nickname);
+
+	// 필요하면 UI 위젯에 닉네임 전달하거나 델리게이트 호출 가능
+	// 예: OnPlayerNameChanged.Broadcast(); 또는 HUD에 표시
+}
+
+
 void ATFDPlayerState::OnRep_ActualTeam()
 {
 	// 클라이언트 실제 팀 동기화 시 작동 (UI 등 갱신 가능)

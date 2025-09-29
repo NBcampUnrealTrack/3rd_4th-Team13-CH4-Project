@@ -6,8 +6,10 @@
 #include "Components/ScrollBox.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerState.h"
+#include "PlayerState/TFDPlayerState.h"
 #include "Engine/Player.h"
 #include "Engine/World.h"
+#include "TFDNativeGameplayTags.h"
 
 #include "Controller/TFDPlayerController.h"
 #include "GameState/TFDGameStateBase_Lobby.h"
@@ -103,18 +105,14 @@ void UUW_Lobby::NativeConstruct()
 {
 	Super::NativeConstruct();
 
+	// 버튼 바인딩
 	if (Btn_Leave)
-	{
 		Btn_Leave->OnClicked.AddDynamic(this, &UUW_Lobby::OnLeaveClicked);
-	}
 
 	if (Btn_Play)
-	{
 		Btn_Play->OnClicked.AddDynamic(this, &UUW_Lobby::OnPlayClicked);
-	}
 
-
-	// IP관련: Delegate 바인딩
+	// IP 델리게이트
 	if (ATFDPlayerController* PC = Cast<ATFDPlayerController>(GetOwningPlayer()))
 	{
 		if (PC->IsHostPlayer())
@@ -123,20 +121,34 @@ void UUW_Lobby::NativeConstruct()
 		}
 	}
 
-
-
-	// Host 여부에 따른 UI 제어
 	InitHostIP();
 	UpdateUIByRole();
 
-	// GameState 델리게이트 바인딩
+	// GameState 델리게이트
 	if (ATFDGameStateBase_Lobby* GS = GetWorld()->GetGameState<ATFDGameStateBase_Lobby>())
 	{
 		GS->OnPlayerListChanged.AddDynamic(this, &UUW_Lobby::HandlePlayerListChanged);
 
-		// 초기 한번 갱신
+		for (APlayerState* PS : GS->PlayerArray)
+		{
+			if (ATFDPlayerState* TFDPS = Cast<ATFDPlayerState>(PS))
+			{
+				TFDPS->OnPlayerNameChanged.AddDynamic(this, &UUW_Lobby::HandlePlayerListChanged);
+			}
+		}
+
 		HandlePlayerListChanged();
 	}
+
+	//  Timer 설정 (괄호 닫기 포함)
+	GetWorld()->GetTimerManager().SetTimer(
+		RefreshTimerHandle,
+		this,
+		&UUW_Lobby::HandlePlayerListChanged,
+		1.0f, // 반복 간격
+		true, // 반복 여부
+		0.5f  // 최초 호출 지연
+	);
 }
 
 void UUW_Lobby::NativeDestruct()
@@ -157,7 +169,18 @@ void UUW_Lobby::NativeDestruct()
 	if (ATFDGameStateBase_Lobby* GS = GetWorld()->GetGameState<ATFDGameStateBase_Lobby>())
 	{
 		GS->OnPlayerListChanged.RemoveDynamic(this, &UUW_Lobby::HandlePlayerListChanged);
+
+		for (APlayerState* PS : GS->PlayerArray)
+		{
+			if (ATFDPlayerState* TFDPS = Cast<ATFDPlayerState>(PS))
+			{
+				TFDPS->OnPlayerNameChanged.RemoveDynamic(this, &UUW_Lobby::HandlePlayerListChanged);
+			}
+		}
 	}
+
+
+
 }
 
 void UUW_Lobby::OnPublicIPReceived(const FString& PublicIP)
@@ -221,26 +244,29 @@ void UUW_Lobby::UpdatePlayerList(const TArray<APlayerState*>& PlayerStates)
 	// 각 플레이어 상태마다 위젯을 생성해서 추가 (접속자 한명 한명의 UI)
 	for (APlayerState* PS : SortedPlayerArray)
 	{
-		if (!PS) continue;
+		ATFDPlayerState* TFDPS = Cast<ATFDPlayerState>(PS);
+		if (!TFDPS) continue;
 
-		FString PlayerName = PS->GetPlayerName();
+		FString Nickname = TFDPS->GetPlayerName(); // 또는 TFDPS->GetNickname();
+		if (Nickname.IsEmpty()) continue;
 
-		// 이름이 비어있으면 건너뜀
-		if (PlayerName.IsEmpty())
-		{
-			UE_LOG(LogTemp, Warning, TEXT("[UpdatePlayerList][UUW_Lobby] Skipping player with empty name"));
-			continue;
-		}
+		FString TeamName;
+		if (TFDPS->GetPreferredTeam() == TAG_Team_Cop)
+			TeamName = TEXT("Cop");
+		else if (TFDPS->GetPreferredTeam() == TAG_Team_Thief)
+			TeamName = TEXT("Thief");
+
+		FString DisplayText = TeamName.IsEmpty() ? Nickname : FString::Printf(TEXT("%s (%s)"), *Nickname, *TeamName);
 
 		UTextBlock* PlayerNameText = NewObject<UTextBlock>(this);
 		if (PlayerNameText)
 		{
-			PlayerNameText->SetText(FText::FromString(PS->GetPlayerName()));
+			PlayerNameText->SetText(FText::FromString(DisplayText));
 			SB_PlayerList->AddChild(PlayerNameText);
-
-			UE_LOG(LogTemp, Warning, TEXT("[UpdatePlayerList][UUW_Lobby] Player in list: %s"), *PlayerName);
 		}
 	}
+
+
 }
 
 void UUW_Lobby::HandlePlayerListChanged()
