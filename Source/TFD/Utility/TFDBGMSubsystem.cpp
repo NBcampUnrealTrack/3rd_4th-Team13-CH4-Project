@@ -124,19 +124,5 @@ void UTFDBGMSubsystem::EnsureBGMManager()
 		UE_LOG(LogTemp, Warning, TEXT("BGMManagerActor spawned for new level"));
 	}
 
-	// if (!BGMManagerActor && GetWorld())
-	// {
-	// 	FActorSpawnParameters Params;
-	// 	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	//
-	// 	BGMManagerActor = GetWorld()->SpawnActor<ATFDBGMManager>(
-	// 		ATFDBGMManager::StaticClass(),
-	// 		FVector::ZeroVector,
-	// 		FRotator::ZeroRotator,
-	// 		Params
-	// 	);
-	//
-	// 	UE_LOG(LogTemp, Warning, TEXT("BGMManagerActor spawned by Subsystem."));
-	// 	
-	// }
+
 }
