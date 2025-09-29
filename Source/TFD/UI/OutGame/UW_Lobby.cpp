@@ -6,8 +6,10 @@
 #include "Components/ScrollBox.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerState.h"
+#include "PlayerState/TFDPlayerState.h"
 #include "Engine/Player.h"
 #include "Engine/World.h"
+#include "TFDNativeGameplayTags.h"
 
 #include "Controller/TFDPlayerController.h"
 #include "GameState/TFDGameStateBase_Lobby.h"
@@ -133,6 +135,13 @@ void UUW_Lobby::NativeConstruct()
 	if (ATFDGameStateBase_Lobby* GS = GetWorld()->GetGameState<ATFDGameStateBase_Lobby>())
 	{
 		GS->OnPlayerListChanged.AddDynamic(this, &UUW_Lobby::HandlePlayerListChanged);
+		for (APlayerState* PS : GS->PlayerArray)
+		{
+			if (ATFDPlayerState* TFDPS = Cast<ATFDPlayerState>(PS))
+			{
+				TFDPS->OnPlayerNameChanged.AddDynamic(this, &UUW_Lobby::HandlePlayerListChanged);
+			}
+		}
 
 		// 초기 한번 갱신
 		HandlePlayerListChanged();
@@ -157,7 +166,18 @@ void UUW_Lobby::NativeDestruct()
 	if (ATFDGameStateBase_Lobby* GS = GetWorld()->GetGameState<ATFDGameStateBase_Lobby>())
 	{
 		GS->OnPlayerListChanged.RemoveDynamic(this, &UUW_Lobby::HandlePlayerListChanged);
+
+		for (APlayerState* PS : GS->PlayerArray)
+		{
+			if (ATFDPlayerState* TFDPS = Cast<ATFDPlayerState>(PS))
+			{
+				TFDPS->OnPlayerNameChanged.RemoveDynamic(this, &UUW_Lobby::HandlePlayerListChanged);
+			}
+		}
 	}
+
+
+
 }
 
 void UUW_Lobby::OnPublicIPReceived(const FString& PublicIP)
@@ -221,26 +241,29 @@ void UUW_Lobby::UpdatePlayerList(const TArray<APlayerState*>& PlayerStates)
 	// 각 플레이어 상태마다 위젯을 생성해서 추가 (접속자 한명 한명의 UI)
 	for (APlayerState* PS : SortedPlayerArray)
 	{
-		if (!PS) continue;
+		ATFDPlayerState* TFDPS = Cast<ATFDPlayerState>(PS);
+		if (!TFDPS) continue;
 
-		FString PlayerName = PS->GetPlayerName();
+		FString Nickname = TFDPS->GetPlayerName(); // 또는 TFDPS->GetNickname();
+		if (Nickname.IsEmpty()) continue;
 
-		// 이름이 비어있으면 건너뜀
-		if (PlayerName.IsEmpty())
-		{
-			UE_LOG(LogTemp, Warning, TEXT("[UpdatePlayerList][UUW_Lobby] Skipping player with empty name"));
-			continue;
-		}
+		FString TeamName;
+		if (TFDPS->GetPreferredTeam() == TAG_Team_Cop)
+			TeamName = TEXT("Cop");
+		else if (TFDPS->GetPreferredTeam() == TAG_Team_Thief)
+			TeamName = TEXT("Thief");
+
+		FString DisplayText = TeamName.IsEmpty() ? Nickname : FString::Printf(TEXT("%s (%s)"), *Nickname, *TeamName);
 
 		UTextBlock* PlayerNameText = NewObject<UTextBlock>(this);
 		if (PlayerNameText)
 		{
-			PlayerNameText->SetText(FText::FromString(PS->GetPlayerName()));
+			PlayerNameText->SetText(FText::FromString(DisplayText));
 			SB_PlayerList->AddChild(PlayerNameText);
-
-			UE_LOG(LogTemp, Warning, TEXT("[UpdatePlayerList][UUW_Lobby] Player in list: %s"), *PlayerName);
 		}
 	}
+
+
 }
 
 void UUW_Lobby::HandlePlayerListChanged()

@@ -38,6 +38,10 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "PlayerState")
 	FOnPlayerNameChanged OnPlayerNameChanged;
 
+	UFUNCTION(Server, Reliable)
+	void ServerSetNickname(const FString& NewNickname);
+
+
 protected:
 	// 복제되는 플레이어 이름 변수
 	UPROPERTY(ReplicatedUsing = OnRep_PlayerName)
@@ -47,6 +51,13 @@ protected:
 	// MSB3073 오류 : 부모 클래스에서 이미 UFUNCTION으로 선언된 함수이므로 UFUNCTION 매크로 없이 override만 붙임
 	//UFUNCTION()
 	void OnRep_PlayerName();
+
+	 UPROPERTY(ReplicatedUsing = OnRep_Nickname)
+    FString Nickname;
+
+    UFUNCTION()
+    void OnRep_Nickname();
+
 
 public:
 	// 이름 설정 함수 (서버에서 호출)
@@ -74,4 +85,6 @@ void SetPreferredTeam(const FGameplayTag& InTeamTag) { PreferredTeam = InTeamTag
 
 FGameplayTag GetActualTeam() const { return ActualTeam; }
 void SetActualTeam(const FGameplayTag& InTeam) { ActualTeam = InTeam; }
+
+
 };
