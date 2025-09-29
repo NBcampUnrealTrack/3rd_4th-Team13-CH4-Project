@@ -35,6 +35,7 @@ public:
 
 	const TArray<FLevelBGMData> GetMapBGMs();
 
+	void OnPostLoadMap(UWorld* World);
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Audio")
 	TArray<FLevelBGMData> MapBGMs;
