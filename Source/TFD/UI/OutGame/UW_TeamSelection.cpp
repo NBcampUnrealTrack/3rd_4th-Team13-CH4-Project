@@ -65,13 +65,13 @@ void UUW_TeamSelection::UpdateSelectedTeamText(FGameplayTag NewTeam)
 {
 	if (NewTeam == TAG_Team_Cop && Txt_Cop)
 	{
-		Txt_Cop->SetText(FText::FromString("Selected"));
+		Txt_Cop->SetText(FText::FromString("Cop"));
 		if (Txt_Thief)
 			Txt_Thief->SetText(FText::GetEmpty());
 	}
 	else if (NewTeam == TAG_Team_Thief && Txt_Thief)
 	{
-		Txt_Thief->SetText(FText::FromString("Selected"));
+		Txt_Thief->SetText(FText::FromString("Thief"));
 		if (Txt_Cop)
 			Txt_Cop->SetText(FText::GetEmpty());
 	}
