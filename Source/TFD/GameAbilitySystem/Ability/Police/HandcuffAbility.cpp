@@ -15,10 +15,14 @@
 
 UHandcuffAbility::UHandcuffAbility()
 {
-	AbilityTags.AddTag(TAG_Ability_Cop_Handcuff);
+	FGameplayTagContainer Tags = GetAssetTags(); // const& 반환이므로 복사
+	Tags.AddTag(TAG_Ability_Cop_Handcuff);
+	SetAssetTags(Tags); // 생성자에서만 호출 가능
+	
+	//AbilityTags.AddTag(TAG_Ability_Cop_Handcuff);
+	
 	
 	//필요하면 쿨다운, 코스트, 차단 조건 추가
-
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 
 	// 입력 즉시 반응 + 서버 검증

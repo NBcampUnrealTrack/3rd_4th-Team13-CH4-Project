@@ -20,7 +20,8 @@ void UMiniMapWidget::NativeConstruct()
 
     if (MapImage)
     {
-        MapSize = MapImage->Brush.ImageSize;
+        //MapSize = MapImage->Brush.ImageSize;
+        MapSize = MapImage->GetBrush().ImageSize;
 
         if (MapSize.IsZero())
         {
