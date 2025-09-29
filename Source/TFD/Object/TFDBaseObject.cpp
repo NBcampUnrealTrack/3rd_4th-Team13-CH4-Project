@@ -2,16 +2,14 @@
 
 
 #include "Object/TFDBaseObject.h"
-#include "NiagaraFunctionLibrary.h"
-#include "AbilitySystemBlueprintLibrary.h"
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "AbilitySystemComponent.h"
-#include "TFDNativeGameplayTags.h"
+
 #include "Character/TFDCharacterBase.h"
 #include "Component/TFDProjectileMovementComponent.h"
 #include "GameMode/TFDGameMode.h"
-#include "Kismet/GameplayStatics.h"
+
 
 // Sets default values
 ATFDBaseObject::ATFDBaseObject()
@@ -23,53 +21,9 @@ ATFDBaseObject::ATFDBaseObject()
 void ATFDBaseObject::BeginPlay()
 {
 	Super::BeginPlay();
-	SetMovementComponent();
 
 	CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &ATFDBaseObject::OnOverlapBegin);
 	SetAllowedTeamTag();
-
-
-	if (GetOwner())
-	{
-		UAbilitySystemComponent* OwnerAsc = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner());
-		if (OwnerAsc)
-		{
-			// 주인의 태그 중 Team 카테고리에 속하는 태그를 찾아서 저장.
-			OwnerTeamTag = OwnerAsc->GetOwnedGameplayTags().Filter(FGameplayTagContainer(TAG_Team)).
-			                         First();
-		}
-	}
-
-	StartTransform = GetActorTransform();
-	switch (BaseObjectParam.MovementType)
-	{
-	case EProjectileMovementType::Arc:
-
-		break;
-
-	case EProjectileMovementType::Straight:
-	default:
-		ProjectileMovementComponent->Velocity = GetActorForwardVector() * ProjectileMovementComponent->InitialSpeed;
-		break;
-	}
-
-
-	if (BaseObjectParam.MuzzleVFX)
-	{
-		UNiagaraComponent* MuzzleVFXComponent = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-			this,
-			BaseObjectParam.MuzzleVFX,
-			StartTransform.GetLocation(),
-			StartTransform.GetRotation().Rotator(),
-			BaseObjectParam.MuzzleScale,
-			true
-		);
-	}
-
-	if (BaseObjectParam.MuzzleSound)
-	{
-		UGameplayStatics::PlaySoundAtLocation(this, BaseObjectParam.MuzzleSound, StartTransform.GetLocation());
-	}
 }
 
 void ATFDBaseObject::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
@@ -79,37 +33,19 @@ void ATFDBaseObject::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor*
 	if (!CollisionEffect)
 		return;
 
-	//UE_LOG(LogTemp, Warning, TEXT("GRE:1"));
-	if (ATFDCharacterBase* Player = Cast<ATFDCharacterBase>(OtherActor))
-	{
-		// ASC 가져오기
-		if (UAbilitySystemComponent* ASC = Player->GetAbilitySystemComponent())
-		{
-			// 배열 → 컨테이너 변환
-			FGameplayTagContainer AllowedTagContainer;
-			for (const FGameplayTag& Tag : AllowedTeamTag)
-			{
-				AllowedTagContainer.AddTag(Tag);
-			}
+	ATFDCharacterBase* Player = Cast<ATFDCharacterBase>(OtherActor);
+	if (!Player)
+		return;
 
-			// 플레이어가 허용된 팀 태그 중 하나라도 가지고 있다면
-			if (ASC->HasAnyMatchingGameplayTags(AllowedTagContainer))
-			{
-				ASC->ApplyGameplayEffectToSelf(CollisionEffect.GetDefaultObject(), 1.f, ASC->MakeEffectContext());
+	UAbilitySystemComponent* ASC = Player->GetAbilitySystemComponent();
+	if (!ASC)
+		return;
 
-				// GameState에 아이템 제거 알림
-				if (UWorld* World = GetWorld())
-				{
-					if (ATFDGameState* GS = World->GetGameState<ATFDGameState>())
-					{
-						GS->RemoveAllowedItem(this);
-					}
-				}
+	if (!HasAllowedTeamTag(ASC))
+		return;
 
-				Destroy();
-			}
-		}
-	}
+	// 실제 로직 실행
+	ApplyEffectAndDestroy(ASC);
 }
 
 // Called every frame
@@ -140,43 +76,8 @@ void ATFDBaseObject::DefaultCreater()
 	MeshComp->SetupAttachment(RootComponent);
 	//메시는 충돌안함
 	MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
-	ProjectileMovementComponent = CreateDefaultSubobject<UTFDProjectileMovementComponent>(
-		TEXT("TFDProjectileMovementComponent"));
-
-	ProjectileMovementComponent->bAutoActivate = false;
-	ProjectileMovementComponent->InitialSpeed = 0.f;
-	ProjectileMovementComponent->MaxSpeed = 0.f;
 }
 
-void ATFDBaseObject::SetMovementComponent()
-{
-	//발사체 움직임 컴포넌트
-	if (BaseObjectParam.bMoveFlag)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("GRE:1"));
-		ProjectileMovementComponent->bAutoActivate = true;
-		ProjectileMovementComponent->InitialSpeed = BaseObjectParam.ProjectileSpeed;
-		ProjectileMovementComponent->MaxSpeed = BaseObjectParam.ProjectileSpeed;
-		//중력 영향X
-		ProjectileMovementComponent->ProjectileGravityScale = 0.f;
-		// 투사체가 속도방향을 따라 회전
-		ProjectileMovementComponent->bRotationFollowsVelocity = true;
-
-		// 발사체 방향 = 액터의 전방 방향
-		FVector ShootDirection = GetActorForwardVector();
-		ProjectileMovementComponent->Velocity = ShootDirection * BaseObjectParam.ProjectileSpeed;
-
-		// 활성화
-		ProjectileMovementComponent->Activate();
-	}
-
-}
-
-void ATFDBaseObject::SetBaseObjectParam(const FTFDBaseObjectParam& InBaseObjectParams)
-{
-	BaseObjectParam = InBaseObjectParams;
-}
 
 void ATFDBaseObject::SetAllowedTeamTag()
 {
@@ -185,4 +86,42 @@ void ATFDBaseObject::SetAllowedTeamTag()
 		return;
 
 	AllowedTeamTag = pGameMode->GetDTAllowedTeamTagContainer(ItemTag);
+}
+
+bool ATFDBaseObject::HasAllowedTeamTag(UAbilitySystemComponent* ASC) const
+{
+	// 배열을 컨테이너로 변환
+	FGameplayTagContainer AllowedTagContainer;
+	for (const FGameplayTag& Tag : AllowedTeamTag)
+	{
+		AllowedTagContainer.AddTag(Tag);
+	}
+
+	// 플레이어가 허용된 팀 태그 중 하나라도 가지고 있는지 확인
+	return ASC->HasAnyMatchingGameplayTags(AllowedTagContainer);
+}
+
+void ATFDBaseObject::ApplyEffectAndDestroy(UAbilitySystemComponent* ASC)
+{
+	// 게임플레이 이펙트 적용
+	ASC->ApplyGameplayEffectToSelf(CollisionEffect.GetDefaultObject(), 1.f, ASC->MakeEffectContext());
+
+	// GameState에 아이템 제거 알림
+	NotifyItemRemoval();
+
+	// 오브젝트 파괴
+	Destroy();
+}
+
+void ATFDBaseObject::NotifyItemRemoval()
+{
+	UWorld* World = GetWorld();
+	if (!World)
+		return;
+
+	ATFDGameState* GameState = World->GetGameState<ATFDGameState>();
+	if (!GameState)
+		return;
+
+	GameState->RemoveAllowedItem(this);
 }

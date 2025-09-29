@@ -18,15 +18,20 @@ UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Character_State_Hiding); // 은신
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Character_State_Stun); //기절
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Character_State_Detecting); //수색중
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Character_State_Release); //풀기 가능
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Character_State_StopMovement);
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Character_State_RestartRandomMove);
 
 //3.캐릭터 능력 
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ability_Cop_Handcuff); //경찰-포획
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ability_Thief_Steal); //도둑-훔치기
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ability_Thief_Release); //도둑-풀어주기
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ability_Thief_CancelRelease);
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ability_Thief_Invisibility); //도둑-은신
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ability_Thief_Teleport); //도둑-텔레포트
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ability_Neutral_RandomMove); //도둑-훔치기
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ability_FireProjectile); //도둑-훔치기
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ability_StopMovement);
+
 //3-2 쿨타임관련
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ability_Cop_Handcuff_CoolDown);
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ability_Thief_Steal_CoolDown);

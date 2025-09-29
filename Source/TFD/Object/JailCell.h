@@ -36,11 +36,9 @@ public:
 	UBoxComponent* OpenJailCellBox;
 
 
-	UPROPERTY(VisibleAnywhere, Category = "Jail")
+	UPROPERTY(VisibleAnywhere, Replicated, Category = "Jail")
 	TArray<TWeakObjectPtr<ATFDCharacterBase>> InCharacters;
 
-	UPROPERTY(VisibleAnywhere, Category = "Jail")
-	TArray<TWeakObjectPtr<ATFDPlayerState>> CharactersState;
 
 	/** 감옥 입장 */
 	void EnterJail(ATFDCharacterBase* Character);

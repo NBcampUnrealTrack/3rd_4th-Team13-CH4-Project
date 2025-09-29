@@ -103,7 +103,7 @@ void UPlayingWidget::UpdateTeamName()
         return;
     }
 
-    FGameplayTag TeamTag = PS->GetTeamTag();
+    FGameplayTag TeamTag = PS->GetActualTeam();
 
     if (!TeamTag.IsValid())
     {

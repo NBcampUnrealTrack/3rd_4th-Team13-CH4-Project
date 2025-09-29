@@ -66,6 +66,8 @@ void UHandcuffAbility::ActivateAbility(
 	FActiveGameplayEffectHandle EffectHandle = ASC->ApplyGameplayEffectSpecToSelf(*EffectSpec.Data.Get());
 	if (EffectHandle.IsValid() && EffectHandle.WasSuccessfullyApplied())
 	{
+		ApplyStopEffect(ActorInfo->AvatarActor.Get(), CuffDuration);
+
 		UAbilityTask_WaitGameplayEvent* WaitEvent =
 			UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, TAG_Ability_Cop_HandCuff_Apply, nullptr, true, true);
 		WaitEvent->EventReceived.AddDynamic(this, &UHandcuffAbility::OnApplyCuffEvent);

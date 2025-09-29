@@ -95,7 +95,7 @@ void UMiniMapWidget::TryInitializeOwnerPawnState()
 
     if (!CurrentGameState) return;
 
-    FGameplayTag TeamTag = OwnerPawnState->GetTeamTag();
+    FGameplayTag TeamTag = OwnerPawnState->GetActualTeam();
     if (TeamTag == TAG_Team_Cop)
     {
         CurrentGameState->OnPoliceArrayChanged.AddDynamic(this, &UMiniMapWidget::UpdateTeamPlayerStateArray);

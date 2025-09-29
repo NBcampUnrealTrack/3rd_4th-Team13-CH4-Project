@@ -6,6 +6,15 @@
 #include "GameState/TFDGameState.h"
 #include "Object/JailCell.h"
 
+#include "Abilities/Tasks/AbilityTask_WaitInputRelease.h"
+#include "Abilities/Tasks/AbilityTask_WaitDelay.h"
+#include "Abilities/Tasks/AbilityTask_WaitInputPress.h"
+
+#include "Controller/TFDPlayerController.h"
+#include "AbilitySystemComponent.h"
+#include "GameFramework/Actor.h"
+#include "Engine/Engine.h"
+
 UReleaseAbility::UReleaseAbility()
 {
 }
@@ -28,18 +37,15 @@ void UReleaseAbility::ActivateAbility(
         return;
     }
 
-    UE_LOG(LogTemp, Warning, TEXT("ReleaseAbility go"));
-    // 게임스테이트에서 감옥 가져와서 벽 숨기기 실행
-    if (ATFDGameState* GS = ActorInfo->AvatarActor->GetWorld()->GetGameState<ATFDGameState>())
+    // 3초 Delay Task
+    UAbilityTask_WaitDelay* WaitDelay = UAbilityTask_WaitDelay::WaitDelay(this, 3.0f);
+    if (WaitDelay)
     {
-        if (AJailCell* JailCell = GS->GetWorldJailCell())
-        {
-            JailCell->HideWallsTemporarily();
-            UE_LOG(LogTemp, Warning, TEXT("Jail walls temporarily hidden via ReleaseAbility"));
-        }
+        WaitDelay->OnFinish.AddDynamic(this, &UReleaseAbility::OnHoldFinished);
+        WaitDelay->ReadyForActivation();
     }
 
-    EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
+
 }
 
 void UReleaseAbility::EndAbility(
@@ -53,3 +59,17 @@ void UReleaseAbility::EndAbility(
 
     Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
+
+void UReleaseAbility::OnHoldFinished()
+{
+    if (ATFDGameState* GS = GetWorld()->GetGameState<ATFDGameState>())
+    {
+        if (AJailCell* JailCell = GS->GetWorldJailCell())
+        {
+            JailCell->HideWallsTemporarily();
+        }
+    }
+
+    EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
+}
+

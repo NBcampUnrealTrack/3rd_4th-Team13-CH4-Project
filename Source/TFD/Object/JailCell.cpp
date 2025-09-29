@@ -52,6 +52,7 @@ void AJailCell::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetim
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
     DOREPLIFETIME(AJailCell, CachedGameState);
+    DOREPLIFETIME(AJailCell, InCharacters);
 }
 
 void AJailCell::EnterJail(ATFDCharacterBase* Character)
@@ -186,6 +187,9 @@ void AJailCell::OnOpenJailCellBoxOverlapBegin(UPrimitiveComponent* OverlappedCom
     ATFDCharacterBase* Char = Cast<ATFDCharacterBase>(OtherActor);
     if (!Char) return;
 
+    if (InCharacters.Contains(Char)) return;
+
+
     ATFDPlayerController* PC = Cast<ATFDPlayerController>(Char->GetController());
     if (!PC) return;
 
@@ -196,13 +200,7 @@ void AJailCell::OnOpenJailCellBoxOverlapBegin(UPrimitiveComponent* OverlappedCom
     UAbilitySystemComponent* ASC = Char->GetAbilitySystemComponent();
     if (!ASC) return;
 
-    if (ASC->HasMatchingGameplayTag(TAG_Team_Cop) || ASC->HasMatchingGameplayTag(TAG_Character_State_Arrested)) return;
-
-    if (PC->IsLocalController())
-    {
-        PC->HandleShowReleaseWidget();
-    }
-            
+    if (ASC->HasMatchingGameplayTag(TAG_Team_Cop) || ASC->HasMatchingGameplayTag(TAG_GameplayCue_Character_Arrested)) return;
 
     FGameplayEffectContextHandle Context = ASC->MakeEffectContext();
     Context.AddSourceObject(this);
@@ -214,6 +212,11 @@ void AJailCell::OnOpenJailCellBoxOverlapBegin(UPrimitiveComponent* OverlappedCom
     {
         ASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
         UE_LOG(LogTemp, Log, TEXT("%s: Release Ability Effect applied"), *Char->GetName());
+
+        if (PC->IsLocalController())
+        {
+            PC->HandleShowReleaseWidget();
+        }
     }
 }
 

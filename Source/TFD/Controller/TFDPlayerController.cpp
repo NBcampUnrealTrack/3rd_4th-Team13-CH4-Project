@@ -25,6 +25,7 @@
 #include "UI/InGame/ResultWidget.h"
 #include "UI/InGame/MiniMapWidget.h"
 #include "UI/InGame/ReleaseWidget.h"
+#include "UI/InGame/UW_SkillSlot.h"
 
 #include "Object/JailCell.h"
 
@@ -215,7 +216,17 @@ void ATFDPlayerController::AcknowledgePossession(APawn* InPawn)
 
 		for (auto& Action : CB->CharacterData->Actions)
 		{
-			EnhancedInputComponent->BindAction(Action.InputAction, ETriggerEvent::Started, this, &ATFDPlayerController::JobAbility, Action.Tag);
+
+
+				// Pressed 이벤트
+			EnhancedInputComponent->BindAction(
+				Action.InputAction,
+				Action.TriggerEvent,
+				this,
+				&ATFDPlayerController::JobAbility,
+				Action.Tag
+			);
+
 		}
 	}
 }
@@ -392,7 +403,9 @@ void ATFDPlayerController::EnterLobby()
 			if(ATFDPlayerState* State = Cast<ATFDPlayerState>(PS))
 			{
 				//플레이어의 팀 태그 초기화
-				State->SetTeamTag(FGameplayTag::EmptyTag);
+				//State->SetTeamTag(FGameplayTag::EmptyTag);
+				State->SetActualTeam(FGameplayTag::EmptyTag);
+				State->SetPreferredTeam(FGameplayTag::EmptyTag);
 			}
 		}
 
@@ -610,6 +623,15 @@ void ATFDPlayerController::HandleMatchInProgress()
 					UISub->AddWidgetToLayer(EUILayer::GameLayer, MiniMapWidgetClass)
 				);
 				UISub->MiniMapWidget->SetOwnerPawn(GetPawn());
+			}
+		}
+		if (SkillSlotClass)
+		{
+			if (!UISub->SkillSlotWidget)
+			{
+				UISub->SkillSlotWidget = Cast<UUW_SkillSlot>(
+					UISub->AddWidgetToLayer(EUILayer::GameLayer, SkillSlotClass)
+				);
 			}
 		}
 	}

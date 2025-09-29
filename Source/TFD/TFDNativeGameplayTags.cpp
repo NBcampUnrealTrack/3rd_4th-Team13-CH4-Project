@@ -15,14 +15,17 @@ UE_DEFINE_GAMEPLAY_TAG(TAG_Character_State_Idle, "Character.State.Idle");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Character_State_Stun, "Character.State.Stun");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Character_State_Detecting, "Character.State.Detecting");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Character_State_Release, "Character.State.Release");
-
+UE_DEFINE_GAMEPLAY_TAG(TAG_Character_State_StopMovement, "Character.State.StopMovement");
+UE_DEFINE_GAMEPLAY_TAG(TAG_Character_State_RestartRandomMove, "Character.State.RestartRandomMove");
 //3.캐릭터 능력 
 UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Cop_Handcuff, "Ability.Cop.Handcuff");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Thief_Steal, "Ability.Thief.Steal");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Thief_Release, "Ability.Thief.Release");
+UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Thief_CancelRelease, "Ability.Thief.CancelRelease");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Thief_Invisibility, "Ability.Thief.Invisibility");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Thief_Teleport, "Ability.Thief.Teleport");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Neutral_RandomMove, "Ability.Neutral.RandomMove");
+UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_StopMovement, "Ability.StopMovement");
 
 
 UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_FireProjectile,"Ability.FireProjectile"); //도둑-훔치기
