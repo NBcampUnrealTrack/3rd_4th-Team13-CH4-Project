@@ -51,7 +51,7 @@ UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SpawnPoint_Period, "Object.SpawnPoint.Period")
 //5.게임플레이큐 - 이펙트
 UE_DEFINE_GAMEPLAY_TAG(TAG_GameplayCue_Character_Arrested, "GameplayCue.Character.Arrested");
 UE_DEFINE_GAMEPLAY_TAG(TAG_GameplayCue_Character_HandCuff, "GameplayCue.Character.HandCuff");
-
+UE_DEFINE_GAMEPLAY_TAG(TAG_GameplayCue_Character_Demerit, "GameplayCue.Character.Demerit");
 UE_DEFINE_GAMEPLAY_TAG(TAG_GameplayCue_Hiding, "GameplayCue.Hiding");
 
 //GameplayEvent
