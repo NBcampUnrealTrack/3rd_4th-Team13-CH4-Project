@@ -1,9 +1,9 @@
+#include "MatchStateWidget.h"
 #include "GameState/TFDGameState.h"
 #include "GameInstance/TFDGameInstance.h"
 #include "NativeGameplayTags.h"
-#include "MatchStateWidget.h"
-
 #include "Components/PanelWidget.h"
+#include "Components/TextBlock.h"
 #include "Engine/AssetManager.h"
 
 void UMatchStateWidget::NativeConstruct()
@@ -46,6 +46,9 @@ void UMatchStateWidget::UpdateThiefScore(int32 NewScore)
 {
 	int32 TotalScoreGoal = CachedGameState->GetRuleData()->ThiefScoreForWin;
 	ProgressBar_Gold->SetPercent(static_cast<float>(NewScore) / TotalScoreGoal);
+	
+	GoldText->SetText(FText::FromString(
+		FString::Printf(TEXT("%d / %d"), NewScore, TotalScoreGoal))); 
 }
 
 void UMatchStateWidget::UpdateTeamIconAsync()

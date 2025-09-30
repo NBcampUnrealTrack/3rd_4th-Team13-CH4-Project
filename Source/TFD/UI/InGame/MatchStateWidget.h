@@ -29,6 +29,8 @@ public:
 
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
 	TObjectPtr<UProgressBar> ProgressBar_Gold;
+	UPROPERTY(EditAnywhere, meta = (BindWidget))
+	TObjectPtr<UTextBlock> GoldText;
 
 	UPROPERTY(EditAnywhere, meta=(BindWidget))
 	UHorizontalBox* HBox_Jail;
@@ -50,5 +52,5 @@ public:
 	void CollectJailImages();
 
 private:
-	ATFDGameState* CachedGameState = nullptr;
+	class ATFDGameState* CachedGameState = nullptr;
 };
