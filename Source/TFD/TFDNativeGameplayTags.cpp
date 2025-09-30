@@ -40,6 +40,12 @@ UE_DEFINE_GAMEPLAY_TAG(TAG_Object_Door, "Object.Door"); //문
 UE_DEFINE_GAMEPLAY_TAG(TAG_Object_Money, "Object.Money"); //돈
 UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SpawnArea, "Object.SpawnArea"); //스폰
 UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SlowItem, "Object.SlowItem"); //스폰
+UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SlowItem_PickupItem, "Object.SlowItem.PickupItem");		// 스킬-겸용-줍는 아이템
+UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SlowItem_ThrowableItem, "Object.SlowItem.ThrowableItem");	// 스킬-겸용-던지는 아이템
+UE_DEFINE_GAMEPLAY_TAG(TAG_Object_Thief_PickupItem, "Object.Thief.PickupItem");			//스킬-도둑용-줍는 아이템 
+UE_DEFINE_GAMEPLAY_TAG(TAG_Object_Thief_ThrowableItem, "Object.Thief.ThrowableItem");	//스킬-도둑용-던지는 아이템
+UE_DEFINE_GAMEPLAY_TAG(TAG_Object_Cop_PickupItem, "Object.Cop.PickupItem");				//스킬-경찰용-줍는 아이템 
+UE_DEFINE_GAMEPLAY_TAG(TAG_Object_Cop_ThrowableItem, "Object.Cop.ThrowableItem");		//스킬-경찰용-던지는 아이템
 UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SKillStockItem_00, "Object.SkillStockItem_00"); //스폰
 UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SpawnPoint, "Object.SpawnPoint"); //스폰포인트
 UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SpawnPoint_Cop, "Object.SpawnPoint.Cop"); //스폰포인트
