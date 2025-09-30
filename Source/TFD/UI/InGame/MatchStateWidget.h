@@ -3,6 +3,7 @@
 #include "Components/Image.h"
 #include "Components/ProgressBar.h"
 #include "Components/HorizontalBox.h"
+#include "Components/TextBlock.h"
 #include "Blueprint/UserWidget.h"
 #include "MatchStateWidget.generated.h"
 
