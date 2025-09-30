@@ -9,6 +9,7 @@
 #include "TFDBGMSubsystem.generated.h"
 
 
+
 /**
  * 
  */
@@ -20,10 +21,10 @@ class TFD_API UTFDBGMSubsystem : public UGameInstanceSubsystem
 public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
-
-	/** ============ UI Sound ============ */
-	UFUNCTION(BlueprintCallable, Category = "Audio")
-	void PlayUISound(USoundBase* Sound);
+	//
+	// /** ============ UI Sound ============ */
+	// UFUNCTION(BlueprintCallable, Category = "Audio")
+	// void PlayUISound(USoundBase* Sound);
 
 
 	void OnLevelChanged(const FName& NewLevelName);

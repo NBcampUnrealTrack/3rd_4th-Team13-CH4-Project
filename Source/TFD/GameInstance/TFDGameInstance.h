@@ -72,6 +72,8 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Audio|Volume")
 	float SFXVolume = 1.f;
 
-
+	
+	UPROPERTY()
+	TArray<UAudioComponent*> ActiveUISounds;
 	
 };

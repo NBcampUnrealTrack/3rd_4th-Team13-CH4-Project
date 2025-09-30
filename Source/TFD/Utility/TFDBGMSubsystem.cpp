@@ -15,8 +15,6 @@ void UTFDBGMSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
 
-	// BGMManagerActor = FindOrSpawnBGMManager();
-
 	EnsureBGMManager();
 
 	// 첫 맵도 강제 처리
@@ -27,18 +25,6 @@ void UTFDBGMSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	}
 }
 
-
-void UTFDBGMSubsystem::PlayUISound(USoundBase* Sound)
-{
-	UWorld* World = GetWorld();
-	if (!IsValid(World))
-		return;
-
-	if (Sound)
-	{
-		UGameplayStatics::PlaySound2D(World, Sound);
-	}
-}
 
 void UTFDBGMSubsystem::OnLevelChanged(const FName& NewLevelName)
 {
@@ -72,6 +58,7 @@ void UTFDBGMSubsystem::OnLevelChanged(const FName& NewLevelName)
 			}
 		}
 
+
 		if (BGMManagerActor)
 			BGMManagerActor->StopBGM();
 	}, 0.2f, false); // 0.2초 딜레이
@@ -99,30 +86,48 @@ ATFDBGMManager* UTFDBGMSubsystem::FindOrSpawnBGMManager()
 
 void UTFDBGMSubsystem::EnsureBGMManager()
 {
+	if (BGMManagerActor && BGMManagerActor->IsValidLowLevel())
+		return; // 이미 존재하면 그대로 사용
+
 	UWorld* World = GetWorld();
-	if (!World) return;
+	if (!World)
+		return;
 
-	// 기존 액터가 다른 월드에 속해있거나 nullptr이면 새로 스폰
-	if (!BGMManagerActor || BGMManagerActor->GetWorld() != World)
-	{
-		if (BGMManagerActor)
-		{
-			BGMManagerActor->Destroy();
-			BGMManagerActor = nullptr;
-		}
+	FActorSpawnParameters Params;
+	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-		FActorSpawnParameters Params;
-		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	BGMManagerActor = World->SpawnActor<ATFDBGMManager>(
+		ATFDBGMManager::StaticClass(),
+		FVector::ZeroVector,
+		FRotator::ZeroRotator,
+		Params
+	);
 
-		BGMManagerActor = World->SpawnActor<ATFDBGMManager>(
-			ATFDBGMManager::StaticClass(),
-			FVector::ZeroVector,
-			FRotator::ZeroRotator,
-			Params
-		);
+	UE_LOG(LogTemp, Warning, TEXT("BGMManagerActor spawned"));
 
-		UE_LOG(LogTemp, Warning, TEXT("BGMManagerActor spawned for new level"));
-	}
-
-
+	// UWorld* World = GetWorld();
+	// if (!World)
+	// 	return;
+	//
+	// // 기존 액터가 다른 월드에 속해있거나 nullptr이면 새로 스폰
+	// if (!BGMManagerActor || BGMManagerActor->GetWorld() != World)
+	// {
+	// 	if (BGMManagerActor)
+	// 	{
+	// 		BGMManagerActor->Destroy();
+	// 		BGMManagerActor = nullptr;
+	// 	}
+	//
+	// 	FActorSpawnParameters Params;
+	// 	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	//
+	// 	BGMManagerActor = World->SpawnActor<ATFDBGMManager>(
+	// 		ATFDBGMManager::StaticClass(),
+	// 		FVector::ZeroVector,
+	// 		FRotator::ZeroRotator,
+	// 		Params
+	// 	);
+	//
+	// 	UE_LOG(LogTemp, Warning, TEXT("BGMManagerActor spawned for new level"));
+	// }
 }
