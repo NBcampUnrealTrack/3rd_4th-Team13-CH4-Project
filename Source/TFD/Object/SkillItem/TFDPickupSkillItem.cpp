@@ -6,6 +6,7 @@
 #include "Object/SkillItem/Subsystem/TFDSkillEventSubsystem.h" // 서브시스템 헤더 추가
 #include "Controller/TFDAIController.h"
 #include "Engine/World.h" // GetWorld() 사용을 위해 추가
+#include "Character/TFDCharacterBase.h"
 
 ATFDPickupSkillItem::ATFDPickupSkillItem()
 {
@@ -108,16 +109,35 @@ void ATFDPickupSkillItem::OnOverlapSkill(
 	bool bFromSweep,
 	const FHitResult& SweepResult)
 {
-	// 서버에서만 처리
+	//================================================================
+	// 유효성 검사
+	//================================================================
 	if (!HasAuthority())
-	{
+	{// 서버에서만 처리
 		UE_LOG(LogTemp, Log, TEXT("[ATFDPickupSkillItem][OnOverlapSkill] No authority, ignoring overlap on client. Actor: %s"), OtherActor ? *OtherActor->GetName() : TEXT("NULL"));
 		return;
 	}
 
-	// 오버랩이 발생했지만 이미 아이템을 획득하거나, 이미 파괴된 상태라면 처리하지 않음
+	ATFDCharacterBase* Player = Cast<ATFDCharacterBase>(OtherActor);
+	if (!Player)
+	{// 플레이어 캐릭터가 아닐 때
+		UE_LOG(LogTemp, Error, TEXT("[ATFDBaseObject][OnOverlapBegin] OtherActor is not a valid ATFDCharacterBase, exiting"));
+		return;
+	}
+	UAbilitySystemComponent* ASC = Player->GetAbilitySystemComponent();
+	if (!ASC)
+	{// AbilitySystemComponent가 없을 때
+		UE_LOG(LogTemp, Error, TEXT("[ATFDBaseObject][OnOverlapBegin] ASC is nullptr, exiting"));
+		return;
+	}
+	if (!HasAllowedTeamTag(ASC))
+	{// 팀 태그가 허용되지 않은 경우
+		UE_LOG(LogTemp, Error, TEXT("[ATFDBaseObject][OnOverlapBegin] Player has disallowed team tag, exiting"));
+		return;
+	}
+
 	if (bIsPickedUp || bIsDestroyed || bIsProcessingPickup)
-	{
+	{// 오버랩이 발생했지만 이미 아이템을 획득하거나, 이미 파괴된 상태라면 처리하지 않음
 		UE_LOG(LogTemp, Log, TEXT("[ATFDPickupSkillItem][OnOverlapSkill] Item already picked up, destroyed, or being processed, ignoring overlap. Flags: PickedUp=%d, Destroyed=%d, Processing=%d"),
 			bIsPickedUp, bIsDestroyed, bIsProcessingPickup);
 		return;
@@ -126,9 +146,11 @@ void ATFDPickupSkillItem::OnOverlapSkill(
 	UE_LOG(LogTemp, Log, TEXT("[ATFDPickupSkillItem][OnOverlapBegin] Overlap!!! Actor: %s, Setting bIsProcessingPickup=true, Authority: %d"),
 		OtherActor ? *OtherActor->GetName() : TEXT("NULL"), HasAuthority());
 
-	// 다른 액터가 아이템과 오버랩 시 아이템을 주운 것으로 간주
+	//================================================================
+	// 아이템 획득 처리
+	//================================================================	
 	if (OtherActor && OtherActor != this && OtherComp)
-	{
+	{// 다른 액터가 아이템과 오버랩 시 아이템을 주운 것으로 간주
 		APawn* Pawn = Cast<APawn>(OtherActor);
 		if (Pawn)
 		{

@@ -15,7 +15,8 @@ ATFDCharacterBase::ATFDCharacterBase()
 	// ASC 생성
 	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComp"));
 	AbilitySystemComponent->SetIsReplicated(true);
-	//AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed); // or Full
+	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed); // or Full
+
 	// AttributeSet 생성
 	AttributeSet = CreateDefaultSubobject<UTFDAttributeSet>(TEXT("AttributeSet"));
 
@@ -221,9 +222,12 @@ void ATFDCharacterBase::SetDAPlayerStat()
 
 void ATFDCharacterBase::OnSpeedAttributeChanged(const FOnAttributeChangeData& Data)
 {
+	UE_LOG(LogTemp, Warning, TEXT("[ATFDCharacterBase][Speed Changed] Old: %f → New: %f (Character: %s)"), Data.OldValue, Data.NewValue, *GetName());
+
 	if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
 	{
 		MoveComp->MaxWalkSpeed = Data.NewValue;
+		UE_LOG(LogTemp, Warning, TEXT("[ATFDCharacterBase][Speed Changed] MaxWalkSpeed updated to: %f"), MoveComp->MaxWalkSpeed);
 	}
 }
 
