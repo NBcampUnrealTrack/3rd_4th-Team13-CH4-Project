@@ -4,12 +4,15 @@
 #include "Components/Button.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Controller/TFDPlayerController_Title.h"
+#include "GameInstance/TFDGameInstance.h"
 
 void UUW_Title::OnCreateServerClicked()
 {
 	if (ATFDPlayerController_Title* PC = GetOwningPlayer<ATFDPlayerController_Title>())
 	{
 		PC->CreateServer();
+		UTFDGameInstance* TFDGI = Cast<UTFDGameInstance>(GetGameInstance());
+		TFDGI->PlayUISound(EUISoundType::Click_00);
 	}
 }
 

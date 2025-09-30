@@ -5,6 +5,7 @@
 #include "Components/EditableTextBox.h"
 #include "Kismet/GameplayStatics.h"
 #include "Controller/TFDPlayerController_Title.h"
+#include "GameInstance/TFDGameInstance.h"
 
 void UUW_EnterServerIP::OnConnectClicked()
 {
@@ -20,6 +21,10 @@ void UUW_EnterServerIP::OnConnectClicked()
 	if (ATFDPlayerController_Title* PC = GetOwningPlayer<ATFDPlayerController_Title>())
 	{
 		PC->JoinServer(EnteredIP);
+
+		UTFDGameInstance* TFDGI = Cast<UTFDGameInstance>(GetGameInstance());
+		TFDGI->PlayUISound(EUISoundType::Click_00);
+		
 	}
 }
 
