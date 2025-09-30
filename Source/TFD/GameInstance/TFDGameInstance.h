@@ -4,8 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
+#include "UI/UIResourceAsset.h"
 #include "TFDGameInstance.generated.h"
-
 
 USTRUCT(BlueprintType)
 struct FLevelBGMData
@@ -20,7 +20,7 @@ struct FLevelBGMData
 };
 
 /**
- * 
+ *
  */
 UCLASS()
 class TFD_API UTFDGameInstance : public UGameInstance
@@ -37,6 +37,9 @@ public:
 
 	void OnPostLoadMap(UWorld* World);
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Audio")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
 	TArray<FLevelBGMData> MapBGMs;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UIResource")
+	TSoftObjectPtr<UUIResourceAsset> UIResourceAsset;
 };
