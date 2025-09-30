@@ -131,6 +131,10 @@ void ATFDPlayerController::SetupInputComponent()
 		EnhancedInputComponent->BindAction(Skill1Action, ETriggerEvent::Started, this, &ATFDPlayerController::OnSkillInput1);
 		EnhancedInputComponent->BindAction(Skill2Action, ETriggerEvent::Started, this, &ATFDPlayerController::OnSkillInput2);
 		EnhancedInputComponent->BindAction(Skill3Action, ETriggerEvent::Started, this, &ATFDPlayerController::OnSkillInput3);
+
+		// Sound Settings UI 토글 바인딩
+		EnhancedInputComponent->BindAction(ToggleSoundUIAction, ETriggerEvent::Started, this, &ATFDPlayerController::ToggleSoundSettingsUI);
+
 	}
 }
 
@@ -368,6 +372,28 @@ void ATFDPlayerController::JobAbility(const FInputActionValue& Value, FGameplayT
 			AbilityTags.AddTag(InputTag);
 			AbilitySystemComponent->TryActivateAbilitiesByTag(AbilityTags);
 		}
+	}
+}
+
+// Sound Settings UI 토글 함수
+void ATFDPlayerController::ToggleSoundSettingsUI()
+{
+	if (!SoundSettingsWidgetInstance && SoundSettingsWidgetClass)
+	{
+		SoundSettingsWidgetInstance = CreateWidget<UUW_SoundSettings>(this, SoundSettingsWidgetClass);
+		if (SoundSettingsWidgetInstance)
+		{
+			SoundSettingsWidgetInstance->AddToViewport();
+			SetInputMode(FInputModeUIOnly());
+			bShowMouseCursor = true;
+		}
+	}
+	else if (SoundSettingsWidgetInstance)
+	{
+		SoundSettingsWidgetInstance->RemoveFromParent();
+		SoundSettingsWidgetInstance = nullptr;
+		SetInputMode(FInputModeGameOnly());
+		bShowMouseCursor = false;
 	}
 }
 

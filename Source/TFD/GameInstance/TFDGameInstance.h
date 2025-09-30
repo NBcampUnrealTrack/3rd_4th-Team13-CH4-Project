@@ -54,6 +54,16 @@ public:
 	const TArray<FLevelBGMData> GetMapBGMs();
 
 	void OnPostLoadMap(UWorld* World);
+
+	UFUNCTION(BlueprintCallable, Category = "Audio|Volume")
+	void SetMasterVolume(float InVolume);
+
+	UFUNCTION(BlueprintCallable, Category = "Audio|Volume")
+	void SetBGMVolume(float InVolume);
+
+	UFUNCTION(BlueprintCallable, Category = "Audio|Volume")
+	void SetSFXVolume(float InVolume);
+
 public:
 	UPROPERTY(EditAnywhere)
 	TMap<EUISoundType, USoundBase*> UISoundsMap;
