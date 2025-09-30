@@ -163,10 +163,20 @@ void ATFDGameState::RemoveAllowedItem(ATFDBaseObject* Object)
 	if (ItemTag.HasTag(TAG_Team_Cop))
 	{
 		PoliceMapItemArray.RemoveSingleSwap(Object);
+
+		if (HasAuthority())
+		{
+			OnPoliceItemArrayChanged.Broadcast(PoliceMapItemArray);
+		}
 	}
 	else if (ItemTag.HasTag(TAG_Team_Thief))
 	{
 		ThiefMapItemArray.RemoveSingleSwap(Object);
+
+		if (HasAuthority()) 
+		{
+			OnThiefItemArrayChanged.Broadcast(ThiefMapItemArray);
+		}
 	}
 }
 
