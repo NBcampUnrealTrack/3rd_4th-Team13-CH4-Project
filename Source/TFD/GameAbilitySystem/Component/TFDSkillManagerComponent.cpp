@@ -6,6 +6,7 @@
 #include "GameFramework/Pawn.h"
 #include "AbilitySystemInterface.h"
 #include "Net/UnrealNetwork.h"
+#include "AbilitySystemBlueprintLibrary.h"
 
 #include "Object/SkillItem/Subsystem/TFDSkillEventSubsystem.h" // 서브시스템 헤더 추가
 #include "Controller/TFDAIController.h"
@@ -248,6 +249,11 @@ void UTFDSkillManagerComponent::AddSkill(TSubclassOf<UGameplayAbility> SkillClas
 		NewSlot.AbilityHandle = NewHandle;
 		NewSlot.SkillTag = SkillTag;
 		NewSlot.UsageCount = InitialUsageCount;
+
+		if (SkillTagToIconMap.Contains(SkillTag))
+		{
+			NewSlot.SkillIcon = SkillTagToIconMap[SkillTag];
+		}
 
 		//=============================================================================
 		// 빈 슬롯 찾기

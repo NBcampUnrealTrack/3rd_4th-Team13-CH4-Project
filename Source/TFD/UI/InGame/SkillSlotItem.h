@@ -1,0 +1,44 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Blueprint/UserWidget.h"
+#include "GameAbilitySystem/Component/TFDSkillManagerComponent.h"
+#include "SkillSlotItem.generated.h"
+
+class UImage;
+class UTextBlock;
+
+UCLASS()
+class TFD_API USkillSlotItem : public UUserWidget
+{
+	GENERATED_BODY()
+	
+public:
+	void UpdateSlot(const FTFDSkillSlot& InSlot);
+
+	/** 현재 슬롯 데이터 반환 */
+	const FTFDSkillSlot& GetSlotData() const { return CurrentSlot; }
+
+	void StartCooldown(float Duration, float Remaining);
+	void StopCooldown();
+
+protected:
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	TObjectPtr<UImage> SkillIcon;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	TObjectPtr<UTextBlock> UsageCountText;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	TObjectPtr<UTextBlock> CooldownText;
+
+private:
+	FTFDSkillSlot CurrentSlot;
+
+	float CurrentRemainingTime = 0.f;
+	FTimerHandle CooldownTimerHandle;
+
+	void UpdateCooldownUI();
+};

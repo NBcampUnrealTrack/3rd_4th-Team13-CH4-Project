@@ -32,9 +32,14 @@ struct FTFDSkillSlot
 	// 스킬 사용 가능 횟수
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	int32 UsageCount;
+	
+	// 아이콘
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TObjectPtr<UTexture2D> SkillIcon;   
 
 	FTFDSkillSlot()
 		: UsageCount(1)
+		, SkillIcon(nullptr)
 	{
 	}
 };
@@ -165,6 +170,10 @@ protected:
 	//==================================================
 	UPROPERTY(EditDefaultsOnly, Category = "TFD|SkillManager", meta = (TitleProperty = "Key"))
 	TMap<FGameplayTag, TSubclassOf<UGameplayAbility>> SkillTagToClassMap;
+
+	//추가: 태그 → 아이콘 매핑
+	UPROPERTY(EditDefaultsOnly, Category = "TFD|SkillManager")
+	TMap<FGameplayTag, TObjectPtr<UTexture2D>> SkillTagToIconMap;
 
 	//==============================================
 	// 서브시스템 구독 상태 추적

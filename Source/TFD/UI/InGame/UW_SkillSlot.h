@@ -7,47 +7,48 @@
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "GameAbilitySystem/Component/TFDSkillManagerComponent.h"
-#include "GameplayTagContainer.h"
-#include "Engine/TimerHandle.h"
 #include "UW_SkillSlot.generated.h"
 
-class UTextBlock;
+class USkillSlotItem;
+class UHorizontalBox;
+class UAbilitySystemComponent;
 
 UCLASS()
 class TFD_API UUW_SkillSlot : public UUserWidget
 {
-	GENERATED_BODY()
-	
+    GENERATED_BODY()
+
 public:
-	//// 특정 슬롯 인덱스에 대한 업데이트를 처리하는 함수
-	//UFUNCTION(BlueprintCallable, Category = "SkillSlot")
-	//void UpdateSkillSlot(int32 SlotIndex, const FTFDSkillSlot& SkillSlot);
-
-	// 스킬 슬롯에 관련된 정보들 (예: 스킬 아이콘, 사용횟수 등)
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	TObjectPtr<UTextBlock> Skillinfo;
-
-	//UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	//TObjectPtr<UTextBlock> UsageCountText;
-
-	//UPROPERTY(meta = (BindWidgetOptional))
-	//class UImage* SkillIcon;
-
-	// 스킬 변경 이벤트를 처리하는 함수 (델리게이트)
-	UFUNCTION()
-	void OnSkillChanged(const TArray<FTFDSkillSlot>& SkillSlots);
+    /** SkillManager에서 전달된 슬롯 데이터 초기화 */
+    UFUNCTION()
+    void OnSkillChanged(const TArray<FTFDSkillSlot>& SkillSlots);
 
 protected:
-	// 위젯이 생성될 때 호출되는 함수
-	virtual void NativeConstruct() override;
-
-	// 스킬 매니저 바인딩을 재시도하는 함수
-	UFUNCTION()
-	void TryBindToSkillManager();
+    virtual void NativeConstruct() override;
+    //UFUNCTION()
+    //void TryBindToSkillManager();
 
 private:
-	FTFDSkillSlot CurrentSkillSlot;
+    /** 슬롯이 들어갈 컨테이너 (HorizontalBox) */
+    UPROPERTY(BlueprintReadOnly, meta = (BindWidget), meta = (AllowPrivateAccess = "true"))
+    TObjectPtr<UHorizontalBox> SlotContainer;
 
-	// 바인딩 재시도용 타이머 핸들
-	FTimerHandle TimerHandle_RetryBinding;
+    /** 슬롯 아이템 위젯 클래스 */
+    UPROPERTY(EditDefaultsOnly, Category = "UI")
+    TSubclassOf<USkillSlotItem> SkillSlotItemClass;
+
+    /** 현재 슬롯 위젯들 */
+    UPROPERTY()
+    TArray<USkillSlotItem*> SlotWidgets;
+
+    /** ASC 캐싱 */
+    UPROPERTY()
+    UAbilitySystemComponent* CachedASC;
+
+    /** 스킬 매니저 바인딩 재시도용 타이머 */
+    FTimerHandle TimerHandle_RetryBinding;
+
+    /** ASC Delegate 처리 */
+    void OnEffectAdded(UAbilitySystemComponent* Target, const FGameplayEffectSpec& Spec, FActiveGameplayEffectHandle Handle);
+    void OnEffectRemoved(const FActiveGameplayEffect& Effect);
 };
