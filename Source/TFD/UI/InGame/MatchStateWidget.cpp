@@ -22,15 +22,31 @@ void UMatchStateWidget::NativeConstruct()
 	CachedGameState->OnThiefArrayChanged.AddDynamic(this, &UMatchStateWidget::UpdateThiefArray);
 
 	// 이미지 어레이 셋업
+	UpdateThiefScore(0);
+	InitCaughtJaiImages();
+	UpdateThiefCountAsync();
 }
 
-void UMatchStateWidget::CollectJailImages()
+void UMatchStateWidget::InitCaughtJaiImages()
 {
+	int32 CaughtThieves = CachedGameState->ThiefPlayerStateArray.Num();
+	const int32 N = HBox_JailBG->GetChildrenCount();
+	for (int32 i = 0; i < N; i++)
+	{
+		ESlateVisibility JailCntVisibility = ESlateVisibility::Hidden;
+		if (i < CaughtThieves)
+		{
+			JailCntVisibility = ESlateVisibility::Visible;
+		}
+		HBox_JailBG->GetChildAt(i)->SetVisibility(JailCntVisibility);
+		HBox_Jail->GetChildAt(i)->SetVisibility(JailCntVisibility);
+	}
+
 	JailCountImageArray.Reset();
 
 	if (!HBox_Jail) return;
 
-	const int32 N = HBox_Jail->GetChildrenCount();
+	//const int32 N = HBox_Jail->GetChildrenCount();
 	JailCountImageArray.Reserve(N);
 
 	for (int32 i = 0; i < N; ++i)
@@ -119,9 +135,10 @@ void UMatchStateWidget::UpdateThiefCountAsync()
 
 	auto* GS = Cast<ATFDGameState>(GetWorld()->GetGameState());
 
-	int32 CaughtThieves = CachedGameState->CaughtThiefPlayerStateArray.Num();\
+	int32 CaughtThieves = CachedGameState->CaughtThiefPlayerStateArray.Num();
+	int32 ThievesNum = CachedGameState->ThiefPlayerStateArray.Num();
 	
-	for (int i = 0; i < JailCountImageArray.Num(); i++)
+	for (int i = 0; i < ThievesNum; i++)
 	{
 		TObjectPtr<UImage> JailImg = JailCountImageArray[i];
 

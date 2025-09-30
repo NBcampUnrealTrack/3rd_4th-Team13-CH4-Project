@@ -13,6 +13,7 @@ class UMatchStateWidget : public UUserWidget
 	GENERATED_BODY()
 
 public:
+	
 	virtual void NativeConstruct() override;
 
 	
@@ -36,6 +37,9 @@ public:
 	UPROPERTY(EditAnywhere, meta=(BindWidget))
 	UHorizontalBox* HBox_Jail;
 
+	UPROPERTY(EditAnywhere, meta=(BindWidget))
+	UHorizontalBox* HBox_JailBG;
+
 	UFUNCTION(BlueprintCallable)
 	void UpdateThiefScore(int32 NewScore);
 
@@ -49,8 +53,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void UpdateTeamIconAsync();
 
-	UFUNCTION(BlueprintCallable)
-	void CollectJailImages();
+	UFUNCTION()
+	void InitCaughtJaiImages();
 
 private:
 	class ATFDGameState* CachedGameState = nullptr;
