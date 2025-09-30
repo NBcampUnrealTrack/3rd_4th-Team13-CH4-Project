@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -53,18 +53,28 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Handcuff|Anim")
 	FName StartSection = NAME_None;
 
+	bool bCatchThief = true;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ability|Effects")
 	TSubclassOf<UGameplayEffect> ArrestedEffect;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ability|Effects")
 	TSubclassOf<UGameplayEffect> HandcuffAnimEffect;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ability|Effects")
+	TSubclassOf<UGameplayEffect> DemeritEffect;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ability|Effects")
+	float DemeritTime = 3.f;
+
 private:
 	//잡힌 대상에게 상태적용
-	void HandcuffToTarget(AActor* TargetActor, const FGameplayAbilityActorInfo* ActorInfo) const;
+	void HandcuffToTarget(AActor* TargetActor, const FGameplayAbilityActorInfo* ActorInfo);
 
 	UFUNCTION()
 	void OnApplyCuffEvent(FGameplayEventData Payload); // ← AnimNotify로 쏘는 GameplayEvent 수신
 	UFUNCTION()
 	void OnEndCuffEvent(FGameplayEventData Payload);
+
+	UFUNCTION()
+	void ApplyDemeritEffect(float Duration);
 };

@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "GameMode/TFDGameMode.h"
@@ -613,12 +613,12 @@ void ATFDGameMode::MovePlayerToRandomSpawnPoint(APlayerController* PlayerControl
 }
 
 
-void ATFDGameMode::OnCatchThief(APawn* Pawn)
+bool ATFDGameMode::OnCatchThief(APawn* Pawn)
 {
 	APlayerState* CatchPlayerState = Pawn->GetPlayerState();
 
 	if (CatchPlayerState == nullptr)
-		return;
+		return false;
 
 	if (ATFDPlayerState* PS = Cast<ATFDPlayerState>(CatchPlayerState))
 	{
@@ -636,6 +636,7 @@ void ATFDGameMode::OnCatchThief(APawn* Pawn)
 	{
 		GameEnd(EGameCompleteType::CatchAllThief);
 	}
+	return true;
 }
 
 void ATFDGameMode::OffCatchThief(APawn* Pawn)

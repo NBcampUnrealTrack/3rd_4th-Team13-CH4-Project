@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
@@ -22,9 +22,15 @@ public:
 	void PlayHitAnim(EHitDirection Direction);
 	void HitAnimEnd();
 
+	void PlayDemeritAnim();
+	void DemeritAnimEnd();
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Animation")
 	UAnimMontage* HitMontage;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimMontage* DemeritMontage;
+
 	static FName GetSectionNameByDirection(EHitDirection Direction);
 	
 protected:
@@ -51,4 +57,7 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Animation")
 	bool bIsHitPlaying = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation")
+	bool bIsDemeritPlaying = false;
 };

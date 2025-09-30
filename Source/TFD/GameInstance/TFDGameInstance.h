@@ -4,8 +4,21 @@
 
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
-#include "UI/UIResourceAsset.h"
 #include "TFDGameInstance.generated.h"
+
+
+UENUM(BlueprintType)
+enum class EUISoundType : uint8
+{
+	Click_00,
+	Click_01,
+	Hover,
+	OpenMenu,
+	CloseMenu,
+	Confirm,
+	Cancel
+};
+
 
 USTRUCT(BlueprintType)
 struct FLevelBGMData
@@ -20,7 +33,7 @@ struct FLevelBGMData
 };
 
 /**
- *
+ * 
  */
 UCLASS()
 class TFD_API UTFDGameInstance : public UGameInstance
@@ -33,13 +46,32 @@ public:
 
 	void HandleLevelChanged(const FName& LevelName);
 
+	UFUNCTION(BlueprintCallable)
+	void PlayUISound(EUISoundType SoundType);
+	
+	const TMap<EUISoundType, USoundBase*>& GetUISounds();
 	const TArray<FLevelBGMData> GetMapBGMs();
 
 	void OnPostLoadMap(UWorld* World);
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
+	UPROPERTY(EditAnywhere)
+	TMap<EUISoundType, USoundBase*> UISoundsMap;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Audio")
 	TArray<FLevelBGMData> MapBGMs;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UIResource")
-	TSoftObjectPtr<UUIResourceAsset> UIResourceAsset;
+	//종합 크기
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Audio|Volume")
+	float MasterVolume = 1.f;
+
+	//브금 크기
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Audio|Volume")
+	float BGMVolume = 1.f;
+
+	//UI 사운드 & 상호작용,이펙트 크기
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Audio|Volume")
+	float SFXVolume = 1.f;
+
+
+	
 };
