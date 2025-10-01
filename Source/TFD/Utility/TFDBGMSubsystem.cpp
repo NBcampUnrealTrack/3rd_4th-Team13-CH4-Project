@@ -16,7 +16,7 @@ void UTFDBGMSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	Super::Initialize(Collection);
 
 	// EnsureBGMManager();
-	EnsureBGMComponent();
+	//EnsureBGMComponent();
 	// 첫 맵도 강제 처리
 	if (UWorld* World = GetWorld())
 	{
@@ -95,7 +95,7 @@ void UTFDBGMSubsystem::Play_BGM_02(USoundBase* NewBGM, float FadeInTime)
 	if (!NewBGM)
 		return;
 
-	EnsureBGMComponent();
+	//EnsureBGMComponent();
 
 	// 같은 곡이면 그대로 재생 && BGMComponent->IsPlaying()
 	if (CurrentPlayingBGM == NewBGM)
@@ -179,7 +179,7 @@ void UTFDBGMSubsystem::StopBGM(float FadeOutTime)
 void UTFDBGMSubsystem::OnLevelChanged(const FName& NewLevelName)
 {
 	// EnsureBGMManager();
-	EnsureBGMComponent();
+	//EnsureBGMComponent();
 
 	UWorld* World = GetWorld();
 
