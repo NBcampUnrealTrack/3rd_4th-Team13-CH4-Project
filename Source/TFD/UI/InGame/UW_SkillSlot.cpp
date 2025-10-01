@@ -23,98 +23,32 @@ void UUW_SkillSlot::NativeConstruct()
 
     SkillManager->OnSkillChanged.AddDynamic(this, &UUW_SkillSlot::OnSkillChanged);
     OnSkillChanged(SkillManager->GetAllSkills());
-
-    CachedASC = PlayerPawn->FindComponentByClass<UAbilitySystemComponent>();
-    if (CachedASC)
-    {
-        CachedASC->OnActiveGameplayEffectAddedDelegateToSelf.AddUObject(
-            this, &UUW_SkillSlot::OnEffectAdded);
-
-        CachedASC->OnAnyGameplayEffectRemovedDelegate().AddUObject(
-            this, &UUW_SkillSlot::OnEffectRemoved);
-    }
 }
 
 void UUW_SkillSlot::OnSkillChanged(const TArray<FTFDSkillSlot>& SkillSlots)
 {
     if (!SlotContainer || !SkillSlotItemClass) return;
 
-    SlotContainer->ClearChildren();
-    SlotWidgets.Empty();
+    if (SkillSlots.IsEmpty()) return;
 
-    for (const FTFDSkillSlot& SlotData : SkillSlots)
+    // 기존 슬롯 재활용 처리
+    for (int32 i = 0; i < SkillSlots.Num(); ++i)
     {
-        USkillSlotItem* NewSlot = CreateWidget<USkillSlotItem>(this, SkillSlotItemClass);
-        if (NewSlot)
+        if (SlotWidgets.IsValidIndex(i) && SlotWidgets[i])
         {
-            NewSlot->UpdateSlot(SlotData);
-            SlotContainer->AddChild(NewSlot);
-            SlotWidgets.Add(NewSlot);
+            // 기존 위젯 업데이트
+            SlotWidgets[i]->UpdateSlot(SkillSlots[i]);
         }
-    }
-}
-
-void UUW_SkillSlot::OnEffectAdded(UAbilitySystemComponent* Target, const FGameplayEffectSpec& Spec, FActiveGameplayEffectHandle Handle)
-{
-    if (!CachedASC) return;
-
-    for (USkillSlotItem* Item : SlotWidgets)
-    {
-        if (!Item) continue;
-
-        const FTFDSkillSlot& SlotData = Item->GetSlotData();
-        FGameplayAbilitySpec* SpecFound = CachedASC->FindAbilitySpecFromHandle(SlotData.AbilityHandle);
-        if (!SpecFound || !SpecFound->Ability) continue;
-
-        // AbilityHandle 매칭
-        if (SpecFound->Handle != SlotData.AbilityHandle)
-            continue;
-
-        const FGameplayTagContainer* CooldownTagsPtr = SpecFound->Ability->GetCooldownTags();
-        if (!CooldownTagsPtr || CooldownTagsPtr->Num() == 0) continue;
-
-        FGameplayTagContainer EffectTags;
-        Spec.GetAllGrantedTags(EffectTags);
-
-        if (EffectTags.HasAny(*CooldownTagsPtr))
+        else
         {
-            if (const FActiveGameplayEffect* ActiveEffect = CachedASC->GetActiveGameplayEffect(Handle))
+            // 새로운 슬롯 생성
+            USkillSlotItem* NewSlot = CreateWidget<USkillSlotItem>(this, SkillSlotItemClass);
+            if (NewSlot)
             {
-                float Duration = ActiveEffect->GetDuration();
-                float Remaining = ActiveEffect->GetTimeRemaining(GetWorld()->GetTimeSeconds());
-
-                if (Duration > 0.f && Remaining > 0.f)
-                {
-                    Item->StartCooldown(Duration, Remaining);
-                }
+                NewSlot->UpdateSlot(SkillSlots[i]);
+                SlotContainer->AddChild(NewSlot);
+                SlotWidgets.Add(NewSlot);
             }
-        }
-    }
-}
-
-void UUW_SkillSlot::OnEffectRemoved(const FActiveGameplayEffect& Effect)
-{
-    if (!CachedASC) return;
-
-    // 제거된 이펙트의 태그 가져오기
-    FGameplayTagContainer RemovedTags;
-    Effect.Spec.GetAllGrantedTags(RemovedTags);
-
-    for (USkillSlotItem* Item : SlotWidgets)
-    {
-        if (!Item) continue;
-
-        const FTFDSkillSlot& SlotData = Item->GetSlotData();
-        FGameplayAbilitySpec* SpecFound = CachedASC->FindAbilitySpecFromHandle(SlotData.AbilityHandle);
-        if (!SpecFound || !SpecFound->Ability) continue;
-
-        const FGameplayTagContainer* CooldownTagsPtr = SpecFound->Ability->GetCooldownTags();
-        if (!CooldownTagsPtr || CooldownTagsPtr->Num() == 0) continue;
-
-        //실제로 자기 쿨다운 태그가 제거된 경우만 StopCooldown 실행
-        if (RemovedTags.HasAny(*CooldownTagsPtr))
-        {
-            Item->StopCooldown();
         }
     }
 }

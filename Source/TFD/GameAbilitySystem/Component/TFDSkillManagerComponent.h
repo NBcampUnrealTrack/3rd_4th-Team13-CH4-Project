@@ -37,9 +37,17 @@ struct FTFDSkillSlot
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TObjectPtr<UTexture2D> SkillIcon;   
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	float CooldownDuration;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	float CooldownStartTime;
+
 	FTFDSkillSlot()
 		: UsageCount(1)
 		, SkillIcon(nullptr)
+		, CooldownDuration(0.f)
+		, CooldownStartTime(0.f)
 	{
 	}
 };
@@ -67,6 +75,17 @@ protected:
 
 	// 리플리케이션 등록용 함수
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	//ASC 델리게이트 핸들
+	FDelegateHandle EffectAddedHandle;
+	FDelegateHandle EffectRemovedHandle;
+
+	//UI연동 : 스킬 어빌리티의 시작과 종료관련
+	void HandleEffectAdded(UAbilitySystemComponent* InASC, const FGameplayEffectSpec& Spec, FActiveGameplayEffectHandle Handle);
+	void HandleEffectRemoved(const FActiveGameplayEffect& ActiveEffect);
+
+	//UI연동 : 쿨다운 검사 전용 함수
+	void ApplyExistingCooldownToSlot(int32 SlotIndex, TSubclassOf<UGameplayAbility> SkillClass);
 
 public:
 	// 스킬 슬롯 초기화 로직 추가

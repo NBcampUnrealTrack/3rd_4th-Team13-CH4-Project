@@ -10,94 +10,69 @@
 
 void USkillSlotItem::UpdateSlot(const FTFDSkillSlot& InSlot)
 {
-	CurrentSlot = InSlot;
-    UE_LOG(LogTemp, Error, TEXT("UpdateSlot!!!"));
-	// 아이콘
-	if (SkillIcon)
-	{
-		if (CurrentSlot.SkillIcon)
-			SkillIcon->SetBrushFromTexture(CurrentSlot.SkillIcon);
-		else
-			SkillIcon->SetBrushFromTexture(nullptr);
-	}
-
-	// 사용횟수
-	if (UsageCountText)
-	{
-		if (CurrentSlot.SkillTag.IsValid())
-			UsageCountText->SetText(FText::AsNumber(CurrentSlot.UsageCount));
-		else
-			UsageCountText->SetText(FText::FromString(TEXT("")));
-	}
-
-    //쿨다운
-    if (CooldownText)
+    CurrentSlot = InSlot;
+    // 아이콘
+    if (SkillIcon)
     {
-        CooldownText->SetText(FText::FromString(TEXT("")));
-    }
-}
-
-void USkillSlotItem::StartCooldown(float Duration, float Remaining)
-{
-    UE_LOG(LogTemp, Error, TEXT("StartCooldown"));
-    if (Remaining <= 0.f || Duration <= 0.f)
-        return;
-
-    CurrentRemainingTime = Remaining;
-    UE_LOG(LogTemp, Error, TEXT("CurrentRemainingTime : %f"), CurrentRemainingTime);
-
-    if (CooldownText)
-    {
-        FText Cooldown = FText::AsNumber(FMath::CeilToInt(CurrentRemainingTime));
-        CooldownText->SetText(Cooldown);
+        if (InSlot.SkillIcon)
+            SkillIcon->SetBrushFromTexture(InSlot.SkillIcon);
+        else
+            SkillIcon->SetBrushFromTexture(nullptr);
     }
 
-    // ✅ 타이머 시작
-    GetWorld()->GetTimerManager().SetTimer(
-        CooldownTimerHandle,
-        this,
-        &USkillSlotItem::UpdateCooldownUI,
-        1.0f,
-        true
-    );
-}
-
-void USkillSlotItem::StopCooldown()
-{
-    UE_LOG(LogTemp, Error, TEXT("StopCooldown"));
-    if (GetWorld())
+    // 사용 횟수
+    if (UsageCountText)
     {
-        GetWorld()->GetTimerManager().ClearTimer(CooldownTimerHandle);
+        if (InSlot.SkillTag.IsValid())
+            UsageCountText->SetText(FText::Format(FText::FromString(TEXT("x{0}")),FText::AsNumber(InSlot.UsageCount)));
+        else
+            UsageCountText->SetText(FText::FromString(TEXT("")));
     }
 
-    CurrentRemainingTime = 0.f;
-
-    if (CooldownText)
+    // 쿨다운
+    if (InSlot.CooldownDuration > 0.f && InSlot.CooldownStartTime > 0.f)
     {
-        CooldownText->SetText(FText::FromString(TEXT("")));
-    }
-}
-
-void USkillSlotItem::UpdateCooldownUI()
-{
-    UE_LOG(LogTemp, Error, TEXT("UpdateCooldownUI"));
-    if (CurrentRemainingTime > 0.f)
-    {
-        CurrentRemainingTime -= 1.f;
-        //UE_LOG(LogTemp, Error, TEXT("CurrentRemainingTime : %s"), *FText::AsNumber(FMath::CeilToInt(CurrentRemainingTime)).ToString());
-
-        if (CooldownText)
+        if (GetWorld()->GetTimerManager().IsTimerActive(CooldownTimerHandle))
         {
-            UE_LOG(LogTemp, Error, TEXT("CurrentRemainingTime : %s"), *FText::AsNumber(FMath::CeilToInt(CurrentRemainingTime)).ToString());
-            FText Cooldown = FText::AsNumber(FMath::CeilToInt(CurrentRemainingTime));
-            CooldownText->SetText(Cooldown);
-
-            //FString StringCooldown = LexToString(FMath::CeilToInt(CurrentRemainingTime));
-            //CooldownText->SetText(FText::FromString(StringCooldown));
+            GetWorld()->GetTimerManager().ClearTimer(CooldownTimerHandle);
         }
+
+        // 1초마다 텍스트 갱신
+        GetWorld()->GetTimerManager().SetTimer(
+            CooldownTimerHandle,
+            this,
+            &USkillSlotItem::UpdateCooldownText,
+            1.0f,
+            true);
+
+        UpdateCooldownText();
     }
     else
     {
-        StopCooldown();
+        if (CooldownText)
+            CooldownText->SetText(FText::GetEmpty());
+
+        if (GetWorld()->GetTimerManager().IsTimerActive(CooldownTimerHandle))
+        {
+            GetWorld()->GetTimerManager().ClearTimer(CooldownTimerHandle);
+        }
+    }
+}
+
+void USkillSlotItem::UpdateCooldownText()
+{
+    if (!CooldownText || CurrentSlot.CooldownDuration <= 0.f || CurrentSlot.CooldownStartTime <= 0.f)
+        return;
+
+    float Remaining = (CurrentSlot.CooldownStartTime + CurrentSlot.CooldownDuration) - GetWorld()->GetTimeSeconds();
+
+    if (Remaining > 0.f)
+    {
+        CooldownText->SetText(FText::AsNumber(FMath::CeilToInt(Remaining)));
+    }
+    else
+    {
+        CooldownText->SetText(FText::GetEmpty());
+        GetWorld()->GetTimerManager().ClearTimer(CooldownTimerHandle);
     }
 }

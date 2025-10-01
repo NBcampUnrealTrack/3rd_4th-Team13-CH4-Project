@@ -63,11 +63,112 @@ void UTFDSkillManagerComponent::SetupASC()
 		bASCSetup = true;
 		SkillSlots.SetNum(MaxSkillSlotCount);
 
+		EffectAddedHandle = ASC->OnActiveGameplayEffectAddedDelegateToSelf.AddUObject(this, &UTFDSkillManagerComponent::HandleEffectAdded);
+		EffectRemovedHandle = ASC->OnAnyGameplayEffectRemovedDelegate().AddUObject(this, &UTFDSkillManagerComponent::HandleEffectRemoved);
+
 		UE_LOG(LogTemp, Log, TEXT("[SkillManagerComponent][InitializeASC] ASC initialized successfully."));
 	}
 	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("[SkillManagerComponent][InitializeASC] ASC is null even though Pawn implements IAbilitySystemInterface."));
+	}
+}
+
+void UTFDSkillManagerComponent::HandleEffectAdded(UAbilitySystemComponent* InASC, const FGameplayEffectSpec& Spec, FActiveGameplayEffectHandle Handle)
+{
+	if (!InASC) return;
+	UE_LOG(LogTemp, Error, TEXT("[SkillManagerComponent][HandleEffectAdded] start"));
+	// 태그 확인
+	FGameplayTagContainer EffectTags;
+	Spec.GetAllGrantedTags(EffectTags);
+
+	// 어떤 슬롯이 해당 쿨다운인지 찾아서 업데이트
+	for (FTFDSkillSlot& Slot : SkillSlots)
+	{
+		if (!Slot.AbilityHandle.IsValid()) continue;
+
+		FGameplayAbilitySpec* AbilitySpec = InASC->FindAbilitySpecFromHandle(Slot.AbilityHandle);
+		if (!AbilitySpec || !AbilitySpec->Ability) continue;
+
+		const FGameplayTagContainer* CooldownTags = AbilitySpec->Ability->GetCooldownTags();
+		if (!CooldownTags || CooldownTags->Num() == 0) continue;
+
+		if (EffectTags.HasAny(*CooldownTags))
+		{
+			// Duration / Remaining 계산
+			const FActiveGameplayEffect* ActiveEffect = InASC->GetActiveGameplayEffect(Handle);
+			if (ActiveEffect)
+			{
+				Slot.CooldownDuration = ActiveEffect->GetDuration();
+				Slot.CooldownStartTime = GetWorld()->GetTimeSeconds();
+			}
+
+			break; // 해당 슬롯 찾았으면 끝
+		}
+	}
+
+	// UI 갱신
+	OnSkillChanged.Broadcast(SkillSlots);
+}
+
+void UTFDSkillManagerComponent::HandleEffectRemoved(const FActiveGameplayEffect& ActiveEffect)
+{
+	UE_LOG(LogTemp, Error, TEXT("[SkillManagerComponent][HandleEffectRemoved] End"));
+
+	// 태그 가져오기
+	FGameplayTagContainer EffectTags;
+	ActiveEffect.Spec.GetAllGrantedTags(EffectTags);
+
+	for (FTFDSkillSlot& Slot : SkillSlots)
+	{
+		if (!Slot.AbilityHandle.IsValid()) continue;
+
+		FGameplayAbilitySpec* Spec = ASC->FindAbilitySpecFromHandle(Slot.AbilityHandle);
+		if (!Spec || !Spec->Ability) continue;
+
+		const FGameplayTagContainer* CooldownTags = Spec->Ability->GetCooldownTags();
+		if (!CooldownTags || CooldownTags->Num() == 0) continue;
+
+		if (EffectTags.HasAny(*CooldownTags))
+		{
+			Slot.CooldownDuration = 0.f;
+			Slot.CooldownStartTime = 0.f;
+			break;
+		}
+	}
+
+	// UI 갱신
+	OnSkillChanged.Broadcast(SkillSlots);
+}
+
+void UTFDSkillManagerComponent::ApplyExistingCooldownToSlot(int32 SlotIndex, TSubclassOf<UGameplayAbility> SkillClass)
+{
+	if (!SkillSlots.IsValidIndex(SlotIndex) || !ASC || !SkillClass) return;
+
+	UGameplayAbility* AbilityCDO = SkillClass->GetDefaultObject<UGameplayAbility>();
+	if (!AbilityCDO) return;
+
+	const FGameplayTagContainer* CooldownTags = AbilityCDO->GetCooldownTags();
+	if (!CooldownTags || CooldownTags->Num() == 0) return;
+
+	// ASC에서 해당 태그와 매칭되는 쿨다운 효과 검색
+	FGameplayEffectQuery Query = FGameplayEffectQuery::MakeQuery_MatchAnyOwningTags(*CooldownTags);
+	TArray<FActiveGameplayEffectHandle> ActiveEffects = ASC->GetActiveEffects(Query);
+
+	for (FActiveGameplayEffectHandle ActiveHandle : ActiveEffects)
+	{
+		const FActiveGameplayEffect* ActiveEffect = ASC->GetActiveGameplayEffect(ActiveHandle);
+		if (!ActiveEffect) continue;
+
+		float Duration = ActiveEffect->GetDuration();
+		float TimeRemaining = ActiveEffect->GetTimeRemaining(GetWorld()->GetTimeSeconds());
+
+		if (Duration > 0.f && TimeRemaining > 0.f)
+		{
+			SkillSlots[SlotIndex].CooldownDuration = Duration;
+			SkillSlots[SlotIndex].CooldownStartTime = GetWorld()->GetTimeSeconds() - (Duration - TimeRemaining);
+			return; // 첫 번째 매칭만 적용
+		}
 	}
 }
 
@@ -265,6 +366,9 @@ void UTFDSkillManagerComponent::AddSkill(TSubclassOf<UGameplayAbility> SkillClas
 			if (!SkillSlots[i].AbilityHandle.IsValid())
 			{
 				SkillSlots[i] = NewSlot;
+
+				ApplyExistingCooldownToSlot(i, SkillClass);
+
 				UE_LOG(LogTemp, Log, TEXT("[SkillManagerComponent][AddSkill] Added skill %s at empty slot %d"),
 					*SkillTag.ToString(), i);
 
@@ -292,6 +396,9 @@ void UTFDSkillManagerComponent::AddSkill(TSubclassOf<UGameplayAbility> SkillClas
 		SkillSlots[SkillSlots.Num() - 1] = NewSlot;
 
 		UE_LOG(LogTemp, Log, TEXT("[SkillManagerComponent][AddSkill] Replaced oldest skill with %s"), *SkillTag.ToString());
+		
+		int32 NewIndex = SkillSlots.Num() - 1;
+		ApplyExistingCooldownToSlot(NewIndex, SkillClass);
 
 		OnSkillChanged.Broadcast(SkillSlots);
 		// 서버가 로컬 플레이어(리슨 서버의 호스트)인 경우 직접 브로드캐스트
@@ -303,6 +410,8 @@ void UTFDSkillManagerComponent::AddSkill(TSubclassOf<UGameplayAbility> SkillClas
 	}
 
 	// 클라이언트에서도 항상 실행할 이펙트나 UI 로직이 있다면 여기서 처리
+
+	
 }
 
 void UTFDSkillManagerComponent::AddSkillByTag(FGameplayTag SkillTag, int32 UsageCount)
