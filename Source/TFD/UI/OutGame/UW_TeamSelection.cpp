@@ -23,8 +23,6 @@ void UUW_TeamSelection::NativeConstruct()
 	if (NicknameTextBox)
 	{
 		NicknameTextBox->OnTextChanged.AddDynamic(this, &UUW_TeamSelection::OnNicknameChanged);
-
-
 	}
 }
 
@@ -32,17 +30,16 @@ void UUW_TeamSelection::OnClickTeamCop()
 {
 	if (ATFDPlayerController* PC = Cast<ATFDPlayerController>(GetOwningPlayer()))
 	{
+		UTFDGameInstance* TFD_GI = Cast<UTFDGameInstance>(GetGameInstance());
+		UTFDBGMSubsystem* TFDBGMSubSyetem = TFD_GI->GetSubsystem<UTFDBGMSubsystem>();
+		if (IsValid(TFDBGMSubSyetem))
+		{
+			TFDBGMSubSyetem->PlayUISound(EUISoundType::Click_00);
+		}
+
 		PC->SendPreferredTeam(TAG_Team_Cop);
 		SelectedTeam = TAG_Team_Cop;
 		UpdateSelectedTeamText(TAG_Team_Cop);
-
-	
-		UTFDGameInstance* TFDGI =  Cast<UTFDGameInstance>(GetGameInstance());
-		UTFDBGMSubsystem* BGMSubSyetem = TFDGI->GetSubsystem<UTFDBGMSubsystem>();
-		if (IsValid(BGMSubSyetem))
-		{
-			BGMSubSyetem->PlayUISound(EUISoundType::Click_00);
-		}
 	}
 }
 
@@ -53,8 +50,6 @@ void UUW_TeamSelection::OnClickTeamThief()
 		PC->SendPreferredTeam(TAG_Team_Thief);
 		SelectedTeam = TAG_Team_Thief;
 		UpdateSelectedTeamText(TAG_Team_Thief);
-	
-
 	}
 }
 
@@ -68,7 +63,6 @@ void UUW_TeamSelection::OnNicknameChanged(const FText& Text)
 		}
 	}
 }
-
 
 
 void UUW_TeamSelection::UpdateSelectedTeamText(FGameplayTag NewTeam)

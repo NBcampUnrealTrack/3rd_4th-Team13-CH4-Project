@@ -32,7 +32,7 @@ void UTFDGameInstance::HandleLevelChanged(const FName& LevelName)
 		return;
 	}
 
-	if (UTFDBGMSubsystem* BGM = GetSubsystem<UTFDBGMSubsystem>())
+	if (UTFDBGMSubsystem* BGM = this->GetSubsystem<UTFDBGMSubsystem>())
 	{
 		BGM->OnLevelChanged(LevelName);
 	}
@@ -55,7 +55,6 @@ void UTFDGameInstance::SetSFXVolume(float InVolume)
 }
 
 
-
 const TMap<EUISoundType, USoundBase*>& UTFDGameInstance::GetUISounds()
 {
 	return UISoundsMap;
@@ -68,11 +67,6 @@ const TArray<FLevelBGMData> UTFDGameInstance::GetMapBGMs()
 
 void UTFDGameInstance::OnPostLoadMap(UWorld* World)
 {
-	if (!IsValid(this))
-	{
-		return;
-	}
-
 	if (!World)
 	{
 		return;
@@ -84,12 +78,6 @@ void UTFDGameInstance::OnPostLoadMap(UWorld* World)
 		return;
 	}
 
-	if (World->WorldType == EWorldType::Editor || World->WorldType == EWorldType::Inactive)
-	{
-		return;
-	}
-
-
 	FName LevelName = World->GetFName();
 	if (LevelName.IsNone())
 	{
@@ -97,5 +85,4 @@ void UTFDGameInstance::OnPostLoadMap(UWorld* World)
 	}
 
 	HandleLevelChanged(LevelName);
-
 }
