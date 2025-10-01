@@ -14,6 +14,7 @@ class UResultWidget;
 class UMiniMapWidget;
 class UReleaseWidget;
 class UUW_SkillSlot;
+class UToolTipWidget;
 /**
  * UI 관리 서브 시스템
  * - LocalPlayerSubsystem 기반으로 자동 클라 전용
@@ -75,4 +76,7 @@ public:
 
 	UPROPERTY()
 	UUW_SkillSlot* SkillSlotWidget = nullptr;
+
+	UPROPERTY()
+	UToolTipWidget* ToolTipWidget = nullptr;
 };

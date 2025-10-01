@@ -20,6 +20,7 @@ class UHUDLayoutWidget;
 class UMiniMapWidget;
 class UReleaseWidget;
 class UUW_SkillSlot;
+class UToolTipWidget;
 
 // Delegate 선언: 공인 IP가 준비되었을 때 알려주는 이벤트
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPublicIPReady, const FString&, PublicIP);
@@ -56,6 +57,8 @@ protected:
 	TObjectPtr<UInputAction> JumpAction;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="TFD|Input")
 	TObjectPtr<UInputAction> DashAction;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "TFD|Input")
+	TObjectPtr<UInputAction> ToggleToolTipAction;
 
 	// 스킬 시스템 관련
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "TFD|Input|Skill")
@@ -78,6 +81,7 @@ private:
 	void Look(const FInputActionValue& Value);
 	void Jump(const FInputActionValue& Value);
 	void StopJumping();
+	void ToggleTooltip();
 
 	//===================================================
 	// 스킬 시스템 관련
@@ -186,4 +190,7 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UUW_SkillSlot> SkillSlotClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UToolTipWidget> ToolTipWidgetClass;
 };

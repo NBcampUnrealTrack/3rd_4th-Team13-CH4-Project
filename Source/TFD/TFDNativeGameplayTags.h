@@ -64,6 +64,9 @@ UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_GameplayCue_Character_Demerit); //체포 시�
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ability_Cop_HandCuff_Apply); //잡기 발동 시점
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ability_Cop_HandCuff_End);   //잡기 종료.
 
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ability_Thief_Release_Apply);
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ability_Thief_Release_End);
+
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_GameplayCue_Hiding);
 
 //6.입력 - 스킬 슬롯
