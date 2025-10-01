@@ -16,6 +16,7 @@
 //==============================================
 // 스킬 슬롯 구조체 정의
 //==============================================
+class UPaperSprite;
 USTRUCT(BlueprintType)
 struct FTFDSkillSlot
 {
@@ -35,7 +36,8 @@ struct FTFDSkillSlot
 	
 	// 아이콘
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TObjectPtr<UTexture2D> SkillIcon;   
+	TObjectPtr<UPaperSprite> SkillIcon;
+	//TObjectPtr<UTexture2D> SkillIcon;   
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	float CooldownDuration;
@@ -192,7 +194,7 @@ protected:
 
 	//추가: 태그 → 아이콘 매핑
 	UPROPERTY(EditDefaultsOnly, Category = "TFD|SkillManager")
-	TMap<FGameplayTag, TObjectPtr<UTexture2D>> SkillTagToIconMap;
+	TMap<FGameplayTag, TObjectPtr<UPaperSprite>> SkillTagToIconMap;
 
 	//==============================================
 	// 서브시스템 구독 상태 추적

@@ -7,6 +7,7 @@
 #include "GameplayEffectTypes.h"
 #include "GameplayAbilitySpec.h"
 #include "TimerManager.h"
+#include "PaperSprite.h"
 
 void USkillSlotItem::UpdateSlot(const FTFDSkillSlot& InSlot)
 {
@@ -15,7 +16,15 @@ void USkillSlotItem::UpdateSlot(const FTFDSkillSlot& InSlot)
     if (SkillIcon)
     {
         if (InSlot.SkillIcon)
-            SkillIcon->SetBrushFromTexture(InSlot.SkillIcon);
+        {
+            UE_LOG(LogTemp, Error, TEXT("SkillIcon : %s"), *InSlot.SkillIcon->GetName())
+            
+            FSlateBrush Brush;
+            Brush.SetResourceObject(InSlot.SkillIcon); // Texture가 아니라 Sprite 자체를 넣음
+            SkillIcon->SetBrush(Brush);
+
+            //SkillIcon->SetBrushFromTexture(InSlot.SkillIcon);
+        }
         else
             SkillIcon->SetBrushFromTexture(nullptr);
     }
