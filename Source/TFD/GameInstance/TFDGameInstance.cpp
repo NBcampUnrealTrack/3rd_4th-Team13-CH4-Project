@@ -13,7 +13,15 @@ void UTFDGameInstance::Init()
 	// 레벨 변경 시 호출될 함수 바인딩
 	FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(this, &UTFDGameInstance::OnPostLoadMap);
 
-	
+
+}
+
+void UTFDGameInstance::OnStart()
+{
+	Super::OnStart();
+	// 레벨 변경 시 호출될 함수 바인딩
+	FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(this, &UTFDGameInstance::OnPostLoadMap);
+
 }
 
 void UTFDGameInstance::Shutdown()
@@ -44,16 +52,16 @@ void UTFDGameInstance::PlayUISound(EUISoundType SoundType)
 
 	// CreateSound2D + bAutoDestroy = 자동 관리
 	UAudioComponent* AudioComp = UGameplayStatics::CreateSound2D(
-		GetWorld(), 
-		*FoundSound, 
+		GetWorld(),
+		*FoundSound,
 		SFXVolume,
-		1.0f,  // Pitch
-		0.0f,  // StartTime
-		nullptr,  // Concurrency
-		true,  // PersistAcrossLevelTransition - 레벨넘어가도 유지시키기
-		true   // bAutoDestroy - 재생 완료 후 자동 삭제
+		1.0f, // Pitch
+		0.0f, // StartTime
+		nullptr, // Concurrency
+		true, // PersistAcrossLevelTransition - 레벨넘어가도 유지시키기
+		true // bAutoDestroy - 재생 완료 후 자동 삭제
 	);
-    
+
 	if (AudioComp)
 	{
 		AudioComp->Play();

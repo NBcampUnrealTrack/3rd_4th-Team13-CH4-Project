@@ -42,6 +42,7 @@ class TFD_API UTFDGameInstance : public UGameInstance
 
 public:
 	virtual void Init() override;
+	virtual void OnStart() override;
 	virtual void Shutdown() override;
 
 	void HandleLevelChanged(const FName& LevelName);
