@@ -133,6 +133,10 @@ void ATFDPlayerController::SetupInputComponent()
 		EnhancedInputComponent->BindAction(Skill1Action, ETriggerEvent::Started, this, &ATFDPlayerController::OnSkillInput1);
 		EnhancedInputComponent->BindAction(Skill2Action, ETriggerEvent::Started, this, &ATFDPlayerController::OnSkillInput2);
 		EnhancedInputComponent->BindAction(Skill3Action, ETriggerEvent::Started, this, &ATFDPlayerController::OnSkillInput3);
+
+		// Sound Settings UI 토글 바인딩
+		EnhancedInputComponent->BindAction(ToggleSoundUIAction, ETriggerEvent::Started, this, &ATFDPlayerController::ToggleSoundSettingsUI);
+
 	}
 }
 
@@ -409,6 +413,38 @@ void ATFDPlayerController::JobAbility(const FInputActionValue& Value, FGameplayT
 		}
 	}
 }
+
+// Sound Settings UI 토글 함수
+void ATFDPlayerController::ToggleSoundSettingsUI()
+{
+	const bool bIsSoundUIOpen = SoundSettingsWidgetInstance && SoundSettingsWidgetInstance->IsInViewport();
+
+	if (!bIsSoundUIOpen && SoundSettingsWidgetClass)
+	{
+		SoundSettingsWidgetInstance = CreateWidget<UUW_SoundSettings>(this, SoundSettingsWidgetClass);
+		SoundSettingsWidgetInstance->AddToViewport();
+
+		FInputModeGameAndUI InputMode;
+		InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+		InputMode.SetHideCursorDuringCapture(false);
+		SetInputMode(InputMode);
+
+		bShowMouseCursor = true;
+		GetPawn()->DisableInput(this);
+	}
+	else if (bIsSoundUIOpen)
+	{
+		SoundSettingsWidgetInstance->RemoveFromParent();
+		SoundSettingsWidgetInstance = nullptr;
+
+		SetInputMode(FInputModeGameOnly());
+		bShowMouseCursor = false;
+		GetPawn()->EnableInput(this);
+	}
+}
+
+
+
 
 /*
 void ATFDPlayerController::Attack(const FInputActionValue& Value)

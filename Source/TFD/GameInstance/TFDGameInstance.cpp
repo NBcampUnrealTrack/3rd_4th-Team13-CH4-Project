@@ -11,9 +11,8 @@ void UTFDGameInstance::Init()
 	Super::Init();
 
 	// 레벨 변경 시 호출될 함수 바인딩
+	FCoreUObjectDelegates::PostLoadMapWithWorld.RemoveAll(this);
 	FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(this, &UTFDGameInstance::OnPostLoadMap);
-
-	
 }
 
 void UTFDGameInstance::Shutdown()
@@ -23,67 +22,38 @@ void UTFDGameInstance::Shutdown()
 
 void UTFDGameInstance::HandleLevelChanged(const FName& LevelName)
 {
+	if (!IsValid(this))
+	{
+		return;
+	}
+
+	if (GetWorld() == nullptr)
+	{
+		return;
+	}
+
 	if (UTFDBGMSubsystem* BGM = GetSubsystem<UTFDBGMSubsystem>())
 	{
 		BGM->OnLevelChanged(LevelName);
 	}
 }
 
-void UTFDGameInstance::PlayUISound(EUISoundType SoundType)
+
+void UTFDGameInstance::SetMasterVolume(float InVolume)
 {
-
-	if (!GetWorld())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("PlayUISound: World is nullptr"));
-		return;
-	}
-
-	// UISoundMap에서 Sound 찾기
-	USoundBase** FoundSound = UISoundsMap.Find(SoundType);
-	if (!FoundSound || !*FoundSound)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("PlayUISound: Sound not found for %d"), static_cast<int32>(SoundType));
-		return;
-	}
-
-	USoundBase* SoundToPlay = *FoundSound;
-
-	// SoundClass 볼륨 확인
-	float ClassVolume = 1.f;
-	if (SoundToPlay->GetSoundClass())
-	{
-		ClassVolume = SoundToPlay->GetSoundClass()->Properties.Volume;
-	}
-
-	// 최종 볼륨 (Subsystem/GameInstance에서 곱하는 경우)
-	float VolumeMultiplier = 1.f; // 필요하면 UISFXVolume 곱하기
-	float FinalVolume = VolumeMultiplier * ClassVolume;
-
-	UE_LOG(LogTemp, Warning, TEXT("PlayUISound: %s, ClassVolume: %f, FinalVolume: %f"), 
-		*SoundToPlay->GetName(), ClassVolume, FinalVolume);
-
-	if (FinalVolume <= 0.f)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("PlayUISound: Volume is 0, sound will not play"));
-		return;
-	}
-
-	// 실제 재생
-	UGameplayStatics::PlaySound2D(GetWorld(), SoundToPlay, FinalVolume);
-	
-	// if (!GetWorld())
-	// 	return;
-	// USoundBase* TestSound = LoadObject<USoundBase>(nullptr, TEXT("/Game/UI/Sounds/Click_Cue.Click_Cue"));
-	// UGameplayStatics::PlaySound2D(GetWorld(), TestSound);
-	//
-	// if (USoundBase** FoundSound = UISoundsMap.Find(SoundType))
-	// {
-	// 	if (*FoundSound && GetWorld())
-	// 	{
-	// 		UGameplayStatics::PlaySound2D(GetWorld(), *FoundSound);
-	// 	}
-	// }
+	MasterVolume = FMath::Clamp(InVolume, 0.0f, 1.0f);
 }
+
+void UTFDGameInstance::SetBGMVolume(float InVolume)
+{
+	BGMVolume = FMath::Clamp(InVolume, 0.0f, 1.0f);
+}
+
+void UTFDGameInstance::SetSFXVolume(float InVolume)
+{
+	SFXVolume = FMath::Clamp(InVolume, 0.0f, 1.0f);
+}
+
 
 
 const TMap<EUISoundType, USoundBase*>& UTFDGameInstance::GetUISounds()
@@ -98,9 +68,34 @@ const TArray<FLevelBGMData> UTFDGameInstance::GetMapBGMs()
 
 void UTFDGameInstance::OnPostLoadMap(UWorld* World)
 {
-	if (World)
+	if (!IsValid(this))
 	{
-		FName LevelName = World->GetFName();
-		HandleLevelChanged(LevelName);
+		return;
 	}
+
+	if (!World)
+	{
+		return;
+	}
+
+	// PIE나 에디터 전용 월드 같은 경우 필터링
+	if (World->WorldType == EWorldType::Editor || World->WorldType == EWorldType::Inactive)
+	{
+		return;
+	}
+
+	if (World->WorldType == EWorldType::Editor || World->WorldType == EWorldType::Inactive)
+	{
+		return;
+	}
+
+
+	FName LevelName = World->GetFName();
+	if (LevelName.IsNone())
+	{
+		return;
+	}
+
+	HandleLevelChanged(LevelName);
+
 }

@@ -3,7 +3,9 @@
 #include "Components/TextBlock.h"
 #include "Components/EditableTextBox.h"
 #include "Controller/TFDPlayerController.h"
+#include "GameInstance/TFDGameInstance.h"
 #include "PlayerState/TFDPlayerState.h"
+#include "Utility/TFDBGMSubsystem.h"
 
 
 void UUW_TeamSelection::NativeConstruct()
@@ -21,6 +23,8 @@ void UUW_TeamSelection::NativeConstruct()
 	if (NicknameTextBox)
 	{
 		NicknameTextBox->OnTextChanged.AddDynamic(this, &UUW_TeamSelection::OnNicknameChanged);
+
+
 	}
 }
 
@@ -32,7 +36,13 @@ void UUW_TeamSelection::OnClickTeamCop()
 		SelectedTeam = TAG_Team_Cop;
 		UpdateSelectedTeamText(TAG_Team_Cop);
 
-
+	
+		UTFDGameInstance* TFDGI =  Cast<UTFDGameInstance>(GetGameInstance());
+		UTFDBGMSubsystem* BGMSubSyetem = TFDGI->GetSubsystem<UTFDBGMSubsystem>();
+		if (IsValid(BGMSubSyetem))
+		{
+			BGMSubSyetem->PlayUISound(EUISoundType::Click_00);
+		}
 	}
 }
 
@@ -54,7 +64,7 @@ void UUW_TeamSelection::OnNicknameChanged(const FText& Text)
 	{
 		if (ATFDPlayerState* PS = Cast<ATFDPlayerState>(PC->PlayerState))
 		{
-			PS->ServerSetNickname(Text.ToString()); // ¼­¹ö¿¡ ´Ð³×ÀÓ Àü¼Û
+			PS->ServerSetNickname(Text.ToString()); // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ð³ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 		}
 	}
 }

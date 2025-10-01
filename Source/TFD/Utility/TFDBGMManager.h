@@ -23,6 +23,9 @@ public:
 	// BGM 정지
 	UFUNCTION(BlueprintCallable)
 	void StopBGM(float FadeOutTime = 0.5f);
+
+	USoundBase* GetCurrentBGM() const;
+
 	
 protected:
 	// Called when the game starts or when spawned
@@ -34,4 +37,7 @@ public:
 protected:
 	UPROPERTY(VisibleAnywhere)
 	UAudioComponent* BGMComponent;
+	
+	UPROPERTY()
+	USoundBase* CurrentPlayingBGM;
 };

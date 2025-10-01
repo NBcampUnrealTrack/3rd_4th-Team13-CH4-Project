@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -24,21 +24,20 @@ UCLASS()
 class TFD_API UGameUIRouterSubsystem : public ULocalPlayerSubsystem
 {
 	GENERATED_BODY()
-	
+
 private:
 	TMap<EUILayer, UUserWidget*> ActiveWidgets;
-	
+
 	// 이전 Layout 저장 (PopLayout용) 한 번에 훨씬 많은 레이아웃이 활성화 되면 TArray로 확장필요.
 	::EHUDLayout PreviousLayout;
 	// 현재 HUD Layout 추적
 	::EHUDLayout CurrentLayout;
-	
+
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UHUDLayoutWidget> HUDLayoutClass;
 
 	UPROPERTY()
 	UHUDLayoutWidget* HUDLayout;
-
 
 public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
@@ -53,7 +52,6 @@ public:
 	// HUD 레이아웃 제거 (뒤로가기)
 	UFUNCTION(BlueprintCallable)
 	void PopLayout();
-
 
 	// Layer에 Widget 추가
 	UFUNCTION(BlueprintCallable)

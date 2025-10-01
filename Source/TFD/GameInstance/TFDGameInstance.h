@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "UI/UIResourceAsset.h"
 #include "Engine/GameInstance.h"
 #include "TFDGameInstance.generated.h"
 
@@ -46,13 +47,22 @@ public:
 
 	void HandleLevelChanged(const FName& LevelName);
 
-	UFUNCTION(BlueprintCallable)
-	void PlayUISound(EUISoundType SoundType);
+
 	
 	const TMap<EUISoundType, USoundBase*>& GetUISounds();
 	const TArray<FLevelBGMData> GetMapBGMs();
 
 	void OnPostLoadMap(UWorld* World);
+
+	UFUNCTION(BlueprintCallable, Category = "Audio|Volume")
+	void SetMasterVolume(float InVolume);
+
+	UFUNCTION(BlueprintCallable, Category = "Audio|Volume")
+	void SetBGMVolume(float InVolume);
+
+	UFUNCTION(BlueprintCallable, Category = "Audio|Volume")
+	void SetSFXVolume(float InVolume);
+
 public:
 	UPROPERTY(EditAnywhere)
 	TMap<EUISoundType, USoundBase*> UISoundsMap;
@@ -72,6 +82,10 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Audio|Volume")
 	float SFXVolume = 1.f;
 
-
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="UI")
+	TSoftObjectPtr<UUIResourceAsset> UIResourceAsset; 
 	
+
+
+
 };

@@ -190,6 +190,8 @@ APawn* ATFDGameMode::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, 
 	// SpawnTransform 설정
 	FTransform SpawnTransform = StartSpot->GetActorTransform();
 	FVector SpawnLocation = GetRandomPointInSpawnAreaTag(PS->GetActualTeam());
+
+
 	SpawnTransform.SetLocation(SpawnLocation);
 
 	// SpawnActorDeferred로 Pawn 생성
@@ -469,7 +471,8 @@ FVector ATFDGameMode::GetRandomPointInSpawnAreaTag(FGameplayTag InTag)
 	{
 		ATFDSpawnVolume* SpawnVolume = GetRandomSpawnVolumeTag(InTag);
 		if (SpawnVolume)
-			RandomPoint = SpawnVolume->GetRandomPointInVolume();
+			RandomPoint = SpawnVolume->GetRandomPointInVolumeLineTrace();
+		//GetRandomPointInVolumeLineTrace
 		if (!SpawnVolume)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("No SpawnVolume found for tag: %s"), *InTag.ToString());
