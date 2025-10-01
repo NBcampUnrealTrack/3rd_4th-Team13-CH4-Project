@@ -9,8 +9,9 @@
 void UTFDGameInstance::Init()
 {
 	Super::Init();
-	FCoreUObjectDelegates::PostLoadMapWithWorld.RemoveAll(this);
+
 	// 레벨 변경 시 호출될 함수 바인딩
+	FCoreUObjectDelegates::PostLoadMapWithWorld.RemoveAll(this);
 	FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(this, &UTFDGameInstance::OnPostLoadMap);
 }
 
@@ -29,6 +30,16 @@ void UTFDGameInstance::Shutdown()
 
 void UTFDGameInstance::HandleLevelChanged(const FName& LevelName)
 {
+	if (!IsValid(this))
+	{
+		return;
+	}
+
+	if (GetWorld() == nullptr)
+	{
+		return;
+	}
+	
 	if (UTFDBGMSubsystem* BGM = GetSubsystem<UTFDBGMSubsystem>())
 	{
 		BGM->OnLevelChanged(LevelName);
@@ -94,9 +105,39 @@ const TArray<FLevelBGMData> UTFDGameInstance::GetMapBGMs()
 
 void UTFDGameInstance::OnPostLoadMap(UWorld* World)
 {
-	if (World)
+	if (!IsValid(this))
 	{
-		FName LevelName = World->GetFName();
-		HandleLevelChanged(LevelName);
+		return;
 	}
+
+	if (!World)
+	{
+		return;
+	}
+
+	// PIE나 에디터 전용 월드 같은 경우 필터링
+	if (World->WorldType == EWorldType::Editor || World->WorldType == EWorldType::Inactive)
+	{
+		return;
+	}
+
+	if (World->WorldType == EWorldType::Editor || World->WorldType == EWorldType::Inactive)
+	{
+		return;
+	}
+
+	
+
+	FName LevelName = World->GetFName();
+	if (LevelName.IsNone())
+	{
+		return;
+	}
+	
+	HandleLevelChanged(LevelName);
+	// if (World)
+	// {
+	// 	FName LevelName = World->GetFName();
+	// 	HandleLevelChanged(LevelName);
+	// }
 }
