@@ -378,24 +378,34 @@ void ATFDPlayerController::JobAbility(const FInputActionValue& Value, FGameplayT
 // Sound Settings UI 토글 함수
 void ATFDPlayerController::ToggleSoundSettingsUI()
 {
-	if (!SoundSettingsWidgetInstance && SoundSettingsWidgetClass)
+	const bool bIsSoundUIOpen = SoundSettingsWidgetInstance && SoundSettingsWidgetInstance->IsInViewport();
+
+	if (!bIsSoundUIOpen && SoundSettingsWidgetClass)
 	{
 		SoundSettingsWidgetInstance = CreateWidget<UUW_SoundSettings>(this, SoundSettingsWidgetClass);
-		if (SoundSettingsWidgetInstance)
-		{
-			SoundSettingsWidgetInstance->AddToViewport();
-			SetInputMode(FInputModeUIOnly());
-			bShowMouseCursor = true;
-		}
+		SoundSettingsWidgetInstance->AddToViewport();
+
+		FInputModeGameAndUI InputMode;
+		InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+		InputMode.SetHideCursorDuringCapture(false);
+		SetInputMode(InputMode);
+
+		bShowMouseCursor = true;
+		GetPawn()->DisableInput(this);
 	}
-	else if (SoundSettingsWidgetInstance)
+	else if (bIsSoundUIOpen)
 	{
 		SoundSettingsWidgetInstance->RemoveFromParent();
 		SoundSettingsWidgetInstance = nullptr;
+
 		SetInputMode(FInputModeGameOnly());
 		bShowMouseCursor = false;
+		GetPawn()->EnableInput(this);
 	}
 }
+
+
+
 
 /*
 void ATFDPlayerController::Attack(const FInputActionValue& Value)
