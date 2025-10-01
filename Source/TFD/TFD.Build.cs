@@ -1,5 +1,6 @@
 ﻿// Copyright Epic Games, Inc. All Rights Reserved.
 
+using System.IO;
 using UnrealBuildTool;
 
 public class TFD : ModuleRules
@@ -21,6 +22,7 @@ public class TFD : ModuleRules
                 "Niagara", //나이아가라 추가
 				"AIModule",
 				"NavigationSystem",
+                "Paper2D",
 
 				// IP 관련 내용
 				"HTTP",			// 대문자로 수정! ("Http") // Module 'Http' (referenced via Target -> TFD.Build.cs) has incorrect text case. Did you mean 'HTTP'?
@@ -31,8 +33,9 @@ public class TFD : ModuleRules
 		//PublicIncludePaths.AddRange(new string[] { "TFD" });
 
 		PublicIncludePaths.AddRange(new string[] { 
-			ModuleDirectory + "/../TFD"
-		});
+			ModuleDirectory + "/../TFD",
+            Path.Combine(ModuleDirectory, "../../Engine/Plugins/2D/Paper2D/Source/Paper2D/Public")
+        });
 		
 		
 	}

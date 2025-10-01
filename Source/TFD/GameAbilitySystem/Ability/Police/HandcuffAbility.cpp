@@ -7,7 +7,7 @@
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 #include "Character/TFDCharacterBase.h"
 #include "GameMode/TFDGameMode.h"
-#include "TFDNativeGameplayTags.h"
+
 //디버그용
 #include "DrawDebugHelpers.h"
 #include "Engine/OverlapResult.h"
@@ -73,8 +73,6 @@ void UHandcuffAbility::ActivateAbility(
 	FActiveGameplayEffectHandle EffectHandle = ASC->ApplyGameplayEffectSpecToSelf(*EffectSpec.Data.Get());
 	if (EffectHandle.IsValid() && EffectHandle.WasSuccessfullyApplied())
 	{
-		ApplyStopEffect(ActorInfo->AvatarActor.Get(), CuffDuration);
-
 		UAbilityTask_WaitGameplayEvent* WaitEvent =
 			UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, TAG_Ability_Cop_HandCuff_Apply, nullptr, true, true);
 		WaitEvent->EventReceived.AddDynamic(this, &UHandcuffAbility::OnApplyCuffEvent);
