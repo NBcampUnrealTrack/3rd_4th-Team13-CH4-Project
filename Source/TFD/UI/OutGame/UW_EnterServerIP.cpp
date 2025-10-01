@@ -20,10 +20,13 @@ void UUW_EnterServerIP::OnConnectClicked()
 
 	if (ATFDPlayerController_Title* PC = GetOwningPlayer<ATFDPlayerController_Title>())
 	{
-		PC->JoinServer(EnteredIP);
-
 		UTFDGameInstance* TFDGI = Cast<UTFDGameInstance>(GetGameInstance());
-		TFDGI->PlayUISound(EUISoundType::Click_00);
+		if (IsValid(TFDGI))
+		{
+			TFDGI->PlayUISound(EUISoundType::Click_00);
+		}
+		
+		PC->JoinServer(EnteredIP);
 		
 	}
 }
