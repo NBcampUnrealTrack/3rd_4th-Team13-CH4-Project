@@ -22,13 +22,14 @@ void UUW_EnterServerIP::OnConnectClicked()
 	if (ATFDPlayerController_Title* PC = GetOwningPlayer<ATFDPlayerController_Title>())
 	{
 		UTFDGameInstance* TFDGI =  Cast<UTFDGameInstance>(GetGameInstance());
-		UTFDBGMSubsystem* BGMSubSyetem = TFDGI->GetSubsystem<UTFDBGMSubsystem>();
-		if (IsValid(BGMSubSyetem))
+		UTFDBGMSubsystem* TFDBGMSubSyetem = TFDGI->GetSubsystem<UTFDBGMSubsystem>();
+		if (IsValid(TFDBGMSubSyetem))
 		{
-			BGMSubSyetem->PlayUISound(EUISoundType::Click_00);
+			TFDBGMSubSyetem->PlayUISound(EUISoundType::Click_00);
 		}
 		
 		PC->JoinServer(EnteredIP);
+
 		
 	}
 }
