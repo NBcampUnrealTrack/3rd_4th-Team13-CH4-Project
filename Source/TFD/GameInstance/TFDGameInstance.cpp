@@ -68,6 +68,21 @@ void UTFDGameInstance::PlayUISound(EUISoundType SoundType)
 	}
 }
 
+void UTFDGameInstance::SetMasterVolume(float InVolume)
+{
+	MasterVolume = FMath::Clamp(InVolume, 0.0f, 1.0f);
+}
+
+void UTFDGameInstance::SetBGMVolume(float InVolume)
+{
+	BGMVolume = FMath::Clamp(InVolume, 0.0f, 1.0f);
+}
+
+void UTFDGameInstance::SetSFXVolume(float InVolume)
+{
+	SFXVolume = FMath::Clamp(InVolume, 0.0f, 1.0f);
+}
+
 
 const TMap<EUISoundType, USoundBase*>& UTFDGameInstance::GetUISounds()
 {
