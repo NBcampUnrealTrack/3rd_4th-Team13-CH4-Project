@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "UI/UIResourceAsset.h"
 #include "Engine/GameInstance.h"
 #include "TFDGameInstance.generated.h"
 
@@ -42,7 +43,6 @@ class TFD_API UTFDGameInstance : public UGameInstance
 
 public:
 	virtual void Init() override;
-	virtual void OnStart() override;
 	virtual void Shutdown() override;
 
 	void HandleLevelChanged(const FName& LevelName);
@@ -73,6 +73,8 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Audio|Volume")
 	float SFXVolume = 1.f;
 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="UI")
+	TSoftObjectPtr<UUIResourceAsset> UIResourceAsset; 
 	
 	UPROPERTY()
 	TArray<UAudioComponent*> ActiveUISounds;

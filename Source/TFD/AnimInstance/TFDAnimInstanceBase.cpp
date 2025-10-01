@@ -58,6 +58,24 @@ void UTFDAnimInstanceBase::HitAnimEnd()
 	//CurrentHitDirection = EHitDirection::None;
 }
 
+void UTFDAnimInstanceBase::PlayDemeritAnim()
+{
+	if (!DemeritMontage) return;
+	Montage_Play(DemeritMontage);
+
+	bIsDemeritPlaying = true;
+}
+
+void UTFDAnimInstanceBase::DemeritAnimEnd()
+{
+	if (bIsDemeritPlaying)
+	{
+		Montage_Stop(0.1f, DemeritMontage);
+	}
+
+	bIsDemeritPlaying = false;
+}
+
 FName UTFDAnimInstanceBase::GetSectionNameByDirection(EHitDirection Direction)
 {
 	switch(Direction)
