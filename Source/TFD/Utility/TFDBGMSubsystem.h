@@ -27,6 +27,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void Play_BGM_02(USoundBase* NewBGM, float FadeInTime = 0.5f);
 
+	UFUNCTION(BlueprintCallable)
+	void PlayUISound(EUISoundType SoundType);
 	
 	// BGM 정지
 	UFUNCTION(BlueprintCallable)
@@ -39,6 +41,7 @@ private:
 	
 	void EnsureBGMComponent();
 
+private:
 	UPROPERTY(VisibleAnywhere)
 	UAudioComponent* BGMComponent;
 	

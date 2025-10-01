@@ -5,6 +5,7 @@
 #include "Controller/TFDPlayerController.h"
 #include "GameInstance/TFDGameInstance.h"
 #include "PlayerState/TFDPlayerState.h"
+#include "Utility/TFDBGMSubsystem.h"
 
 
 void UUW_TeamSelection::NativeConstruct()
@@ -35,7 +36,13 @@ void UUW_TeamSelection::OnClickTeamCop()
 		SelectedTeam = TAG_Team_Cop;
 		UpdateSelectedTeamText(TAG_Team_Cop);
 
-
+	
+		UTFDGameInstance* TFDGI =  Cast<UTFDGameInstance>(GetGameInstance());
+		UTFDBGMSubsystem* BGMSubSyetem = TFDGI->GetSubsystem<UTFDBGMSubsystem>();
+		if (IsValid(BGMSubSyetem))
+		{
+			BGMSubSyetem->PlayUISound(EUISoundType::Click_00);
+		}
 	}
 }
 
