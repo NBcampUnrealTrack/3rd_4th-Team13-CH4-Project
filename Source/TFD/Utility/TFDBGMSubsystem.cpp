@@ -138,6 +138,34 @@ void UTFDBGMSubsystem::Play_BGM_02(USoundBase* NewBGM, float FadeInTime)
 	}
 }
 
+void UTFDBGMSubsystem::PlayUISound(EUISoundType SoundType)
+{
+	if (!GetWorld()) // Subsystem은 WorldContext가 없을 수도 있음 → 방어 코드
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PlayUISound failed: No World found."));
+		return;
+	}
+	UTFDGameInstance* TFDGI = Cast<UTFDGameInstance>(GetGameInstance());
+	
+
+	const TMap<EUISoundType, USoundBase*>& UISoundsMap = TFDGI->GetUISounds();
+	if (USoundBase* const* FoundSound = UISoundsMap.Find(SoundType))
+	{
+		if (*FoundSound)
+		{
+			UGameplayStatics::PlaySound2D(GetWorld(), *FoundSound);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("PlayUISound: SoundType %d is mapped to null SoundBase."), (int32)SoundType);
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PlayUISound: SoundType %d not found in UISoundsMap."), (int32)SoundType);
+	}
+}
+
 void UTFDBGMSubsystem::StopBGM(float FadeOutTime)
 {
 	if (BGMComponent)

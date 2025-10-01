@@ -9,17 +9,10 @@
 void UTFDGameInstance::Init()
 {
 	Super::Init();
+
+	// 레벨 변경 시 호출될 함수 바인딩
 	FCoreUObjectDelegates::PostLoadMapWithWorld.RemoveAll(this);
-	// 레벨 변경 시 호출될 함수 바인딩
 	FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(this, &UTFDGameInstance::OnPostLoadMap);
-}
-
-void UTFDGameInstance::OnStart()
-{
-	Super::OnStart();
-	// 레벨 변경 시 호출될 함수 바인딩
-	//FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(this, &UTFDGameInstance::OnPostLoadMap);
-
 }
 
 void UTFDGameInstance::Shutdown()
@@ -29,42 +22,22 @@ void UTFDGameInstance::Shutdown()
 
 void UTFDGameInstance::HandleLevelChanged(const FName& LevelName)
 {
-	if (UTFDBGMSubsystem* BGM = GetSubsystem<UTFDBGMSubsystem>())
+	if (!IsValid(this))
+	{
+		return;
+	}
+
+	if (GetWorld() == nullptr)
+	{
+		return;
+	}
+
+	if (UTFDBGMSubsystem* BGM = this->GetSubsystem<UTFDBGMSubsystem>())
 	{
 		BGM->OnLevelChanged(LevelName);
 	}
 }
 
-void UTFDGameInstance::PlayUISound(EUISoundType SoundType)
-{
-	if (!GetWorld())
-	{
-		return;
-	}
-
-	USoundBase** FoundSound = UISoundsMap.Find(SoundType);
-	if (!FoundSound || !*FoundSound)
-	{
-		return;
-	}
-
-	// CreateSound2D + bAutoDestroy = 자동 관리
-	UAudioComponent* AudioComp = UGameplayStatics::CreateSound2D(
-		GetWorld(),
-		*FoundSound,
-		SFXVolume,
-		1.0f, // Pitch
-		0.0f, // StartTime
-		nullptr, // Concurrency
-		true, // PersistAcrossLevelTransition - 레벨넘어가도 유지시키기
-		true // bAutoDestroy - 재생 완료 후 자동 삭제
-	);
-
-	if (AudioComp)
-	{
-		AudioComp->Play();
-	}
-}
 
 void UTFDGameInstance::SetMasterVolume(float InVolume)
 {
@@ -94,9 +67,22 @@ const TArray<FLevelBGMData> UTFDGameInstance::GetMapBGMs()
 
 void UTFDGameInstance::OnPostLoadMap(UWorld* World)
 {
-	if (World)
+	if (!World)
 	{
-		FName LevelName = World->GetFName();
-		HandleLevelChanged(LevelName);
+		return;
 	}
+
+	// PIE나 에디터 전용 월드 같은 경우 필터링
+	if (World->WorldType == EWorldType::Editor || World->WorldType == EWorldType::Inactive)
+	{
+		return;
+	}
+
+	FName LevelName = World->GetFName();
+	if (LevelName.IsNone())
+	{
+		return;
+	}
+
+	HandleLevelChanged(LevelName);
 }
