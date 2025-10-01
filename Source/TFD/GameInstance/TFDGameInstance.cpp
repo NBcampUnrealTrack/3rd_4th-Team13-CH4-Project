@@ -9,18 +9,16 @@
 void UTFDGameInstance::Init()
 {
 	Super::Init();
-
+	FCoreUObjectDelegates::PostLoadMapWithWorld.RemoveAll(this);
 	// 레벨 변경 시 호출될 함수 바인딩
-	//FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(this, &UTFDGameInstance::OnPostLoadMap);
-
-
+	FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(this, &UTFDGameInstance::OnPostLoadMap);
 }
 
 void UTFDGameInstance::OnStart()
 {
 	Super::OnStart();
 	// 레벨 변경 시 호출될 함수 바인딩
-	FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(this, &UTFDGameInstance::OnPostLoadMap);
+	//FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(this, &UTFDGameInstance::OnPostLoadMap);
 
 }
 
