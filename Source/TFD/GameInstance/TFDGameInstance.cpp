@@ -13,7 +13,15 @@ void UTFDGameInstance::Init()
 	// 레벨 변경 시 호출될 함수 바인딩
 	FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(this, &UTFDGameInstance::OnPostLoadMap);
 
-	
+
+}
+
+void UTFDGameInstance::OnStart()
+{
+	Super::OnStart();
+	// 레벨 변경 시 호출될 함수 바인딩
+	FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(this, &UTFDGameInstance::OnPostLoadMap);
+
 }
 
 void UTFDGameInstance::Shutdown()
@@ -31,58 +39,33 @@ void UTFDGameInstance::HandleLevelChanged(const FName& LevelName)
 
 void UTFDGameInstance::PlayUISound(EUISoundType SoundType)
 {
-
 	if (!GetWorld())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("PlayUISound: World is nullptr"));
 		return;
 	}
 
-	// UISoundMap에서 Sound 찾기
 	USoundBase** FoundSound = UISoundsMap.Find(SoundType);
 	if (!FoundSound || !*FoundSound)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("PlayUISound: Sound not found for %d"), static_cast<int32>(SoundType));
 		return;
 	}
 
-	USoundBase* SoundToPlay = *FoundSound;
+	// CreateSound2D + bAutoDestroy = 자동 관리
+	UAudioComponent* AudioComp = UGameplayStatics::CreateSound2D(
+		GetWorld(),
+		*FoundSound,
+		SFXVolume,
+		1.0f, // Pitch
+		0.0f, // StartTime
+		nullptr, // Concurrency
+		true, // PersistAcrossLevelTransition - 레벨넘어가도 유지시키기
+		true // bAutoDestroy - 재생 완료 후 자동 삭제
+	);
 
-	// SoundClass 볼륨 확인
-	float ClassVolume = 1.f;
-	if (SoundToPlay->GetSoundClass())
+	if (AudioComp)
 	{
-		ClassVolume = SoundToPlay->GetSoundClass()->Properties.Volume;
+		AudioComp->Play();
 	}
-
-	// 최종 볼륨 (Subsystem/GameInstance에서 곱하는 경우)
-	float VolumeMultiplier = 1.f; // 필요하면 UISFXVolume 곱하기
-	float FinalVolume = VolumeMultiplier * ClassVolume;
-
-	UE_LOG(LogTemp, Warning, TEXT("PlayUISound: %s, ClassVolume: %f, FinalVolume: %f"), 
-		*SoundToPlay->GetName(), ClassVolume, FinalVolume);
-
-	if (FinalVolume <= 0.f)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("PlayUISound: Volume is 0, sound will not play"));
-		return;
-	}
-
-	// 실제 재생
-	UGameplayStatics::PlaySound2D(GetWorld(), SoundToPlay, FinalVolume);
-	
-	// if (!GetWorld())
-	// 	return;
-	// USoundBase* TestSound = LoadObject<USoundBase>(nullptr, TEXT("/Game/UI/Sounds/Click_Cue.Click_Cue"));
-	// UGameplayStatics::PlaySound2D(GetWorld(), TestSound);
-	//
-	// if (USoundBase** FoundSound = UISoundsMap.Find(SoundType))
-	// {
-	// 	if (*FoundSound && GetWorld())
-	// 	{
-	// 		UGameplayStatics::PlaySound2D(GetWorld(), *FoundSound);
-	// 	}
-	// }
 }
 
 

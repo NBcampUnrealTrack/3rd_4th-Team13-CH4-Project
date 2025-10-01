@@ -75,4 +75,8 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="UI")
 	TSoftObjectPtr<UUIResourceAsset> UIResourceAsset; 
+	
+	UPROPERTY()
+	TArray<UAudioComponent*> ActiveUISounds;
+	
 };
