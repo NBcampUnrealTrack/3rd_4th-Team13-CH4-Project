@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
 #include "TFDNativeGameplayTags.h"
+#include "TFD/UI/InGame/UW_SoundSettings.h"
 
 #include "Blueprint/UserWidget.h"  // OutGame 관련 - Lobby UI 위젯 관련 헤더
 #include "GameData/EGameEnums.h"
@@ -20,6 +21,7 @@ class UHUDLayoutWidget;
 class UMiniMapWidget;
 class UReleaseWidget;
 class UUW_SkillSlot;
+class UToolTipWidget;
 
 // Delegate 선언: 공인 IP가 준비되었을 때 알려주는 이벤트
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPublicIPReady, const FString&, PublicIP);
@@ -56,6 +58,8 @@ protected:
 	TObjectPtr<UInputAction> JumpAction;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="TFD|Input")
 	TObjectPtr<UInputAction> DashAction;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "TFD|Input")
+	TObjectPtr<UInputAction> ToggleToolTipAction;
 
 	// 스킬 시스템 관련
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "TFD|Input|Skill")
@@ -65,6 +69,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "TFD|Input|Skill")
 	TObjectPtr<UInputAction> Skill3Action;
 	
+	// Sound Settings UI 토글 액션
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "TFD|Input|UI")
+	TObjectPtr<UInputAction> ToggleSoundUIAction;
+
 	/*
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "TFD|Input")
 	TObjectPtr<UInputAction> AttackAction;
@@ -78,6 +86,7 @@ private:
 	void Look(const FInputActionValue& Value);
 	void Jump(const FInputActionValue& Value);
 	void StopJumping();
+	void ToggleTooltip();
 
 	//===================================================
 	// 스킬 시스템 관련
@@ -90,7 +99,8 @@ private:
 	// Skill input 공통 처리 함수
 	void HandleSkillInput(int32 SlotIndex);
 	//===================================================
-
+	// 
+	
 	/*
 	void Attack(const FInputActionValue& Value);
 	void TogglePause(const FInputActionValue& Value);
@@ -128,6 +138,10 @@ public:
 	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Lobby|TeamSelection")
 	void ServerSetPreferredTeam(const FGameplayTag& TeamTag);
 
+	// Sound Settings UI 토글 함수
+	UFUNCTION()
+	void ToggleSoundSettingsUI();
+
 public:
 	UFUNCTION()
 	FString GetLocalIP() const;
@@ -161,13 +175,20 @@ public:
 	UFUNCTION()
 	void HandleRemoveReleaseWidget();
 
+
+
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UUserWidget> LobbyWidgetClass;
 
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TObjectPtr<UUserWidget> LobbyWidgetInstance;
 
+	UPROPERTY()
+	TObjectPtr<UUW_SoundSettings> SoundSettingsWidgetInstance;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UUW_SoundSettings> SoundSettingsWidgetClass;
 
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UHUDLayoutWidget> HUDWidgetClass;
@@ -186,4 +207,7 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UUW_SkillSlot> SkillSlotClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UToolTipWidget> ToolTipWidgetClass;
 };

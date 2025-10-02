@@ -33,6 +33,7 @@ protected:
 	                    bool bFromSweep, const FHitResult& SweepResult);
 
 	void DefaultCreater();
+	bool HasAllowedTeamTag(UAbilitySystemComponent* ASC) const;
 
 protected:
 	UPROPERTY(VisibleAnywhere, Category = "TFD|Components")
@@ -66,7 +67,7 @@ public:
 
 private:
 	void SetAllowedTeamTag();
-	bool HasAllowedTeamTag(UAbilitySystemComponent* ASC) const;
+	//bool HasAllowedTeamTag(UAbilitySystemComponent* ASC) const;
 	void ApplyEffectAndDestroy(UAbilitySystemComponent* ASC);
 	void NotifyItemRemoval();
 };

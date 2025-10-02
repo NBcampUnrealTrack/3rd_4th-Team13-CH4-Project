@@ -40,6 +40,12 @@ UE_DEFINE_GAMEPLAY_TAG(TAG_Object_Door, "Object.Door"); //문
 UE_DEFINE_GAMEPLAY_TAG(TAG_Object_Money, "Object.Money"); //돈
 UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SpawnArea, "Object.SpawnArea"); //스폰
 UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SlowItem, "Object.SlowItem"); //스폰
+UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SlowItem_PickupItem, "Object.SlowItem.PickupItem");		// 스킬-겸용-줍는 아이템
+UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SlowItem_ThrowableItem, "Object.SlowItem.ThrowableItem");	// 스킬-겸용-던지는 아이템
+UE_DEFINE_GAMEPLAY_TAG(TAG_Object_Thief_PickupItem, "Object.Thief.PickupItem");			//스킬-도둑용-줍는 아이템 
+UE_DEFINE_GAMEPLAY_TAG(TAG_Object_Thief_ThrowableItem, "Object.Thief.ThrowableItem");	//스킬-도둑용-던지는 아이템
+UE_DEFINE_GAMEPLAY_TAG(TAG_Object_Cop_PickupItem, "Object.Cop.PickupItem");				//스킬-경찰용-줍는 아이템 
+UE_DEFINE_GAMEPLAY_TAG(TAG_Object_Cop_ThrowableItem, "Object.Cop.ThrowableItem");		//스킬-경찰용-던지는 아이템
 UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SKillStockItem_00, "Object.SkillStockItem_00"); //스폰
 UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SpawnPoint, "Object.SpawnPoint"); //스폰포인트
 UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SpawnPoint_Cop, "Object.SpawnPoint.Cop"); //스폰포인트
@@ -51,12 +57,15 @@ UE_DEFINE_GAMEPLAY_TAG(TAG_Object_SpawnPoint_Period, "Object.SpawnPoint.Period")
 //5.게임플레이큐 - 이펙트
 UE_DEFINE_GAMEPLAY_TAG(TAG_GameplayCue_Character_Arrested, "GameplayCue.Character.Arrested");
 UE_DEFINE_GAMEPLAY_TAG(TAG_GameplayCue_Character_HandCuff, "GameplayCue.Character.HandCuff");
-
+UE_DEFINE_GAMEPLAY_TAG(TAG_GameplayCue_Character_Demerit, "GameplayCue.Character.Demerit");
 UE_DEFINE_GAMEPLAY_TAG(TAG_GameplayCue_Hiding, "GameplayCue.Hiding");
 
 //GameplayEvent
 UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Cop_HandCuff_Apply, "Ability.Cop.HandCuff.Apply"); // 체포 발동 시점 GameplayEvent 수신 태그
 UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Cop_HandCuff_End, "Ability.Cop.HandCuff.End"); // 체포 발동 시점 GameplayEvent 수신 태그
+
+UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Thief_Release_Apply, "Ability.Thief.Release.Apply");
+UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Thief_Release_End, "Ability.Thief.Release.End");
 // 6. 입력 - 스킬 슬롯
 UE_DEFINE_GAMEPLAY_TAG(TAG_Input_Skill_Slot1, "Input.Skill.Slot1");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Input_Skill_Slot2, "Input.Skill.Slot2");

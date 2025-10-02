@@ -40,7 +40,13 @@ UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ability_FireProjectile_CoolDown);
 //4. object
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Object_Door); //문
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Object_Money); //돈
-UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Object_SlowItem);
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Object_SlowItem); // sample
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Object_SlowItem_PickupItem);		// 스킬-겸용-줍는 아이템
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Object_SlowItem_ThrowableItem);	// 스킬-겸용-던지는 아이템
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Object_Thief_PickupItem);	//스킬-도둑용-줍는 아이템 
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Object_Thief_ThrowableItem);	//스킬-도둑용-던지는 아이템
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Object_Cop_PickupItem);		//스킬-경찰용-줍는 아이템 
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Object_Cop_ThrowableItem);	//스킬-경찰용-던지는 아이템
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Object_SKillStockItem_00);
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Object_SpawnArea); //스폰지역
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Object_SpawnPoint); //스폰포인트
@@ -52,10 +58,14 @@ UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Object_SpawnPoint_Period);
 //5.게임플레이큐 - 이펙트
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_GameplayCue_Character_Arrested); //체포 시 효과
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_GameplayCue_Character_HandCuff); //체포 시도 효과
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_GameplayCue_Character_Demerit); //체포 시도 효과
 
 //6.GameplayEvent
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ability_Cop_HandCuff_Apply); //잡기 발동 시점
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ability_Cop_HandCuff_End);   //잡기 종료.
+
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ability_Thief_Release_Apply);
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ability_Thief_Release_End);
 
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_GameplayCue_Hiding);
 

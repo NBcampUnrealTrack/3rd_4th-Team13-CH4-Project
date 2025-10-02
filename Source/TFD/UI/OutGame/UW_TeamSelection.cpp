@@ -3,7 +3,9 @@
 #include "Components/TextBlock.h"
 #include "Components/EditableTextBox.h"
 #include "Controller/TFDPlayerController.h"
+#include "GameInstance/TFDGameInstance.h"
 #include "PlayerState/TFDPlayerState.h"
+#include "Utility/TFDBGMSubsystem.h"
 
 
 void UUW_TeamSelection::NativeConstruct()
@@ -28,11 +30,16 @@ void UUW_TeamSelection::OnClickTeamCop()
 {
 	if (ATFDPlayerController* PC = Cast<ATFDPlayerController>(GetOwningPlayer()))
 	{
+		UTFDGameInstance* TFD_GI = Cast<UTFDGameInstance>(GetGameInstance());
+		UTFDBGMSubsystem* TFDBGMSubSyetem = TFD_GI->GetSubsystem<UTFDBGMSubsystem>();
+		if (IsValid(TFDBGMSubSyetem))
+		{
+			TFDBGMSubSyetem->PlayUISound(EUISoundType::Click_00);
+		}
+
 		PC->SendPreferredTeam(TAG_Team_Cop);
 		SelectedTeam = TAG_Team_Cop;
 		UpdateSelectedTeamText(TAG_Team_Cop);
-
-
 	}
 }
 
@@ -43,8 +50,6 @@ void UUW_TeamSelection::OnClickTeamThief()
 		PC->SendPreferredTeam(TAG_Team_Thief);
 		SelectedTeam = TAG_Team_Thief;
 		UpdateSelectedTeamText(TAG_Team_Thief);
-	
-
 	}
 }
 
@@ -54,11 +59,10 @@ void UUW_TeamSelection::OnNicknameChanged(const FText& Text)
 	{
 		if (ATFDPlayerState* PS = Cast<ATFDPlayerState>(PC->PlayerState))
 		{
-			PS->ServerSetNickname(Text.ToString()); // ¼­¹ö¿¡ ´Ð³×ÀÓ Àü¼Û
+			PS->ServerSetNickname(Text.ToString()); // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ð³ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 		}
 	}
 }
-
 
 
 void UUW_TeamSelection::UpdateSelectedTeamText(FGameplayTag NewTeam)

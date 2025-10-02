@@ -26,6 +26,7 @@
 #include "UI/InGame/MiniMapWidget.h"
 #include "UI/InGame/ReleaseWidget.h"
 #include "UI/InGame/UW_SkillSlot.h"
+#include "UI/InGame/ToolTipWidget.h"
 
 #include "Object/JailCell.h"
 
@@ -126,11 +127,16 @@ void ATFDPlayerController::SetupInputComponent()
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ATFDPlayerController::Jump);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ATFDPlayerController::StopJumping);
 		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Triggered, this, &ATFDPlayerController::Dash);
+		EnhancedInputComponent->BindAction(ToggleToolTipAction, ETriggerEvent::Started, this, &ATFDPlayerController::ToggleTooltip);
 
 		// 스킬 시스템 관련
 		EnhancedInputComponent->BindAction(Skill1Action, ETriggerEvent::Started, this, &ATFDPlayerController::OnSkillInput1);
 		EnhancedInputComponent->BindAction(Skill2Action, ETriggerEvent::Started, this, &ATFDPlayerController::OnSkillInput2);
 		EnhancedInputComponent->BindAction(Skill3Action, ETriggerEvent::Started, this, &ATFDPlayerController::OnSkillInput3);
+
+		// Sound Settings UI 토글 바인딩
+		EnhancedInputComponent->BindAction(ToggleSoundUIAction, ETriggerEvent::Started, this, &ATFDPlayerController::ToggleSoundSettingsUI);
+
 	}
 }
 
@@ -299,6 +305,43 @@ void ATFDPlayerController::StopJumping()
 	}
 }
 
+void ATFDPlayerController::ToggleTooltip()
+{
+	if (!IsLocalController())
+	{
+		return;
+	}
+
+	ULocalPlayer* LP = GetLocalPlayer();
+	if (!LP)
+	{
+		return;
+	}
+
+	if (UGameUIRouterSubsystem* UISub = LP->GetSubsystem<UGameUIRouterSubsystem>())
+	{
+		if (!HUDWidgetClass)
+		{
+			return;
+		}
+
+		if (!UISub->ToolTipWidget)
+		{
+			return;
+		}
+
+		ESlateVisibility CurrentVis = UISub->ToolTipWidget->GetVisibility();
+		if (CurrentVis == ESlateVisibility::Visible)
+		{
+			UISub->ToolTipWidget->SetVisibility(ESlateVisibility::Collapsed);
+		}
+		else
+		{
+			UISub->ToolTipWidget->SetVisibility(ESlateVisibility::Visible);
+		}
+	}
+}
+
 void ATFDPlayerController::OnSkillInput1(const FInputActionValue& Value)
 {
 	HandleSkillInput(0);
@@ -370,6 +413,38 @@ void ATFDPlayerController::JobAbility(const FInputActionValue& Value, FGameplayT
 		}
 	}
 }
+
+// Sound Settings UI 토글 함수
+void ATFDPlayerController::ToggleSoundSettingsUI()
+{
+	const bool bIsSoundUIOpen = SoundSettingsWidgetInstance && SoundSettingsWidgetInstance->IsInViewport();
+
+	if (!bIsSoundUIOpen && SoundSettingsWidgetClass)
+	{
+		SoundSettingsWidgetInstance = CreateWidget<UUW_SoundSettings>(this, SoundSettingsWidgetClass);
+		SoundSettingsWidgetInstance->AddToViewport();
+
+		FInputModeGameAndUI InputMode;
+		InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+		InputMode.SetHideCursorDuringCapture(false);
+		SetInputMode(InputMode);
+
+		bShowMouseCursor = true;
+		GetPawn()->DisableInput(this);
+	}
+	else if (bIsSoundUIOpen)
+	{
+		SoundSettingsWidgetInstance->RemoveFromParent();
+		SoundSettingsWidgetInstance = nullptr;
+
+		SetInputMode(FInputModeGameOnly());
+		bShowMouseCursor = false;
+		GetPawn()->EnableInput(this);
+	}
+}
+
+
+
 
 /*
 void ATFDPlayerController::Attack(const FInputActionValue& Value)
@@ -634,6 +709,17 @@ void ATFDPlayerController::HandleMatchInProgress()
 				);
 			}
 		}
+
+		if (ToolTipWidgetClass)
+		{
+			if (!UISub->ToolTipWidget)
+			{
+				UISub->ToolTipWidget = Cast<UToolTipWidget>(
+					UISub->AddWidgetToLayer(EUILayer::GameLayer, ToolTipWidgetClass)
+				);
+				UISub->ToolTipWidget->SetOwnerPawn(GetPawn());
+			}
+		}
 	}
 }
 
@@ -673,6 +759,12 @@ void ATFDPlayerController::HandleMatchWaitingPostMatch(FGameplayTag WinTeamTag, 
 		{
 			UISub->RemoveWidgetFromLayer(EUILayer::GameLayer, UISub->SkillSlotWidget);
 			UISub->SkillSlotWidget = nullptr;
+		}
+
+		if (UISub->ToolTipWidget)
+		{
+			UISub->RemoveWidgetFromLayer(EUILayer::GameLayer, UISub->ToolTipWidget);
+			UISub->ToolTipWidget = nullptr;
 		}
 
 		if (ResultWidgetClass)

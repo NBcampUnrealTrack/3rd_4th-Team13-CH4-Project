@@ -9,6 +9,7 @@
 #include "TFDBGMSubsystem.generated.h"
 
 
+
 /**
  * 
  */
@@ -20,20 +21,38 @@ class TFD_API UTFDBGMSubsystem : public UGameInstanceSubsystem
 public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
+	UFUNCTION(BlueprintCallable)
+	void PlayBGM(USoundBase* BGM, float FadeInTime = 0.5f);
 
-	/** ============ UI Sound ============ */
-	UFUNCTION(BlueprintCallable, Category = "Audio")
-	void PlayUISound(USoundBase* Sound);
+	UFUNCTION(BlueprintCallable)
+	void Play_BGM_02(USoundBase* NewBGM, float FadeInTime = 0.5f);
 
+	UFUNCTION(BlueprintCallable)
+	void PlayUISound(EUISoundType SoundType);
+	
+	// BGM 정지
+	UFUNCTION(BlueprintCallable)
+	void StopBGM(float FadeOutTime = 0.5f);
 
 	void OnLevelChanged(const FName& NewLevelName);
 
 private:
+	void EnsureBGMManager();
+	
+	void EnsureBGMComponent();
+
+private:
+	UPROPERTY(VisibleAnywhere)
+	UAudioComponent* BGMComponent;
+	
 	UPROPERTY()
 	ATFDBGMManager* BGMManagerActor = nullptr;
-
-	ATFDBGMManager* FindOrSpawnBGMManager();
-	void EnsureBGMManager();
-
+	
+	UPROPERTY()
+	USoundBase* CurrentPlayingBGM;
+	
 	FTimerHandle LevelChangeTimerHandle;
+	FTimerHandle InitTempHandle;
+	FTimerHandle PlayBGMTimerHandle;
+	bool bFirstMap = true;
 };
