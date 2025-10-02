@@ -64,25 +64,6 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "TeamUI|Text", meta = (MultiLine = true))
     FText ThiefExtraText;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "TeamUI|Image")
-    TObjectPtr<UPaperSprite> PoliceIconTex = nullptr;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "TeamUI|Image")
-    TObjectPtr<UPaperSprite> PoliceObjectiveTex = nullptr;
-
-    // Texture2D 아이콘
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "TeamUI|Image")
-    TObjectPtr<UPaperSprite> PoliceAbilityTex = nullptr;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "TeamUI|Image")
-    TObjectPtr<UPaperSprite> ThiefIconTex = nullptr;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "TeamUI|Image")
-    TObjectPtr<UPaperSprite> ThiefObjectiveTex = nullptr;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "TeamUI|Image")
-    TObjectPtr<UPaperSprite> ThiefAbilityTex = nullptr;
-
     UPROPERTY(BlueprintReadWrite, Category = "ToolTip")
     APawn* OwnerPawn;
 

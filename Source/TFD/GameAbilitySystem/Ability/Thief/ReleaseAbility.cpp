@@ -39,8 +39,26 @@ void UReleaseAbility::ActivateAbility(
         return;
     }
 
+    if (!ReleaseStartAnimEffect)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("ReleaseStartAnimEffect is invalid"));
+        EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+        return;
+    }
+
     if (ActorInfo->AbilitySystemComponent.IsValid())
     {
+        // GameplayEffectSpec 생성
+        FGameplayEffectSpecHandle SpecHandle = ActorInfo->AbilitySystemComponent->MakeOutgoingSpec(
+            ReleaseStartAnimEffect, GetAbilityLevel(), ActorInfo->AbilitySystemComponent->MakeEffectContext()
+        );
+
+        if (SpecHandle.IsValid())
+        {
+            ActorInfo->AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+        }
+
+        // 기존 이벤트 전송
         FGameplayEventData EventData;
         EventData.Instigator = ActorInfo->AvatarActor.Get();
         ActorInfo->AbilitySystemComponent->HandleGameplayEvent((TAG_Ability_Thief_Release_Apply), &EventData);
@@ -69,6 +87,19 @@ void UReleaseAbility::EndAbility(
 
     if (ActorInfo->AbilitySystemComponent.IsValid())
     {
+        if (ReleaseEndAnimEffect)
+        {
+            FGameplayEffectSpecHandle SpecHandle = ActorInfo->AbilitySystemComponent->MakeOutgoingSpec(
+                ReleaseEndAnimEffect, GetAbilityLevel(), ActorInfo->AbilitySystemComponent->MakeEffectContext()
+            );
+
+            if (SpecHandle.IsValid())
+            {
+                ActorInfo->AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+            }
+        }
+       
+
         FGameplayEventData EventData;
         EventData.Instigator = ActorInfo->AvatarActor.Get();
         ActorInfo->AbilitySystemComponent->HandleGameplayEvent((TAG_Ability_Thief_Release_End), &EventData);

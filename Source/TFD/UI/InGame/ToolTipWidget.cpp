@@ -4,44 +4,56 @@
 #include "UI/InGame/ToolTipWidget.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
-
+#include "GameInstance/TFDGameInstance.h"
 #include "PlayerState/TFDPlayerState.h"
 #include "TFDNativeGameplayTags.h"
 
 void UToolTipWidget::SetupForTeam(FGameplayTag TeamTag)
 {
+    auto* GI = Cast<UTFDGameInstance>(GetGameInstance());
+
+    check(GI)
+
+
+    EUIIconType TeamIconType = (TeamTag == TAG_Team_Cop) ? EUIIconType::Cops : EUIIconType::Thief;
+    GI->RequestUIIcon(TeamIconType, [this](const TObjectPtr<UPaperSprite>& Sprite)
+    {
+        if (Sprite && TeamIcon)
+        {
+            const FVector2D& Size = TeamIcon->GetDesiredSize();
+            FSlateBrush Brush = UUIResourceAsset::MakeBrushFromSprite(Sprite, Size.X, Size.Y);
+            TeamIcon->SetBrush(Brush);
+        }
+    });
+
+    EUIIconType TeamObjectiveImageType = (TeamTag == TAG_Team_Cop) ? EUIIconType::Jail : EUIIconType::Gold;
+    GI->RequestUIIcon(TeamObjectiveImageType, [this](const TObjectPtr<UPaperSprite>& Sprite)
+    {
+        if (Sprite && TeamIcon)
+        {
+            const FVector2D& Size = TeamIcon->GetDesiredSize();
+            FSlateBrush Brush = UUIResourceAsset::MakeBrushFromSprite(Sprite, Size.X, Size.Y);
+            TeamObjectiveImage->SetBrush(Brush);
+        }
+    });
+
+    EUIIconType TeamAbilityImageType = (TeamTag == TAG_Team_Cop) ? EUIIconType::Handcuff : EUIIconType::Exit;
+    GI->RequestUIIcon(TeamAbilityImageType, [this](const TObjectPtr<UPaperSprite>& Sprite)
+    {
+        if (Sprite && TeamIcon)
+        {
+            const FVector2D& Size = TeamIcon->GetDesiredSize();
+            FSlateBrush Brush = UUIResourceAsset::MakeBrushFromSprite(Sprite, Size.X, Size.Y);
+            TeamAbilityImage->SetBrush(Brush);
+        }
+    });
+
     if (TeamTag == TAG_Team_Cop)
     {
         // 텍스트 적용
         TeamObjectiveText->SetText(PoliceObjectiveText);
         TeamAbilityText->SetText(PoliceAbilityText);
         ExtraDescriptionText->SetText(PoliceExtraText);
-
-        // 이미지 적용
-        if (PoliceIconTex)
-        {
-            FSlateBrush Brush;
-            Brush.SetResourceObject(PoliceIconTex);
-            Brush.ImageSize = FVector2D(PoliceIconTex->GetSourceSize().X, PoliceIconTex->GetSourceSize().Y);
-
-            TeamIcon->SetBrush(Brush);
-        }
-        if (PoliceObjectiveTex)
-        {
-            FSlateBrush Brush;
-            Brush.SetResourceObject(PoliceObjectiveTex);
-            Brush.ImageSize = FVector2D(PoliceIconTex->GetSourceSize().X, PoliceIconTex->GetSourceSize().Y);
-
-            TeamObjectiveImage->SetBrush(Brush);
-        }
-        if (PoliceAbilityTex)
-        {
-            FSlateBrush Brush;
-            Brush.SetResourceObject(PoliceAbilityTex);
-            Brush.ImageSize = FVector2D(PoliceIconTex->GetSourceSize().X, PoliceIconTex->GetSourceSize().Y);
-
-            TeamAbilityImage->SetBrush(Brush);
-        }
     }
     else if(TeamTag == TAG_Team_Thief)
     {
@@ -49,32 +61,6 @@ void UToolTipWidget::SetupForTeam(FGameplayTag TeamTag)
         TeamObjectiveText->SetText(ThiefObjectiveText);
         TeamAbilityText->SetText(ThiefAbilityText);
         ExtraDescriptionText->SetText(ThiefExtraText);
-
-        // 이미지 적용
-        if (ThiefIconTex)
-        {
-            FSlateBrush Brush;
-            Brush.SetResourceObject(ThiefIconTex);
-            Brush.ImageSize = FVector2D(PoliceIconTex->GetSourceSize().X, PoliceIconTex->GetSourceSize().Y);
-
-            TeamIcon->SetBrush(Brush);
-        }
-        if (ThiefObjectiveTex)
-        {
-            FSlateBrush Brush;
-            Brush.SetResourceObject(ThiefObjectiveTex);
-            Brush.ImageSize = FVector2D(PoliceIconTex->GetSourceSize().X, PoliceIconTex->GetSourceSize().Y);
-
-            TeamObjectiveImage->SetBrush(Brush);
-        }
-        if (ThiefAbilityTex)
-        {
-            FSlateBrush Brush;
-            Brush.SetResourceObject(ThiefAbilityTex);
-            Brush.ImageSize = FVector2D(PoliceIconTex->GetSourceSize().X, PoliceIconTex->GetSourceSize().Y);
-
-            TeamAbilityImage->SetBrush(Brush);
-        }
     }
 }
 

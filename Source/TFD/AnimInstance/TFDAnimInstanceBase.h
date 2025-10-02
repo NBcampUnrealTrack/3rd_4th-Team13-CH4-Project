@@ -25,11 +25,17 @@ public:
 	void PlayDemeritAnim();
 	void DemeritAnimEnd();
 
+	void PlayReleaseAnim();
+	void ReleaseAnimEnd();
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Animation")
 	UAnimMontage* HitMontage;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	UAnimMontage* DemeritMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimMontage* ReleaseMontage;
 
 	static FName GetSectionNameByDirection(EHitDirection Direction);
 	
@@ -60,4 +66,7 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation")
 	bool bIsDemeritPlaying = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation")
+	bool bIsReleasePlaying = false;
 };

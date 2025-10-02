@@ -49,8 +49,6 @@ void UReleaseWidget::UpdateReleaseProgress()
 
 void UReleaseWidget::HandleReleaseAbilityActivated(const FGameplayEventData* Payload)
 {
-    UE_LOG(LogTemp, Warning, TEXT("Release Ability 시작 UI 알림 받음!"));
-
     if (ReleaseProgressBar)
     {
         ReleaseProgressBar->SetPercent(0.f);
@@ -70,7 +68,6 @@ void UReleaseWidget::HandleReleaseAbilityActivated(const FGameplayEventData* Pay
 
 void UReleaseWidget::HandleReleaseAbilityCanceled(const FGameplayEventData* Payload)
 {
-    UE_LOG(LogTemp, Warning, TEXT("Release Ability 취소 UI 알림 받음!"));
     GetWorld()->GetTimerManager().ClearTimer(FillTimerHandle);
 
     // 값 초기화

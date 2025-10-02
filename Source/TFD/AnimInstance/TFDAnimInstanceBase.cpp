@@ -76,6 +76,24 @@ void UTFDAnimInstanceBase::DemeritAnimEnd()
 	bIsDemeritPlaying = false;
 }
 
+void UTFDAnimInstanceBase::PlayReleaseAnim()
+{
+	if (!ReleaseMontage) return;
+	Montage_Play(ReleaseMontage);
+
+	bIsReleasePlaying = true;
+}
+
+void UTFDAnimInstanceBase::ReleaseAnimEnd()
+{
+	if (bIsReleasePlaying)
+	{
+		Montage_Stop(0.1f, ReleaseMontage);
+	}
+
+	bIsReleasePlaying = false;
+}
+
 FName UTFDAnimInstanceBase::GetSectionNameByDirection(EHitDirection Direction)
 {
 	switch(Direction)
