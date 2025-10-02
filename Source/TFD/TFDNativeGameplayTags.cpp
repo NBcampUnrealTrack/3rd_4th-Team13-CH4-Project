@@ -63,6 +63,9 @@ UE_DEFINE_GAMEPLAY_TAG(TAG_GameplayCue_Hiding, "GameplayCue.Hiding");
 //GameplayEvent
 UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Cop_HandCuff_Apply, "Ability.Cop.HandCuff.Apply"); // 체포 발동 시점 GameplayEvent 수신 태그
 UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Cop_HandCuff_End, "Ability.Cop.HandCuff.End"); // 체포 발동 시점 GameplayEvent 수신 태그
+
+UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Thief_Release_Apply, "Ability.Thief.Release.Apply");
+UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Thief_Release_End, "Ability.Thief.Release.End");
 // 6. 입력 - 스킬 슬롯
 UE_DEFINE_GAMEPLAY_TAG(TAG_Input_Skill_Slot1, "Input.Skill.Slot1");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Input_Skill_Slot2, "Input.Skill.Slot2");

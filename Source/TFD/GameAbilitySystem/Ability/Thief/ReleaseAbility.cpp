@@ -15,6 +15,8 @@
 #include "GameFramework/Actor.h"
 #include "Engine/Engine.h"
 
+#include "Net/UnrealNetwork.h"
+
 UReleaseAbility::UReleaseAbility()
 {
 }
@@ -37,11 +39,19 @@ void UReleaseAbility::ActivateAbility(
         return;
     }
 
+    if (ActorInfo->AbilitySystemComponent.IsValid())
+    {
+        FGameplayEventData EventData;
+        EventData.Instigator = ActorInfo->AvatarActor.Get();
+        ActorInfo->AbilitySystemComponent->HandleGameplayEvent((TAG_Ability_Thief_Release_Apply), &EventData);
+    }
+
     // 3초 Delay Task
     UAbilityTask_WaitDelay* WaitDelay = UAbilityTask_WaitDelay::WaitDelay(this, 3.0f);
     if (WaitDelay)
     {
         WaitDelay->OnFinish.AddDynamic(this, &UReleaseAbility::OnHoldFinished);
+        
         WaitDelay->ReadyForActivation();
     }
 
@@ -56,6 +66,14 @@ void UReleaseAbility::EndAbility(
 	bool bWasCancelled)
 {
     UE_LOG(LogTemp, Warning, TEXT("ReleaseAbility end"));
+
+    if (ActorInfo->AbilitySystemComponent.IsValid())
+    {
+        FGameplayEventData EventData;
+        EventData.Instigator = ActorInfo->AvatarActor.Get();
+        ActorInfo->AbilitySystemComponent->HandleGameplayEvent((TAG_Ability_Thief_Release_End), &EventData);
+    }
+
 
     Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }

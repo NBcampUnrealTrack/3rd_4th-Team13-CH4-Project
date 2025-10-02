@@ -6,6 +6,7 @@
 #include "GameAbilitySystem/Ability/TFDGameplayAbility.h"
 #include "ReleaseAbility.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSpecificAbilityActivated, UGameplayAbility*, ActivatedAbility);
 /**
  * 
  */
@@ -32,4 +33,7 @@ public:
 
     UFUNCTION()
     void OnHoldFinished();
+
+    UPROPERTY(BlueprintAssignable, Category = "Ability|Events")
+    FOnSpecificAbilityActivated OnSpecificAbilityActivated;
 };
