@@ -40,17 +40,17 @@ void UTFDBGMSubsystem::PlayBGM(USoundBase* BGM, float FadeInTime)
 	}
 
 
-	if (!BGMComponent)
-	{
-		BGMComponent = NewObject<UAudioComponent>(this, UAudioComponent::StaticClass());
-		if (BGMComponent)
-		{
-			BGMComponent->RegisterComponent();
-			BGMComponent->bAutoActivate = false;
-			BGMComponent->bIsUISound = false;
-			BGMComponent->SetVolumeMultiplier(1.0f);
-		}
-	}
+	// if (!BGMComponent)
+	// {
+	// 	BGMComponent = NewObject<UAudioComponent>(this, UAudioComponent::StaticClass());
+	// 	if (BGMComponent)
+	// 	{
+	// 		BGMComponent->RegisterComponent();
+	// 		BGMComponent->bAutoActivate = false;
+	// 		BGMComponent->bIsUISound = false;
+	// 		BGMComponent->SetVolumeMultiplier(1.0f);
+	// 	}
+	// }
 
 	UWorld* World = GetWorld();
 	if (!World || !BGMComponent)
@@ -249,7 +249,7 @@ void UTFDBGMSubsystem::EnsureBGMComponent()
 		BGMComponent->bAutoActivate = false;
 		BGMComponent->bAutoDestroy = false;
 		BGMComponent->bAllowSpatialization = false;
-
+		
 		if (UWorld* World = GetWorld())
 		{
 			BGMComponent->RegisterComponentWithWorld(World);

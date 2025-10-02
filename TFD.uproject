@@ -12,7 +12,8 @@
 				"GameplayAbilities",
 				"Engine",
 				"AIModule",
-				"UMG"
+				"UMG",
+				"Paper2D"
 			]
 		}
 	],
@@ -26,6 +27,10 @@
 		},
 		{
 			"Name": "GameplayAbilities",
+			"Enabled": true
+		},
+		{
+			"Name": "Paper2D",
 			"Enabled": true
 		}
 	]

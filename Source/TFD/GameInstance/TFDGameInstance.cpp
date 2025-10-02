@@ -2,9 +2,10 @@
 
 #include "GameInstance/TFDGameInstance.h"
 
-#include "Kismet/GameplayStatics.h"
-#include "Sound/SoundClass.h"
+#include "Engine/AssetManager.h"
 #include "Utility/TFDBGMSubsystem.h"
+
+struct FStreamableManager;
 
 void UTFDGameInstance::Init()
 {
@@ -52,6 +53,38 @@ void UTFDGameInstance::SetBGMVolume(float InVolume)
 void UTFDGameInstance::SetSFXVolume(float InVolume)
 {
 	SFXVolume = FMath::Clamp(InVolume, 0.0f, 1.0f);
+}
+
+void UTFDGameInstance::RequestUIIcon(EUIIconType IconType, TFunction<void(TObjectPtr<class UPaperSprite>)> OnLoaded)
+{
+	// 이미 로드된 경우 즉시 반환
+	if (LoadedUIResource)
+	{
+		LoadedUIResource->RequestIconAsync(IconType, OnLoaded);
+		return;
+	}
+
+	// 아직 로드되지 않았다면 비동기 로드
+	if (UIResourceAssetRef.IsNull())
+	{
+		OnLoaded(nullptr);
+		return;
+	}
+
+	FStreamableManager& SM = UAssetManager::GetStreamableManager();
+	SM.RequestAsyncLoad(UIResourceAssetRef.ToSoftObjectPath(),
+		FStreamableDelegate::CreateLambda([this, IconType, OnLoaded]()
+	{
+		LoadedUIResource = UIResourceAssetRef.Get();
+		if (LoadedUIResource)
+		{
+			LoadedUIResource->RequestIconAsync(IconType, OnLoaded);
+		}
+		else
+		{
+			OnLoaded(nullptr);
+		}
+	}));
 }
 
 
