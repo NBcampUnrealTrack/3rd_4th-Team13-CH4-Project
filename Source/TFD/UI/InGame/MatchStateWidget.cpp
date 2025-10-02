@@ -5,6 +5,8 @@
 #include "Components/PanelWidget.h"
 #include "Components/TextBlock.h"
 #include "Engine/AssetManager.h"
+#include "PaperSprite.h"
+#include "Styling/SlateBrush.h"
 
 void UMatchStateWidget::NativeConstruct()
 {
@@ -25,6 +27,7 @@ void UMatchStateWidget::NativeConstruct()
 	UpdateThiefScore(0);
 	InitCaughtJaiImages();
 	UpdateThiefCountAsync();
+	UpdateTeamIconAsync();
 }
 
 void UMatchStateWidget::InitCaughtJaiImages()
@@ -93,38 +96,21 @@ void UMatchStateWidget::UpdateTeamIconAsync()
 	FStreamableManager& SM = UAssetManager::GetStreamableManager();
 	auto* GI = Cast<UTFDGameInstance>(GetGameInstance());
 
-	auto UIResourceAsset = GI->UIResourceAsset; 
-	if (UIResourceAsset.Get() == nullptr)
-	{
-		auto Path = UIResourceAsset.ToSoftObjectPath();
-		SM.RequestAsyncLoad(Path,
-			FStreamableDelegate::CreateWeakLambda(this, [this]()
-		{
-			UpdateTeamIconAsync();
-		}));
-	}
-
-	auto CopTexture = UIResourceAsset->IconCops;
-	auto ThiefTexture = UIResourceAsset->IconThief;
+	check(GI)
 	
-	TArray<FSoftObjectPath> Paths;
-	Paths.Reserve(2);
-	if (CopTexture.Get() == nullptr && CopTexture.ToSoftObjectPath().IsValid())
-		Paths.Add(CopTexture.ToSoftObjectPath());
-	if (ThiefTexture.Get() == nullptr && ThiefTexture.ToSoftObjectPath().IsValid())
-		Paths.Add(ThiefTexture.ToSoftObjectPath());
 
-	if (Paths.Num() > 0)
+	EUIIconType IconType = (TeamTag == TAG_Team_Cop) ? EUIIconType::Cops : EUIIconType::Thief;
+
+	// GameInstance에 Sprite 요청
+	GI->RequestUIIcon(IconType, [this](const TObjectPtr<UPaperSprite>& Sprite)
 	{
-		SM.RequestAsyncLoad(Paths,
-			FStreamableDelegate::CreateWeakLambda(this, [this]()
+		if (Sprite && TeamIcon)
 		{
-			UpdateThiefCountAsync();
-		}));
-		return;
-	}
-	UTexture2D* TeamTexture = TeamTag == TAG_Team_Cop ? CopTexture.Get() : ThiefTexture.Get();
-	TeamIcon->SetBrushFromTexture(TeamTexture, true);
+			const FVector2D& Size = TeamIcon->GetDesiredSize();
+			FSlateBrush Brush = UUIResourceAsset::MakeBrushFromSprite(Sprite, Size.X, Size.Y);
+			TeamIcon->SetBrush(Brush);
+		}
+	});
 	
 }
 
