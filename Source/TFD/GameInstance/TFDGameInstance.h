@@ -83,9 +83,9 @@ public:
 	float SFXVolume = 1.f;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="UI")
-	TSoftObjectPtr<UUIResourceAsset> UIResourceAsset; 
-	
+	TSoftObjectPtr<UUIResourceAsset> UIResourceAssetRef; 
+	TObjectPtr<UUIResourceAsset> LoadedUIResource = nullptr;
 
-
-
+	// Sprite 요청 (비동기 로드 후 콜백 실행)
+	void RequestUIIcon(EUIIconType IconType, TFunction<void(TObjectPtr<class UPaperSprite>)> OnLoaded);
 };
