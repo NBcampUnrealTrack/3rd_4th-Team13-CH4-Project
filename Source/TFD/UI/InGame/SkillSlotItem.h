@@ -9,6 +9,7 @@
 
 class UImage;
 class UTextBlock;
+class UProgressBar;
 
 UCLASS()
 class TFD_API USkillSlotItem : public UUserWidget
@@ -24,6 +25,9 @@ protected:
 	TObjectPtr<UImage> SkillIcon;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	TObjectPtr<UProgressBar> CooldownBar;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	TObjectPtr<UTextBlock> UsageCountText;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
@@ -36,5 +40,5 @@ private:
 	FTFDSkillSlot CurrentSlot;
 
 	FTimerHandle CooldownTimerHandle;
-	void UpdateCooldownText();
+	void UpdateCooldown();
 };

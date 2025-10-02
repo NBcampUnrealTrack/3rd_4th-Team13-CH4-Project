@@ -3,6 +3,7 @@
 #include "UI/InGame/SkillSlotItem.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
+#include "Components/ProgressBar.h"
 #include "AbilitySystemComponent.h"
 #include "GameplayEffectTypes.h"
 #include "GameplayAbilitySpec.h"
@@ -56,38 +57,64 @@ void USkillSlotItem::UpdateSlot(const FTFDSkillSlot& InSlot, int32 SlotIndex)
         GetWorld()->GetTimerManager().SetTimer(
             CooldownTimerHandle,
             this,
-            &USkillSlotItem::UpdateCooldownText,
+            &USkillSlotItem::UpdateCooldown,
             1.0f,
             true);
 
-        UpdateCooldownText();
+        UpdateCooldown();
     }
     else
     {
         if (CooldownText)
             CooldownText->SetText(FText::GetEmpty());
 
+        if (CooldownBar)
+            CooldownBar->SetPercent(0.f);
+
+
         if (GetWorld()->GetTimerManager().IsTimerActive(CooldownTimerHandle))
         {
+            CooldownText->SetText(FText::GetEmpty());
+
             GetWorld()->GetTimerManager().ClearTimer(CooldownTimerHandle);
+
+            FTimerHandle TempHandle;
+
+            if (GetWorld()->GetTimerManager().IsTimerActive(TempHandle))
+            {
+                GetWorld()->GetTimerManager().ClearTimer(TempHandle);
+            }
+
+            if (InSlot.SkillTag.IsValid())
+            { 
+                SetRenderScale(FVector2D(1.2f, 1.2f));
+                GetWorld()->GetTimerManager().SetTimer(TempHandle, [this]()
+                {
+                    SetRenderScale(FVector2D(1.0f, 1.0f));
+                }, 0.15f, false);
+            }
         }
     }
 }
 
-void USkillSlotItem::UpdateCooldownText()
+void USkillSlotItem::UpdateCooldown()
 {
     if (!CooldownText || CurrentSlot.CooldownDuration <= 0.f || CurrentSlot.CooldownStartTime <= 0.f)
         return;
 
     float Remaining = (CurrentSlot.CooldownStartTime + CurrentSlot.CooldownDuration) - GetWorld()->GetTimeSeconds();
+    float Ratio = FMath::Clamp(Remaining / CurrentSlot.CooldownDuration, 0.f, 1.f);
 
     if (Remaining > 0.f)
     {
         CooldownText->SetText(FText::AsNumber(FMath::RoundToInt(Remaining)));
+        CooldownBar->SetPercent(Ratio);
     }
     else
     {
         CooldownText->SetText(FText::GetEmpty());
+        CooldownBar->SetPercent(0.0f);
+
         GetWorld()->GetTimerManager().ClearTimer(CooldownTimerHandle);
     }
 }
