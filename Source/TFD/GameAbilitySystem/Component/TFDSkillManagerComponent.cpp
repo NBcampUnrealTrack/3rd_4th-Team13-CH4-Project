@@ -36,6 +36,19 @@ void UTFDSkillManagerComponent::EndPlay(const EEndPlayReason::Type EndPlayReason
 	// 서브시스템 이벤트 구독 해제
 	UnsubscribeFromSkillItemEvents();
 
+	//ASC 델리게이트 구독 해제
+	if (EffectAddedHandle.IsValid())
+	{
+		ASC->OnActiveGameplayEffectAddedDelegateToSelf.Remove(EffectAddedHandle);
+		EffectAddedHandle.Reset();
+	}
+
+	if (EffectRemovedHandle.IsValid())
+	{
+		ASC->OnAnyGameplayEffectRemovedDelegate().Remove(EffectRemovedHandle);
+		EffectRemovedHandle.Reset();
+	}
+
 	Super::EndPlay(EndPlayReason);
 }
 
@@ -77,7 +90,7 @@ void UTFDSkillManagerComponent::SetupASC()
 void UTFDSkillManagerComponent::HandleEffectAdded(UAbilitySystemComponent* InASC, const FGameplayEffectSpec& Spec, FActiveGameplayEffectHandle Handle)
 {
 	if (!InASC) return;
-	UE_LOG(LogTemp, Error, TEXT("[SkillManagerComponent][HandleEffectAdded] start"));
+
 	// 태그 확인
 	FGameplayTagContainer EffectTags;
 	Spec.GetAllGrantedTags(EffectTags);
@@ -113,8 +126,6 @@ void UTFDSkillManagerComponent::HandleEffectAdded(UAbilitySystemComponent* InASC
 
 void UTFDSkillManagerComponent::HandleEffectRemoved(const FActiveGameplayEffect& ActiveEffect)
 {
-	UE_LOG(LogTemp, Error, TEXT("[SkillManagerComponent][HandleEffectRemoved] End"));
-
 	// 태그 가져오기
 	FGameplayTagContainer EffectTags;
 	ActiveEffect.Spec.GetAllGrantedTags(EffectTags);

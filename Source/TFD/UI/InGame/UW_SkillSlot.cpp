@@ -37,7 +37,7 @@ void UUW_SkillSlot::OnSkillChanged(const TArray<FTFDSkillSlot>& SkillSlots)
         if (SlotWidgets.IsValidIndex(i) && SlotWidgets[i])
         {
             // 기존 위젯 업데이트
-            SlotWidgets[i]->UpdateSlot(SkillSlots[i]);
+            SlotWidgets[i]->UpdateSlot(SkillSlots[i], i+1);
         }
         else
         {
@@ -45,7 +45,7 @@ void UUW_SkillSlot::OnSkillChanged(const TArray<FTFDSkillSlot>& SkillSlots)
             USkillSlotItem* NewSlot = CreateWidget<USkillSlotItem>(this, SkillSlotItemClass);
             if (NewSlot)
             {
-                NewSlot->UpdateSlot(SkillSlots[i]);
+                NewSlot->UpdateSlot(SkillSlots[i], i+1);
                 SlotContainer->AddChild(NewSlot);
                 SlotWidgets.Add(NewSlot);
             }

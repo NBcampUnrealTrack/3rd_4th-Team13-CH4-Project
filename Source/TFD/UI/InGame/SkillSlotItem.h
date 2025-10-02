@@ -17,7 +17,7 @@ class TFD_API USkillSlotItem : public UUserWidget
 	
 public:
 
-	void UpdateSlot(const FTFDSkillSlot& InSlot);
+	void UpdateSlot(const FTFDSkillSlot& InSlot, int32 SlotIndex);
 
 protected:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
@@ -25,6 +25,9 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	TObjectPtr<UTextBlock> UsageCountText;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	TObjectPtr<UTextBlock> BindKey;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	TObjectPtr<UTextBlock> CooldownText;

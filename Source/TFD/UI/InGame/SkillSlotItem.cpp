@@ -9,7 +9,7 @@
 #include "TimerManager.h"
 #include "PaperSprite.h"
 
-void USkillSlotItem::UpdateSlot(const FTFDSkillSlot& InSlot)
+void USkillSlotItem::UpdateSlot(const FTFDSkillSlot& InSlot, int32 SlotIndex)
 {
     CurrentSlot = InSlot;
     // 아이콘
@@ -17,16 +17,16 @@ void USkillSlotItem::UpdateSlot(const FTFDSkillSlot& InSlot)
     {
         if (InSlot.SkillIcon)
         {
-            UE_LOG(LogTemp, Error, TEXT("SkillIcon : %s"), *InSlot.SkillIcon->GetName())
-            
             FSlateBrush Brush;
-            Brush.SetResourceObject(InSlot.SkillIcon); // Texture가 아니라 Sprite 자체를 넣음
+            Brush.SetResourceObject(InSlot.SkillIcon);
             SkillIcon->SetBrush(Brush);
-
-            //SkillIcon->SetBrushFromTexture(InSlot.SkillIcon);
+            SkillIcon->SetOpacity(1.0f);
         }
         else
+        {
             SkillIcon->SetBrushFromTexture(nullptr);
+            SkillIcon->SetOpacity(0.5f);
+        }
     }
 
     // 사용 횟수
@@ -36,6 +36,12 @@ void USkillSlotItem::UpdateSlot(const FTFDSkillSlot& InSlot)
             UsageCountText->SetText(FText::Format(FText::FromString(TEXT("x{0}")),FText::AsNumber(InSlot.UsageCount)));
         else
             UsageCountText->SetText(FText::FromString(TEXT("")));
+    }
+
+    if (BindKey)
+    {
+        FString KeyString = FString::FromInt(SlotIndex);
+        BindKey->SetText(FText::FromString(KeyString));
     }
 
     // 쿨다운
@@ -77,7 +83,7 @@ void USkillSlotItem::UpdateCooldownText()
 
     if (Remaining > 0.f)
     {
-        CooldownText->SetText(FText::AsNumber(FMath::CeilToInt(Remaining)));
+        CooldownText->SetText(FText::AsNumber(FMath::RoundToInt(Remaining)));
     }
     else
     {
