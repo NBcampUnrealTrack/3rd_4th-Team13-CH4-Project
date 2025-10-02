@@ -6,9 +6,7 @@
 #include "GameAbilitySystem/Ability/TFDGameplayAbility.h"
 #include "ReleaseAbility.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSpecificAbilityActivated, UGameplayAbility*, ActivatedAbility);
-/**
- * 
+/* 
  */
 UCLASS()
 class TFD_API UReleaseAbility : public UTFDGameplayAbility
@@ -34,6 +32,9 @@ public:
     UFUNCTION()
     void OnHoldFinished();
 
-    UPROPERTY(BlueprintAssignable, Category = "Ability|Events")
-    FOnSpecificAbilityActivated OnSpecificAbilityActivated;
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ability|Effects")
+    TSubclassOf<UGameplayEffect> ReleaseStartAnimEffect;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ability|Effects")
+    TSubclassOf<UGameplayEffect> ReleaseEndAnimEffect;
 };
