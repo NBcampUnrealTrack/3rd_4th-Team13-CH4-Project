@@ -8,14 +8,17 @@ class UPaperSprite;
 UENUM(BlueprintType)
 enum class EUIIconType : uint8
 {
-	None        UMETA(DisplayName="None"),
-	Cops        UMETA(DisplayName="Cops"),
-	Thief       UMETA(DisplayName="Thief"),
-	Gold        UMETA(DisplayName="Gold"),
-	Clock       UMETA(DisplayName="Clock"),
-	Jail        UMETA(DisplayName="Jail"),
-	Exit        UMETA(DisplayName="Exit"),
-	Handcuff    UMETA(DisplayName="Handcuff")
+	None          UMETA(DisplayName="None"),
+	Cops          UMETA(DisplayName="Cops"),
+	Thief         UMETA(DisplayName="Thief"),
+	Gold          UMETA(DisplayName="Gold"),
+	Clock         UMETA(DisplayName="Clock"),
+	Jail          UMETA(DisplayName="Jail"),
+	Exit          UMETA(DisplayName="Exit"),
+	Handcuff      UMETA(DisplayName="Handcuff"),
+	Invisibility  UMETA(DisplayName="Invisibility"),
+	Teleport      UMETA(DisplayName="Teleport"),
+	ThrowSlowItem UMETA(DisplayName="ThrowSlowItem")
 };
 
 UCLASS()

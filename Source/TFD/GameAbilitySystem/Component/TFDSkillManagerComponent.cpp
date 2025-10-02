@@ -362,11 +362,6 @@ void UTFDSkillManagerComponent::AddSkill(TSubclassOf<UGameplayAbility> SkillClas
 		NewSlot.SkillTag = SkillTag;
 		NewSlot.UsageCount = InitialUsageCount;
 
-		if (SkillTagToIconMap.Contains(SkillTag))
-		{
-			NewSlot.SkillIcon = SkillTagToIconMap[SkillTag];
-		}
-
 		//=============================================================================
 		// 빈 슬롯 찾기
 		//=============================================================================
