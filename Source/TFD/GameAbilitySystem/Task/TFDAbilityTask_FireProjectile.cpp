@@ -67,9 +67,16 @@ void UTFDAbilityTask_FireProjectile::EndTask()
 void UTFDAbilityTask_FireProjectile::ShootProjectile()
 {
 	AActor* AvatarActor = Ability->GetCurrentActorInfo()->AvatarActor.Get();
+
 	UAbilitySystemComponent* SourceASC = Ability->GetAbilitySystemComponentFromActorInfo();
+
+	UE_LOG(LogTemp, Warning, TEXT("[UTFDAbilityTask_FireProjectile][ShootProjectile] Starting - Ability Valid: %s, ASC Valid: %s"),
+		Ability ? TEXT("YES") : TEXT("NO"),
+		SourceASC ? TEXT("YES") : TEXT("NO"));
+
 	if (!CheckProjectile(*AvatarActor, *SourceASC))
 	{
+		UE_LOG(LogTemp, Error, TEXT("[UTFDAbilityTask_FireProjectile][ShootProjectile] CheckProjectile failed!"));
 		EndTask();
 		return;
 	}
