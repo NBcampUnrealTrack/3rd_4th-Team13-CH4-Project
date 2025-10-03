@@ -30,6 +30,18 @@ void ATFDBaseObject::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor*
                                     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
                                     const FHitResult& SweepResult)
 {
+	// Cosmetic 전용이면 시각 효과만 처리하고 파괴
+	if (bIsCosmeticOnly)
+	{
+		ATFDCharacterBase* Player = Cast<ATFDCharacterBase>(OtherActor);
+		if (Player)
+		{// 충돌 감지 시 시각적으로만 사라짐
+			UE_LOG(LogTemp, Log, TEXT("[ATFDBaseObject][OnOverlapBegin] Cosmetic Projectile Hit detected, destroying visual"));
+			Destroy();
+		}
+		return;
+	}
+
 	if (!CollisionEffect)
 		return;
 
@@ -78,6 +90,16 @@ void ATFDBaseObject::DefaultCreater()
 	MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
+//void ATFDBaseObject::DisableCollision()
+//{
+//	if (CollisionComp)
+//	{
+//		CollisionComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+//
+//		// 오버랩 이벤트도 바인딩 해제
+//		CollisionComp->OnComponentBeginOverlap.RemoveDynamic(this, &ATFDBaseObject::OnOverlapBegin);
+//	}
+//}
 
 void ATFDBaseObject::SetAllowedTeamTag()
 {

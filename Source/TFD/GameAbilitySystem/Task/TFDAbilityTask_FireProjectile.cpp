@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "GameAbilitySystem/Task/TFDAbilityTask_FireProjectile.h"
@@ -50,6 +50,10 @@ void UTFDAbilityTask_FireProjectile::Activate()
 	if (Ability->GetCurrentActorInfo()->IsNetAuthority())
 	{
 		ShootProjectile(); // 실제 스폰 
+	}
+	else
+	{// 클라이언트에서는 시각적 효과만 생성
+		SpawnCosmeticProjectile();
 	}
 }
 
@@ -194,4 +198,53 @@ bool UTFDAbilityTask_FireProjectile::CalcSpawnTransform(ATFDCharacterBase* Chara
 	result = true;
 	
 	return result;
+}
+
+void UTFDAbilityTask_FireProjectile::SpawnCosmeticProjectile()
+{
+	AActor* AvatarActor = Ability->GetCurrentActorInfo()->AvatarActor.Get();
+	if (!AvatarActor)
+	{
+		EndTask();
+		return;
+	}
+
+	ATFDCharacterBase* Character = Cast<ATFDCharacterBase>(AvatarActor);
+	if (!Character || !CalcSpawnTransform(Character, SpawnWorldTransform))
+	{
+		EndTask();
+		return;
+	}
+
+	ATFDBaseProjectile* CosmeticProjectile = Cast<ATFDBaseProjectile>(
+		UGameplayStatics::BeginDeferredActorSpawnFromClass(
+			GetWorld(),
+			TaskParams.ProjectileClass,
+			SpawnWorldTransform,
+			ESpawnActorCollisionHandlingMethod::AlwaysSpawn,
+			AvatarActor
+		)
+	);
+
+	if (CosmeticProjectile)
+	{
+		// Cosmetic 플래그 설정
+		CosmeticProjectile->bIsCosmeticOnly = true;
+
+		FTFDBaseObjectParam CosmeticParam = TaskParams.BaseObjectParam;
+		CosmeticParam.bMoveFlag = true;
+
+		CosmeticProjectile->SetBaseObjectParam(CosmeticParam);
+		CosmeticProjectile->SetInstigator(Cast<APawn>(AvatarActor));
+		CosmeticProjectile->InitialLifeSpan = TaskParams.ProjectileLifeSpan;
+
+		// 충돌은 활성화 상태로 유지 (DisableCollision 호출 안 함)
+		// 충돌 감지는 하되, OnOverlapBegin에서 bIsCosmeticOnly로 구분
+
+		UGameplayStatics::FinishSpawningActor(CosmeticProjectile, SpawnWorldTransform);
+
+		UE_LOG(LogTemp, Warning, TEXT("[UTFDAbilityTask_FireProjectile][SpawnCosmeticProjectile] Cosmetic Projectile Spawned with collision enabled"));
+	}
+
+	EndTask();
 }

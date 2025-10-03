@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -72,6 +72,9 @@ private:
 	void ShootProjectile();
 	bool CheckProjectile(AActor& pActor, UAbilitySystemComponent& SourceASC);
 	bool CalcSpawnTransform(ATFDCharacterBase* Character, FTransform& OutSpawnTransform);
+
+	// 클라이언트 전용 시각 효과 투사체 생성
+	void SpawnCosmeticProjectile();
 
 private:
 	//발사체 최종 트랜스폼
