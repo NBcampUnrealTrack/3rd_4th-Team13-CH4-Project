@@ -65,6 +65,10 @@ public:
 
 	const FGameplayTagContainer& GetAllowedTeamTag() const { return AllowedTeamTag; }
 
+public:
+	UPROPERTY()
+	bool bIsCosmeticOnly = false;
+
 private:
 	void SetAllowedTeamTag();
 	//bool HasAllowedTeamTag(UAbilitySystemComponent* ASC) const;
