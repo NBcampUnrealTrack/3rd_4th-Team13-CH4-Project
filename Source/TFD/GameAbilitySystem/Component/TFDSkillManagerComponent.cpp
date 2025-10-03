@@ -535,7 +535,27 @@ void UTFDSkillManagerComponent::UseSkillAtSlot(int32 SlotIndex)
 
 			if (Slot.UsageCount <= 0)
 			{
-				RemoveSkill(Slot.SkillTag);
+				//RemoveSkill(Slot.SkillTag);
+
+				// 스킬 태그 저장 (타이머 람다에서 사용)
+				FGameplayTag SkillTagToRemove = Slot.SkillTag;
+
+				// 즉시 제거하지 않고 0.1초 지연
+				FTimerHandle RemoveTimerHandle;
+				GetWorld()->GetTimerManager().SetTimer(
+					RemoveTimerHandle,
+					[this, SkillTagToRemove]()
+					{
+						RemoveSkill(SkillTagToRemove);
+						UE_LOG(LogTemp, Log, TEXT("[UTFDSkillManagerComponent][UseSkillAtSlot] Delayed removal of skill: %s"),
+							*SkillTagToRemove.ToString());
+					},
+					0.1f, // 0.1초 지연
+					false
+				);
+
+				// UI 업데이트는 즉시 (카운트 0 표시)
+				OnSkillChanged.Broadcast(SkillSlots);
 			}
 			else
 			{
