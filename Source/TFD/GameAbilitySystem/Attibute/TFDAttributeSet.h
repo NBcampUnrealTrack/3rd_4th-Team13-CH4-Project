@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -92,7 +92,18 @@ protected:
 	UFUNCTION()
 	virtual void OnRep_SkillStock(const FGameplayAttributeData& OlSkillStock);
 
-	
-
 protected:
+	// 속성 변경 전 서버 검증
+	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
+
+	// GameplayEffect 적용 후 처리
+	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
+
+	// 안티치트: 속도 최대값
+	UPROPERTY(EditDefaultsOnly, Category = "AntiCheat")
+	float MaxAllowedSpeed = 800.f;
+
+	// 안티치트: 한 번에 변경 가능한 최대 속도 차이
+	UPROPERTY(EditDefaultsOnly, Category = "AntiCheat")
+	float MaxSpeedChangePerFrame = 500.f;
 };
