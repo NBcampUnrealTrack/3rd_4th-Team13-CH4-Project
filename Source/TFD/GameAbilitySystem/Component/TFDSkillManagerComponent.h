@@ -111,7 +111,7 @@ public:
 	void HandleSkillItemObtained(FGameplayTag SkillTag);
 
 	//==============================================
-	// 스킬 추가/제거
+	// 스킬 추가
 	//==============================================
 	// 스킬 추가 (자동 슬롯 배치)
 	UFUNCTION(BlueprintCallable, Category = "TFD|SkillManager")
@@ -125,10 +125,26 @@ public:
 	UFUNCTION(Server, Reliable)
 	void ServerAddSkillByTag(FGameplayTag SkillTag, int32 UsageCount = 1);
 
+	// 서버RPC 검증 함수
+	bool ServerAddSkillByTag_Validate(FGameplayTag SkillTag, int32 UsageCount);
+
+	//==============================================
+	// 스킬 제거
+	//==============================================
 	// 스킬 제거 (태그 기준)
 	UFUNCTION(BlueprintCallable, Category = "TFD|SkillManager")
 	void RemoveSkill(FGameplayTag SkillTag);
 
+	//==============================================
+	// 스킬 사용
+	//==============================================
+	// 슬롯 인덱스로 스킬 사용 시 호출 (사용 횟수 차감 및 제거)
+	UFUNCTION(BlueprintCallable, Category = "TFD|SkillManager")
+	void UseSkillAtSlot(int32 SlotIndex);
+
+	//==============================================
+	// 스킬 슬롯 접근
+	//==============================================
 	// 전체 스킬 슬롯 반환
 	UFUNCTION(BlueprintCallable, Category = "TFD|SkillManager")
 	const TArray<FTFDSkillSlot>& GetAllSkills() const { return SkillSlots; }
@@ -137,10 +153,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "TFD|SkillManager")
 	FTFDSkillSlot GetSkillAt(int32 SlotIndex) const;
 
-	// 슬롯 인덱스로 스킬 사용 시 호출 (사용 횟수 차감 및 제거)
-	UFUNCTION(BlueprintCallable, Category = "TFD|SkillManager")
-	void UseSkillAtSlot(int32 SlotIndex);
-
+	//==============================================
+	// 스킬 슬롯 변경 알림
+	//==============================================
 	// SkillSlots 변경 시 클라에서 호출됨 (Replication)
 	UFUNCTION()
 	void OnRep_SkillSlots();
@@ -157,6 +172,13 @@ public:
 
 	// ASC 초기화 여부 확인
 	bool IsASCSetup() const;
+
+	//==============================================
+	// 안티치트 관련
+	//==============================================
+	// 서버 쿨다운 체크 함수
+	UFUNCTION(BlueprintCallable, Category = "TFD|SkillManager")
+	bool IsSkillOnServerCooldown(int32 SlotIndex) const;
 
 protected:
 	//==============================================
@@ -192,6 +214,21 @@ protected:
 	bool bIsSubscribedToSubsystem = false;
 
 private:
+	//==============================================
+	// 안티치트 관련
+	//==============================================
+	// 서버 쿨다운 종료 시간만 관리
+	UPROPERTY()
+	TMap<int32, float> ServerCooldownEndTimes;
+
+	// 스팸 방지용 마지막 사용 시간
+	UPROPERTY()
+	TMap<int32, float> LastSkillUseTimes;
+
+	// 최소 스킬 사용 간격
+	UPROPERTY(EditDefaultsOnly, Category = "TFD|SkillManager|AntiCheat")
+	float MinSkillInterval = 0.1f;
+
 	//==============================================
 	// 스킬별 처리 함수들
 	//==============================================

@@ -11,6 +11,28 @@
 #include "Object/SkillItem/Subsystem/TFDSkillEventSubsystem.h" // 서브시스템 헤더 추가
 #include "Controller/TFDAIController.h"
 
+/*
+	이중 검증
+
+	UseSkillAtSlot() 호출
+		↓
+	1 서버 쿨다운 체크 (ServerCooldownEndTimes) - 이전 쿨다운 확인
+		↓
+	2 스팸 방지 체크 (LastSkillUseTimes) - 0.1초 간격
+		↓
+	3 GAS TryActivateAbility() 호출 (GameplayEffect 쿨다운)
+		↓
+	4 어빌리티 내부에서 CommitAbility() 실행
+		↓	GAS 쿨다운 체크
+		↓	Cost 체크
+		↓
+	5 CommitAbility()가 쿨다운 GameplayEffect 적용
+		↓
+	6. LastSkillUseTimes 업데이트
+		↓
+	7 [비동기] HandleEffectAdded 자동 호출 (ServerCooldownEndTimes 업데이트, UI 쿨다운 정보 업데이트)
+*/
+
 UTFDSkillManagerComponent::UTFDSkillManagerComponent()
 {
 	// Tick 사용X
@@ -96,8 +118,11 @@ void UTFDSkillManagerComponent::HandleEffectAdded(UAbilitySystemComponent* InASC
 	Spec.GetAllGrantedTags(EffectTags);
 
 	// 어떤 슬롯이 해당 쿨다운인지 찾아서 업데이트
-	for (FTFDSkillSlot& Slot : SkillSlots)
+	//for (FTFDSkillSlot& Slot : SkillSlots)
+	for (int32 i = 0; i < SkillSlots.Num(); ++i)
 	{
+		//if (!Slot.AbilityHandle.IsValid()) continue;
+		FTFDSkillSlot& Slot = SkillSlots[i];
 		if (!Slot.AbilityHandle.IsValid()) continue;
 
 		FGameplayAbilitySpec* AbilitySpec = InASC->FindAbilitySpecFromHandle(Slot.AbilityHandle);
@@ -112,8 +137,22 @@ void UTFDSkillManagerComponent::HandleEffectAdded(UAbilitySystemComponent* InASC
 			const FActiveGameplayEffect* ActiveEffect = InASC->GetActiveGameplayEffect(Handle);
 			if (ActiveEffect)
 			{
-				Slot.CooldownDuration = ActiveEffect->GetDuration();
-				Slot.CooldownStartTime = GetWorld()->GetTimeSeconds();
+				float Duration = ActiveEffect->GetDuration();
+				float CurrentTime = GetWorld()->GetTimeSeconds();
+
+				// UI용 쿨다운 정보
+				Slot.CooldownDuration = Duration;
+				Slot.CooldownStartTime = CurrentTime;
+
+				// 서버 쿨다운 검증용 (추가)
+				if (GetOwner()->HasAuthority())
+				{
+					ServerCooldownEndTimes.Add(i, CurrentTime + Duration);
+
+					UE_LOG(LogTemp, Log,
+						TEXT("[UTFDSkillManagerComponent][HandleEffectAdded][Server] Cooldown started for slot %d: %.2fs"),
+						i, Duration);
+				}
 			}
 
 			break; // 해당 슬롯 찾았으면 끝
@@ -130,8 +169,11 @@ void UTFDSkillManagerComponent::HandleEffectRemoved(const FActiveGameplayEffect&
 	FGameplayTagContainer EffectTags;
 	ActiveEffect.Spec.GetAllGrantedTags(EffectTags);
 
-	for (FTFDSkillSlot& Slot : SkillSlots)
+	//for (FTFDSkillSlot& Slot : SkillSlots)
+	for (int32 i = 0; i < SkillSlots.Num(); ++i)
 	{
+		//if (!Slot.AbilityHandle.IsValid()) continue;
+		FTFDSkillSlot& Slot = SkillSlots[i];
 		if (!Slot.AbilityHandle.IsValid()) continue;
 
 		FGameplayAbilitySpec* Spec = ASC->FindAbilitySpecFromHandle(Slot.AbilityHandle);
@@ -142,8 +184,18 @@ void UTFDSkillManagerComponent::HandleEffectRemoved(const FActiveGameplayEffect&
 
 		if (EffectTags.HasAny(*CooldownTags))
 		{
+			// UI용 쿨다운 초기화
 			Slot.CooldownDuration = 0.f;
 			Slot.CooldownStartTime = 0.f;
+
+			// 서버 쿨다운 제거 (추가)
+			if (GetOwner()->HasAuthority())
+			{
+				ServerCooldownEndTimes.Remove(i);
+
+				UE_LOG(LogTemp, Log,
+					TEXT("[UTFDSkillManagerComponent][HandleEffectRemoved][Server] Cooldown ended for slot %d"), i);
+			}
 			break;
 		}
 	}
@@ -184,6 +236,31 @@ void UTFDSkillManagerComponent::ApplyExistingCooldownToSlot(int32 SlotIndex, TSu
 }
 
 bool UTFDSkillManagerComponent::IsASCSetup() const { return bASCSetup; }
+
+bool UTFDSkillManagerComponent::IsSkillOnServerCooldown(int32 SlotIndex) const
+{
+	if (!GetOwner() || !GetOwner()->HasAuthority())
+	{
+		return false;
+	}
+
+	if (const float* CooldownEnd = ServerCooldownEndTimes.Find(SlotIndex))
+	{
+		float CurrentTime = GetWorld()->GetTimeSeconds();
+		bool bIsOnCooldown = CurrentTime < *CooldownEnd;
+
+		if (bIsOnCooldown)
+		{
+			float Remaining = *CooldownEnd - CurrentTime;
+			UE_LOG(LogTemp, Verbose, TEXT("[UTFDSkillManagerComponent][IsSkillOnServerCooldown] Slot %d on cooldown: %.2fs remaining"),
+				SlotIndex, Remaining);
+		}
+
+		return bIsOnCooldown;
+	}
+
+	return false;
+}
 
 int32 UTFDSkillManagerComponent::GetMaxSlotCount() const { return MaxSkillSlotCount; }
 
@@ -391,20 +468,43 @@ void UTFDSkillManagerComponent::AddSkill(TSubclassOf<UGameplayAbility> SkillClas
 		if (SkillSlots[0].AbilityHandle.IsValid())
 		{// 맨 앞 스킬 제거
 			ASC->ClearAbility(SkillSlots[0].AbilityHandle);
+
+			// 첫 번째 슬롯의 쿨다운 데이터 제거
+			ServerCooldownEndTimes.Remove(0);
+			LastSkillUseTimes.Remove(0);
 		}
 
 		for (int32 i = 1; i < SkillSlots.Num(); ++i)
 		{// 앞당기기
 			SkillSlots[i - 1] = SkillSlots[i];
+
+			// 쿨다운 데이터도 인덱스 조정
+			if (ServerCooldownEndTimes.Contains(i))
+			{
+				float CooldownEnd = ServerCooldownEndTimes[i];
+				ServerCooldownEndTimes.Remove(i);
+				ServerCooldownEndTimes.Add(i - 1, CooldownEnd);
+			}
+
+			if (LastSkillUseTimes.Contains(i))
+			{
+				float LastUseTime = LastSkillUseTimes[i];
+				LastSkillUseTimes.Remove(i);
+				LastSkillUseTimes.Add(i - 1, LastUseTime);
+			}
 		}
 
 		// 마지막 슬롯에 새 스킬 추가
-		SkillSlots[SkillSlots.Num() - 1] = NewSlot;
+		int32 LastIndex = SkillSlots.Num() - 1;
+		SkillSlots[LastIndex] = NewSlot;
+
+		// 마지막 슬롯의 남은 쿨다운 데이터 제거
+		ServerCooldownEndTimes.Remove(LastIndex);
+		LastSkillUseTimes.Remove(LastIndex);
 
 		UE_LOG(LogTemp, Log, TEXT("[SkillManagerComponent][AddSkill] Replaced oldest skill with %s"), *SkillTag.ToString());
 		
-		int32 NewIndex = SkillSlots.Num() - 1;
-		ApplyExistingCooldownToSlot(NewIndex, SkillClass);
+		ApplyExistingCooldownToSlot(LastIndex, SkillClass);
 
 		OnSkillChanged.Broadcast(SkillSlots);
 		// 서버가 로컬 플레이어(리슨 서버의 호스트)인 경우 직접 브로드캐스트
@@ -416,8 +516,6 @@ void UTFDSkillManagerComponent::AddSkill(TSubclassOf<UGameplayAbility> SkillClas
 	}
 
 	// 클라이언트에서도 항상 실행할 이펙트나 UI 로직이 있다면 여기서 처리
-
-	
 }
 
 void UTFDSkillManagerComponent::AddSkillByTag(FGameplayTag SkillTag, int32 UsageCount)
@@ -450,6 +548,29 @@ void UTFDSkillManagerComponent::ServerAddSkillByTag_Implementation(FGameplayTag 
 	AddSkillByTag(SkillTag, UsageCount);
 }
 
+bool UTFDSkillManagerComponent::ServerAddSkillByTag_Validate(FGameplayTag SkillTag, int32 UsageCount)
+{	
+	if (!SkillTag.IsValid())
+	{// 태그 유효성 체크
+		UE_LOG(LogTemp, Error, TEXT("[UTFDSkillManagerComponent][ServerAddSkillByTag_Validate][AntiCheat] Invalid skill tag"));
+		return false;
+	}
+	
+	if (UsageCount <= 0 || UsageCount > 100)
+	{// 사용 횟수 범위 체크 (비정상적인 값 차단)
+		UE_LOG(LogTemp, Error, TEXT("[UTFDSkillManagerComponent][ServerAddSkillByTag_Validate][AntiCheat] Invalid usage count: %d"), UsageCount);
+		return false;
+	}
+	
+	if (!SkillTagToClassMap.Contains(SkillTag))
+	{// 매핑된 스킬인지 체크
+		UE_LOG(LogTemp, Error, TEXT("[UTFDSkillManagerComponent][ServerAddSkillByTag_Validate][AntiCheat] Unmapped skill tag: %s"), *SkillTag.ToString());
+		return false;
+	}
+
+	return true;
+}
+
 void UTFDSkillManagerComponent::RemoveSkill(FGameplayTag SkillTag)
 {
 	if (!bASCSetup || !ASC) return;
@@ -464,14 +585,36 @@ void UTFDSkillManagerComponent::RemoveSkill(FGameplayTag SkillTag)
 				// ASC에서 제거
 				ASC->ClearAbility(SkillSlots[i].AbilityHandle);
 
+				// 서버 쿨다운 데이터 정리
+				ServerCooldownEndTimes.Remove(i);
+				LastSkillUseTimes.Remove(i);
+
 				// 오른쪽 슬롯들을 왼쪽으로 당김
 				for (int32 j = i + 1; j < SkillSlots.Num(); ++j)
 				{
 					SkillSlots[j - 1] = SkillSlots[j];
+
+					// 쿨다운 데이터도 인덱스 조정
+					if (ServerCooldownEndTimes.Contains(j))
+					{
+						float CooldownEnd = ServerCooldownEndTimes[j];
+						ServerCooldownEndTimes.Remove(j);
+						ServerCooldownEndTimes.Add(j - 1, CooldownEnd);
+					}
+
+					if (LastSkillUseTimes.Contains(j))
+					{
+						float LastUseTime = LastSkillUseTimes[j];
+						LastSkillUseTimes.Remove(j);
+						LastSkillUseTimes.Add(j - 1, LastUseTime);
+					}
 				}
 
 				// 마지막 슬롯 초기화
-				SkillSlots[SkillSlots.Num() - 1] = FTFDSkillSlot();
+				int32 LastIndex = SkillSlots.Num() - 1;
+				SkillSlots[LastIndex] = FTFDSkillSlot();
+				ServerCooldownEndTimes.Remove(LastIndex);
+				LastSkillUseTimes.Remove(LastIndex);
 
 				UE_LOG(LogTemp, Log, TEXT("[SkillManagerComponent][RemoveSkill] Skill %s removed."), *SkillTag.ToString());
 
@@ -523,14 +666,42 @@ void UTFDSkillManagerComponent::UseSkillAtSlot(int32 SlotIndex)
 			return;
 		}
 
+		// 1. 서버 쿨다운 체크 (GAS 우회 방지)
+		if (IsSkillOnServerCooldown(SlotIndex))
+		{
+			UE_LOG(LogTemp, Warning,
+				TEXT("[UTFDSkillManagerComponent][UseSkillAtSlot][AntiCheat] Slot %d on server cooldown (possible hack)"), SlotIndex);
+			return;
+		}
+
+		// 2. 스팸 방지
+		float CurrentTime = GetWorld()->GetTimeSeconds();
+		if (const float* LastUseTime = LastSkillUseTimes.Find(SlotIndex))
+		{
+			float TimeSince = CurrentTime - *LastUseTime;
+			if (TimeSince < MinSkillInterval)
+			{
+				UE_LOG(LogTemp, Warning,
+					TEXT("[UTFDSkillManagerComponent][UseSkillAtSlot][AntiCheat] Skill spam detected! Slot: %d, Interval: %.3fs"),
+					SlotIndex, TimeSince);
+				return;
+			}
+		}
+
+		// 3. GAS 어빌리티 활성화 시도 (CommitAbility 포함)
 		// 실제 어빌리티 발동
 		const bool bSuccess = ASC->TryActivateAbility(Slot.AbilityHandle);
 
 		if (bSuccess)
 		{
+			// 4. 스팸 방지용 시간 기록
+			// ServerCooldownEndTimes는 HandleEffectAdded에서 자동으로 설정됨
+			LastSkillUseTimes.Add(SlotIndex, CurrentTime);
+
 			Slot.UsageCount--;
 
-			UE_LOG(LogTemp, Log, TEXT("[UTFDSkillManagerComponent][UseSkillAtSlot] Used skill [%s] in slot %d. Remaining count: %d"),
+			UE_LOG(LogTemp, Log,
+				TEXT("[UTFDSkillManagerComponent][UseSkillAtSlot] Used skill [%s] in slot %d. Remaining count: %d"),
 				*Slot.SkillTag.ToString(), SlotIndex, Slot.UsageCount);
 
 			if (Slot.UsageCount <= 0)
@@ -547,7 +718,8 @@ void UTFDSkillManagerComponent::UseSkillAtSlot(int32 SlotIndex)
 					[this, SkillTagToRemove]()
 					{
 						RemoveSkill(SkillTagToRemove);
-						UE_LOG(LogTemp, Log, TEXT("[UTFDSkillManagerComponent][UseSkillAtSlot] Delayed removal of skill: %s"),
+						UE_LOG(LogTemp, Log,
+							TEXT("[UTFDSkillManagerComponent][UseSkillAtSlot] Delayed removal of skill: %s"),
 							*SkillTagToRemove.ToString());
 					},
 					0.1f, // 0.1초 지연
@@ -564,7 +736,8 @@ void UTFDSkillManagerComponent::UseSkillAtSlot(int32 SlotIndex)
 		}
 		else
 		{
-			UE_LOG(LogTemp, Warning, TEXT("[UTFDSkillManagerComponent][UseSkillAtSlot] Failed to activate ability [%s] in slot %d"),
+			UE_LOG(LogTemp, Warning,
+				TEXT("[UTFDSkillManagerComponent][UseSkillAtSlot] Failed to activate ability [%s] in slot %d"),
 				*Slot.SkillTag.ToString(), SlotIndex);
 		}
 	}
