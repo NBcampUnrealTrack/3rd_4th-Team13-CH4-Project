@@ -82,3 +82,58 @@ void UTFDAttributeSet::OnRep_SkillStock(const FGameplayAttributeData& OlSkillSto
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UTFDAttributeSet, SkillStock, OlSkillStock);
 }
 
+void UTFDAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
+{
+    Super::PreAttributeChange(Attribute, NewValue);
+
+    if (Attribute == GetSpeedAttribute())
+    {
+        float OldSpeed = GetSpeed();
+
+        // 절대 최대값 제한
+        if (NewValue > MaxAllowedSpeed)
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("[UTFDAttributeSet][PreAttributeChange] Speed clamped: %.2f -> %.2f (Max: %.2f)"),
+                NewValue, MaxAllowedSpeed, MaxAllowedSpeed);
+            NewValue = MaxAllowedSpeed;
+        }
+
+        // 최소값 제한
+        if (NewValue < 0.f)
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("[UTFDAttributeSet][PreAttributeChange] Negative speed prevented: %.2f -> 0"),
+                NewValue);
+            NewValue = 0.f;
+        }
+
+        // 서버에서 급격한 변화 감지
+        if (GetOwningActor() && GetOwningActor()->HasAuthority())
+        {
+            float SpeedChange = FMath::Abs(NewValue - OldSpeed);
+
+            if (SpeedChange > MaxSpeedChangePerFrame)
+            {
+                UE_LOG(LogTemp, Error,
+                    TEXT("[UTFDAttributeSet][PreAttributeChange][AntiCheat] Suspicious speed change! Actor: %s, Old: %.2f, Attempted: %.2f, Change: %.2f (Max: %.2f)"),
+                    *GetOwningActor()->GetName(), OldSpeed, NewValue, SpeedChange, MaxSpeedChangePerFrame);
+
+                // 변경 거부
+                NewValue = OldSpeed;
+
+                // TODO: 의심 활동 기록 시스템 연동
+                // - 누적 카운트
+                // - 일정 횟수 이상 시 플레이어 킥
+            }
+        }
+    }
+}
+
+void UTFDAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
+{
+	Super::PostGameplayEffectExecute(Data);
+
+	// Speed 검증은 PreAttributeChange에서 이미 처리되므로 여기서는 추가 처리 없음
+	// 향후 다른 속성에 대한 후처리가 필요하면 여기에 추가
+}
