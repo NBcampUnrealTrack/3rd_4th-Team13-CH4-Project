@@ -43,19 +43,6 @@ void USkillSlotItem::UpdateSlot(const FTFDSkillSlot& InSlot, int32 SlotIndex)
 
         if(IconType != EUIIconType::None)
         {
-            /*
-            // GameInstance에 Sprite 요청
-            GI->RequestUIIcon(IconType, [this](const TObjectPtr<UPaperSprite>& Sprite)
-                {
-                    if (Sprite)
-                    {
-                        const FVector2D& Size = SkillIcon->GetDesiredSize();
-                        FSlateBrush Brush = UUIResourceAsset::MakeBrushFromSprite(Sprite, Size.X, Size.Y);
-                        SkillIcon->SetBrush(Brush);
-                        SkillIcon->SetOpacity(1.0f);
-                    }
-                });
-            */
             const TSoftObjectPtr<UPaperSprite>* Found = GI->LoadedUIResource->IconMap.Find(IconType);
             if (!Found) return;
 

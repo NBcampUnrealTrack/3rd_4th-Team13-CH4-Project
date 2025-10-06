@@ -179,7 +179,7 @@ void UUW_Lobby::NativeDestruct()
 		}
 	}
 
-
+	GetWorld()->GetTimerManager().ClearTimer(RefreshTimerHandle);
 
 }
 
