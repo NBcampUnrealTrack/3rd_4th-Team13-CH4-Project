@@ -33,6 +33,7 @@ public:
 
 	void OnLevelChanged(const FName& NewLevelName);
 
+	void UpdateVolume();
 private:
 	UWorld* GetAudioWorld() const;
 	
