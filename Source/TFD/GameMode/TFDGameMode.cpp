@@ -1,5 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+
 #include "GameMode/TFDGameMode.h"
 
 #include "GameInstance/TFDGameInstance.h"
@@ -43,6 +44,18 @@ void ATFDGameMode::BeginPlay()
 			}
 		}
 	}
+
+	// if (UWorld* World = GetWorld())
+	// {
+	// 	if (UTFDGameInstance* GI = Cast<UTFDGameInstance>(World->GetGameInstance()))
+	// 	{
+	// 		FName CurrentLevel = *UGameplayStatics::GetCurrentLevelName(this);
+	// 		if (UTFDBGMSubsystem* BGMSub = GI->GetSubsystem<UTFDBGMSubsystem>())
+	// 		{
+	// 			BGMSub->OnLevelChanged(CurrentLevel); // 첫 맵 재생
+	// 		}
+	// 	}
+	// }
 
 	if (GetGameState())
 	{
@@ -199,8 +212,8 @@ void ATFDGameMode::AssignTeamsOnGameStart()
 		{
 			TFDPS->SetActualTeam(TFDPS->GetPreferredTeam());
 			UE_LOG(LogTemp, Log, TEXT("Player %s assigned ActualTeam: %s"),
-				*TFDPS->GetPlayerName(),
-				*TFDPS->GetActualTeam().GetTagName().ToString());
+			       *TFDPS->GetPlayerName(),
+			       *TFDPS->GetActualTeam().GetTagName().ToString());
 		}
 	}
 }
@@ -223,6 +236,7 @@ APawn* ATFDGameMode::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, 
 		return nullptr;
 	}
 
+
 	// Pawn 클래스 가져오기
 	TSubclassOf<APawn> PawnClass = GetDefaultPawnClassForController(NewPlayer);
 	if (!PawnClass) return nullptr;
@@ -230,6 +244,7 @@ APawn* ATFDGameMode::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, 
 	// SpawnTransform 설정
 	FTransform SpawnTransform = StartSpot->GetActorTransform();
 	FVector SpawnLocation = GetRandomPointInSpawnAreaTag(PS->GetActualTeam());
+
 
 	SpawnTransform.SetLocation(SpawnLocation);
 
@@ -259,6 +274,7 @@ APawn* ATFDGameMode::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, 
 	return Pawn;
 }
 
+
 bool ATFDGameMode::ReadyToStartMatch_Implementation()
 {
 	return MatchState == MatchState::InProgress;
@@ -287,6 +303,7 @@ void ATFDGameMode::HandleMatchHasEnded()
 	Super::HandleMatchHasEnded();
 	UE_LOG(LogTemp, Warning, TEXT("HandleMatchHasEnded"));
 	//게임 종료 처리
+
 
 	SetActorTickEnabled(false);
 
@@ -357,6 +374,7 @@ void ATFDGameMode::SpawnAI()
 	FVector SpawnLoc = GetRandomPointInSpawnArea();
 	FRotator SpawnRot = FRotator::ZeroRotator;
 
+
 	TSubclassOf<ATFDCharacterBase> AIClass = RuleData->PawnClassAI;
 
 	for (ATFDSpawnVolume* SpawnVolume : AIVolumes)
@@ -385,6 +403,7 @@ void ATFDGameMode::SpawnItemStart()
 		}
 	}
 }
+
 
 UDataTable* ATFDGameMode::GetDTAllowedTeamTag()
 {
@@ -437,15 +456,8 @@ TSubclassOf<AActor> ATFDGameMode::GetDTAllowedTeamTag_Item(FGameplayTag ArgGamep
 	{
 		if (Row && Row->ItemTag == ArgGameplayTag)
 		{
-			// ResultItem = Row->ItemClass;
-			// break;
-			if (Row && Row->ItemTag == ArgGameplayTag && Row->ItemClasses.Num() > 0)
-			{
-				// 랜덤 인덱스 선택
-				int32 RandomIndex = FMath::RandRange(0, Row->ItemClasses.Num() - 1);
-				ResultItem = Row->ItemClasses[RandomIndex];
-				break;
-			}
+			ResultItem = Row->ItemClass;
+			break;
 		}
 	}
 
@@ -486,6 +498,7 @@ FSpawnPointArray ATFDGameMode::GetSpawnPointArrayTag(ETeamType InEnum)
 	// 키가 존재하지 않을 경우 빈 배열 반환
 	return FSpawnPointArray();
 }
+
 
 FVector ATFDGameMode::GetRandomPointInSpawnArea()
 {
@@ -607,17 +620,18 @@ void ATFDGameMode::InitializeSpawnPoints()
 	for (auto& Pair : WorldSpawnPointsByTeam)
 	{
 		UE_LOG(LogTemp, Display, TEXT("%s: %d spawn points found."),
-			*UEnum::GetValueAsString(Pair.Key),
-			Pair.Value.Points.Num());
+		       *UEnum::GetValueAsString(Pair.Key),
+		       Pair.Value.Points.Num());
 	}
 
 	// FSpawnPointArray* CopSpawns = WorldSpawnPointsByTeam.Find(ETeamType::Cop);
 	// if (CopSpawns && CopSpawns->Points.Num() > 0)
 	// {
 	// 	ATFDSpawnpoint* RandomSpawn = CopSpawns->Points[FMath::RandRange(0, CopSpawns->Points.Num() - 1)];
-	//
+	// 	
 	// }
 }
+
 
 void ATFDGameMode::InitializeSpawnVolumes()
 {
@@ -651,9 +665,10 @@ void ATFDGameMode::MovePlayerToRandomSpawnPoint(APlayerController* PlayerControl
 	{
 		PlayerPawn->SetActorLocation(SpawnLocation);
 		UE_LOG(LogTemp, Display, TEXT("Player moved to random location, X: %.1f,Y:%.1f"), SpawnLocation.X,
-			SpawnLocation.Y);
+		       SpawnLocation.Y);
 	}
 }
+
 
 bool ATFDGameMode::OnCatchThief(APawn* Pawn)
 {
@@ -672,6 +687,7 @@ bool ATFDGameMode::OnCatchThief(APawn* Pawn)
 
 		GetGameState()->OnThievesChanged.Broadcast();
 	}
+
 
 	if (GetGameState()->CaughtThiefPlayerStateArray.Num() == GetGameState()->ThiefPlayerStateArray.Num())
 	{
@@ -793,6 +809,7 @@ ATFDGameState* ATFDGameMode::GetGameState()
 	}
 	return GameState;
 }
+
 
 void ATFDGameMode::Tick(float DeltaTime)
 {
