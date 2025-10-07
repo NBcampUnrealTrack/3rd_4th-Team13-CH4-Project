@@ -61,28 +61,13 @@ void UTFDBGMSubsystem::PlayBGM(USoundBase* BGM, float FadeInTime)
 
 	CurrentPlayingBGM = BGM;
 	BGMComponent->SetSound(BGM);
+
+	if (UTFDGameInstance* GI = Cast<UTFDGameInstance>(GetGameInstance()))
+	{
+		float FinalVolume = GI->MasterVolume * GI->BGMVolume;
+		BGMComponent->SetVolumeMultiplier(FinalVolume);
+	}
 	BGMComponent->Play();
-	
-	// if (!BGMComponent)
-	// {
-	// 	BGMComponent = NewObject<UAudioComponent>(GetGameInstance());
-	// 	BGMComponent->bAutoDestroy = false;
-	// 	BGMComponent->bAllowSpatialization = false;
-	// 	if (UWorld* World = GetAudioWorld())  // 
-	// 	{
-	// 		BGMComponent->RegisterComponentWithWorld(World);
-	// 	}
-	// 	// BGMComponent->RegisterComponent();
-	// }
-	//
-	// if (CurrentPlayingBGM == BGM && BGMComponent->IsPlaying())
-	// 	return;
-	//
-	// CurrentPlayingBGM = BGM;
-	// BGMComponent->SetSound(BGM);
-	// BGMComponent->Play();
-
-
 }
 
 void UTFDBGMSubsystem::PlayUISound(EUISoundType SoundType)
@@ -93,14 +78,15 @@ void UTFDBGMSubsystem::PlayUISound(EUISoundType SoundType)
 		return;
 	}
 	UTFDGameInstance* TFDGI = Cast<UTFDGameInstance>(GetGameInstance());
-	
+
 
 	const TMap<EUISoundType, USoundBase*>& UISoundsMap = TFDGI->GetUISounds();
 	if (USoundBase* const* FoundSound = UISoundsMap.Find(SoundType))
 	{
 		if (*FoundSound)
 		{
-			UGameplayStatics::PlaySound2D(GetWorld(), *FoundSound);
+			float FinalVolume = TFDGI->MasterVolume * TFDGI->SFXVolume;
+			UGameplayStatics::PlaySound2D(GetWorld(), *FoundSound, FinalVolume);
 		}
 		else
 		{
@@ -132,7 +118,7 @@ void UTFDBGMSubsystem::OnLevelChanged(const FName& NewLevelName)
 
 	// 기존 타이머 제거 후 새로 설정
 	World->GetTimerManager().ClearTimer(LevelChangeTimerHandle);
-		
+
 	FTimerDelegate TimerDel;
 	TWeakObjectPtr<UTFDBGMSubsystem> WeakThis(this);
 
@@ -171,6 +157,17 @@ void UTFDBGMSubsystem::OnLevelChanged(const FName& NewLevelName)
 	});
 
 	World->GetTimerManager().SetTimer(LevelChangeTimerHandle, TimerDel, 0.2f, false);
+}
+
+void UTFDBGMSubsystem::UpdateVolume()
+{
+	if (BGMComponent && CurrentPlayingBGM)
+	{
+		if (UTFDGameInstance* GI = Cast<UTFDGameInstance>(GetGameInstance()))
+		{
+			BGMComponent->SetVolumeMultiplier(GI->MasterVolume * GI->BGMVolume);
+		}
+	}
 }
 
 UWorld* UTFDBGMSubsystem::GetAudioWorld() const
@@ -219,7 +216,7 @@ void UTFDBGMSubsystem::EnsureBGMComponent()
 		BGMComponent->bAutoActivate = false;
 		BGMComponent->bAutoDestroy = false;
 		BGMComponent->bAllowSpatialization = false;
-		
+
 		if (UWorld* World = GetWorld())
 		{
 			BGMComponent->RegisterComponentWithWorld(World);

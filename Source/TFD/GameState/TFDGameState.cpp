@@ -50,6 +50,7 @@ void ATFDGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	DOREPLIFETIME(ATFDGameState, WinTeamTag);
 	DOREPLIFETIME(ATFDGameState, CompleteType);
 	DOREPLIFETIME(ATFDGameState, WorldJailCell);
+	
 }
 
 float ATFDGameState::GetCurrentGameTimeSec() const
