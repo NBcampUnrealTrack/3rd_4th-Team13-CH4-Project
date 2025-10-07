@@ -92,50 +92,50 @@ void UTFDBGMSubsystem::PlayBGM(USoundBase* BGM, float FadeInTime)
 
 void UTFDBGMSubsystem::Play_BGM_02(USoundBase* NewBGM, float FadeInTime)
 {
-	if (!NewBGM)
-		return;
-
-	//EnsureBGMComponent();
-
-	// 같은 곡이면 그대로 재생 && BGMComponent->IsPlaying()
-	if (CurrentPlayingBGM == NewBGM)
-	{
-		BGMComponent->UnregisterComponent();
-		BGMComponent->RegisterComponentWithWorld(GetWorld());
-		// BGMComponent->SetSound(CurrentPlayingBGM);
-		BGMComponent->Play();
-		return;
-	}
-	//
-	// if (CurrentPlayingBGM == NewBGM && BGMComponent && BGMComponent->IsPlaying())
+	// if (!NewBGM)
 	// 	return;
-	// 레벨 전환으로 World가 바뀌었으면 재등록
-	if (BGMComponent && GetWorld() && BGMComponent->GetWorld() != GetWorld())
-	{
-		BGMComponent->UnregisterComponent();
-		BGMComponent->RegisterComponentWithWorld(GetWorld());
-	}
-
-	// 다른 BGM이면 FadeOut 후 교체
-	if (BGMComponent && BGMComponent->IsPlaying())
-	{
-		BGMComponent->FadeOut(0.2f, 0.f);
-	}
-
-	CurrentPlayingBGM = NewBGM;
-	BGMComponent->SetSound(NewBGM);
-
-
-	if (UWorld* World = GetWorld())
-	{
-		World->GetTimerManager().SetTimer(PlayBGMTimerHandle, [this, FadeInTime]()
-		{
-			if (BGMComponent && BGMComponent->IsValidLowLevelFast())
-			{
-				BGMComponent->FadeIn(FadeInTime);
-			}
-		}, 0.15f, false);
-	}
+	//
+	// //EnsureBGMComponent();
+	//
+	// // 같은 곡이면 그대로 재생 && BGMComponent->IsPlaying()
+	// if (CurrentPlayingBGM == NewBGM)
+	// {
+	// 	BGMComponent->UnregisterComponent();
+	// 	BGMComponent->RegisterComponentWithWorld(GetWorld());
+	// 	// BGMComponent->SetSound(CurrentPlayingBGM);
+	// 	BGMComponent->Play();
+	// 	return;
+	// }
+	// //
+	// // if (CurrentPlayingBGM == NewBGM && BGMComponent && BGMComponent->IsPlaying())
+	// // 	return;
+	// // 레벨 전환으로 World가 바뀌었으면 재등록
+	// if (BGMComponent && GetWorld() && BGMComponent->GetWorld() != GetWorld())
+	// {
+	// 	BGMComponent->UnregisterComponent();
+	// 	BGMComponent->RegisterComponentWithWorld(GetWorld());
+	// }
+	//
+	// // 다른 BGM이면 FadeOut 후 교체
+	// if (BGMComponent && BGMComponent->IsPlaying())
+	// {
+	// 	BGMComponent->FadeOut(0.2f, 0.f);
+	// }
+	//
+	// CurrentPlayingBGM = NewBGM;
+	// BGMComponent->SetSound(NewBGM);
+	//
+	//
+	// if (UWorld* World = GetWorld())
+	// {
+	// 	World->GetTimerManager().SetTimer(PlayBGMTimerHandle, [this, FadeInTime]()
+	// 	{
+	// 		if (BGMComponent && BGMComponent->IsValidLowLevelFast())
+	// 		{
+	// 			BGMComponent->FadeIn(FadeInTime);
+	// 		}
+	// 	}, 0.15f, false);
+	// }
 }
 
 void UTFDBGMSubsystem::PlayUISound(EUISoundType SoundType)
