@@ -9,6 +9,8 @@
 #include "GameState/TFDGameState.h"
 #include "PlayerState/TFDPlayerState.h"
 
+#include "Object/JailCell.h"
+
 #include "TFDNativeGameplayTags.h"
 
 void UMiniMapWidget::NativeConstruct()
@@ -111,6 +113,27 @@ void UMiniMapWidget::TryInitializeOwnerPawnState()
         UpdateTeamPlayerStateArray(CurrentGameState->ThiefPlayerStateArray);
         UpdateTeamItemIcon(CurrentGameState->ThiefMapItemArray);
     }
+
+    AJailCell* JailCell = CurrentGameState->GetWorldJailCell();
+    if (!JailCell) return;
+
+    FVector Location = JailCell->GetActorLocation();
+
+    float XRatio = (Location.Y - WorldMin.Y) / (WorldMax.Y - WorldMin.Y);
+    float YRatio = (Location.X - WorldMin.X) / (WorldMax.X - WorldMin.X);
+
+    FVector2D MiniMapPos = FVector2D(
+        XRatio * MapSize.X,
+        (1.f - YRatio) * MapSize.Y
+    );
+
+    JailCellIcon->SetBrushFromTexture(JailIconTexture);
+
+    if (UCanvasPanelSlot* JailCellSlot = Cast<UCanvasPanelSlot>(JailCellIcon->Slot))
+    {
+        JailCellSlot->SetPosition(MiniMapPos);
+    }
+
 }
 
 void UMiniMapWidget::UpdateTeamPlayerStateArray(const TArray<TWeakObjectPtr<ATFDPlayerState>>& TeamArray)

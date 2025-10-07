@@ -69,6 +69,13 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MiniMap")
     UTexture2D* TeamItemIconTexture;
 
+    // 아이템 아이콘 Texture
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MiniMap")
+    UTexture2D* JailIconTexture;
+
+    UPROPERTY(meta = (BindWidget))
+    UImage* JailCellIcon;
+
     FVector2D WorldMin;
     FVector2D WorldMax;  
     FVector2D MapSize;   
