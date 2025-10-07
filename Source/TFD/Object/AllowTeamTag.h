@@ -24,6 +24,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly , Category="Tag")
 	TSubclassOf<AActor> ItemClass;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly , Category="Tag")
+	TArray<TSubclassOf<AActor>> ItemClasses;
+
 	// 스폰할 아이템 주기
 	UPROPERTY(EditAnywhere, BlueprintReadOnly , Category="Tag")
 	float SpawnPeriodSec;
