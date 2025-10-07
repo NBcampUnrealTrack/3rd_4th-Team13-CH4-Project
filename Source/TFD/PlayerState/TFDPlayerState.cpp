@@ -72,4 +72,5 @@ void ATFDPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 	DOREPLIFETIME(ATFDPlayerState, ReplicatedPlayerName);
 	DOREPLIFETIME(ATFDPlayerState, PreferredTeam);
 	DOREPLIFETIME(ATFDPlayerState, ActualTeam);
+	DOREPLIFETIME(ATFDPlayerState, Nickname); 
 }
