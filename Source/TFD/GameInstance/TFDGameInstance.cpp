@@ -21,14 +21,11 @@ void UTFDGameInstance::Shutdown()
 	Super::Shutdown();
 }
 
+
+
 void UTFDGameInstance::HandleLevelChanged(const FName& LevelName)
 {
 	if (!IsValid(this))
-	{
-		return;
-	}
-
-	if (GetWorld() == nullptr)
 	{
 		return;
 	}

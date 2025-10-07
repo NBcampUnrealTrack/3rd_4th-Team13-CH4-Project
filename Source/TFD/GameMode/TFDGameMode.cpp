@@ -35,17 +35,17 @@ void ATFDGameMode::BeginPlay()
 	Super::BeginPlay();
 
 
-	if (UWorld* World = GetWorld())
-	{
-		if (UTFDGameInstance* GI = Cast<UTFDGameInstance>(World->GetGameInstance()))
-		{
-			FName CurrentLevel = *UGameplayStatics::GetCurrentLevelName(this);
-			if (UTFDBGMSubsystem* BGMSub = GI->GetSubsystem<UTFDBGMSubsystem>())
-			{
-				BGMSub->OnLevelChanged(CurrentLevel); // 첫 맵 재생
-			}
-		}
-	}
+	// if (UWorld* World = GetWorld())
+	// {
+	// 	if (UTFDGameInstance* GI = Cast<UTFDGameInstance>(World->GetGameInstance()))
+	// 	{
+	// 		FName CurrentLevel = *UGameplayStatics::GetCurrentLevelName(this);
+	// 		if (UTFDBGMSubsystem* BGMSub = GI->GetSubsystem<UTFDBGMSubsystem>())
+	// 		{
+	// 			BGMSub->OnLevelChanged(CurrentLevel); // 첫 맵 재생
+	// 		}
+	// 	}
+	// }
 
 	if (GetGameState())
 	{
@@ -272,6 +272,22 @@ void ATFDGameMode::PostSeamlessTravel()
 
 	// 선호 팀 기반 배정 함수 호출
 	AssignTeams();
+
+	UWorld* World = GetWorld();
+
+	if (!World)
+		return;
+
+	UTFDGameInstance* GI = Cast<UTFDGameInstance>(World->GetGameInstance());
+	if (GI)
+	{
+		UTFDBGMSubsystem* BGM = GI->GetSubsystem<UTFDBGMSubsystem>();
+		if (BGM)
+		{
+			FName LevelName = World->GetFName();
+			BGM->OnLevelChanged(LevelName);
+		}
+	}
 }
 
 void ATFDGameMode::HandleSeamlessTravelPlayer(AController*& C)

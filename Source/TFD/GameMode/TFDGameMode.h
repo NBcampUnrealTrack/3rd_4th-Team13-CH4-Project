@@ -48,6 +48,7 @@ public:
 	ATFDGameState* GetGameState();
 	void GamePause(bool bIsPaused);
 
+	
 	// 모든 플레이어의 팀 선호/실제팀을 수집(내부 구현용)
 	void GatherPreferredTeams(TArray<class ATFDPlayerState*>& OutPlayers, TArray<FGameplayTag>& OutPreferredTeams);
 
