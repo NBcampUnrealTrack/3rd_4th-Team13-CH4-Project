@@ -402,8 +402,15 @@ TSubclassOf<AActor> ATFDGameMode::GetDTAllowedTeamTag_Item(FGameplayTag ArgGamep
 	{
 		if (Row && Row->ItemTag == ArgGameplayTag)
 		{
-			ResultItem = Row->ItemClass;
-			break;
+			// ResultItem = Row->ItemClass;
+			// break;
+			if (Row && Row->ItemTag == ArgGameplayTag && Row->ItemClasses.Num() > 0)
+			{
+				// 랜덤 인덱스 선택
+				int32 RandomIndex = FMath::RandRange(0, Row->ItemClasses.Num() - 1);
+				ResultItem = Row->ItemClasses[RandomIndex];
+				break;
+			}
 		}
 	}
 
