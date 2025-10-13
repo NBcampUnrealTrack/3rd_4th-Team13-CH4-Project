@@ -18,7 +18,8 @@ enum class EUIIconType : uint8
 	Handcuff      UMETA(DisplayName="Handcuff"),
 	Invisibility  UMETA(DisplayName="Invisibility"),
 	Teleport      UMETA(DisplayName="Teleport"),
-	ThrowSlowItem UMETA(DisplayName="ThrowSlowItem")
+	ThrowSlowItem UMETA(DisplayName="ThrowSlowItem"),
+	SpeedUp		  UMETA(DisplayName = "SpeedUp")
 };
 
 UCLASS()
