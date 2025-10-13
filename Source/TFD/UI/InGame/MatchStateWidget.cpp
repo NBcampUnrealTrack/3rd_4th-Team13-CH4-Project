@@ -1,4 +1,4 @@
-#include "MatchStateWidget.h"
+﻿#include "MatchStateWidget.h"
 #include "GameState/TFDGameState.h"
 #include "GameInstance/TFDGameInstance.h"
 #include "NativeGameplayTags.h"
@@ -112,6 +112,28 @@ void UMatchStateWidget::UpdateTeamIconAsync()
 		}
 	});
 	
+	EUIIconType GoldIconType = EUIIconType::Gold;
+	EUIIconType JailIconType = EUIIconType::Jail;
+
+	GI->RequestUIIcon(GoldIconType, [this](const TObjectPtr<UPaperSprite>& Sprite)
+	{
+		if (Sprite && GoldIcon)
+		{
+			const FVector2D& Size = TeamIcon->GetDesiredSize();
+			FSlateBrush Brush = UUIResourceAsset::MakeBrushFromSprite(Sprite, Size.X, Size.Y);
+			GoldIcon->SetBrush(Brush);
+		}
+	});
+
+	GI->RequestUIIcon(JailIconType, [this](const TObjectPtr<UPaperSprite>& Sprite)
+	{
+		if (Sprite && JailIcon)
+		{
+			const FVector2D& Size = TeamIcon->GetDesiredSize();
+			FSlateBrush Brush = UUIResourceAsset::MakeBrushFromSprite(Sprite, Size.X, Size.Y);
+			JailIcon->SetBrush(Brush);
+		}
+	});
 }
 
 void UMatchStateWidget::UpdateThiefCountAsync()
