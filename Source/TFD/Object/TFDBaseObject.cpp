@@ -26,9 +26,8 @@ void ATFDBaseObject::BeginPlay()
 	SetAllowedTeamTag();
 }
 
-void ATFDBaseObject::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
-                                    UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
-                                    const FHitResult& SweepResult)
+void ATFDBaseObject::OnOverlapBegin_Implementation(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	// Cosmetic 전용이면 시각 효과만 처리하고 파괴
 	if (bIsCosmeticOnly)
@@ -59,6 +58,8 @@ void ATFDBaseObject::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor*
 	// 실제 로직 실행
 	ApplyEffectAndDestroy(ASC);
 }
+
+
 
 // Called every frame
 void ATFDBaseObject::Tick(float DeltaTime)
