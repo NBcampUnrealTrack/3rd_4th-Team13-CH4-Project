@@ -37,8 +37,8 @@ void UTFDBGMSubsystem::PlayBGM(USoundBase* BGM, float FadeInTime)
 		return;
 
 	UWorld* World = GetAudioWorld();
-	if (!World || World->GetNetMode() == NM_DedicatedServer)
-		return;
+	if (!World)
+		return; // 월드가 없으면 안전하게 리턴
 
 	// 이전 BGMComponent가 존재하면, 월드가 바뀌었을 수 있으므로 새로 등록
 	if (!BGMComponent || !BGMComponent->IsValidLowLevelFast() || BGMComponent->GetWorld() != World)
@@ -172,19 +172,16 @@ void UTFDBGMSubsystem::UpdateVolume()
 
 UWorld* UTFDBGMSubsystem::GetAudioWorld() const
 {
-	for (const FWorldContext& Context : GEngine->GetWorldContexts())
+	if (const UGameInstance* GI = GetGameInstance())
 	{
-		UWorld* World = Context.World();
-		if (!World) continue;
-
-		// Standalone에서는 PIE 타입일 수도 있음
-		if (Context.WorldType == EWorldType::Game ||
-			Context.WorldType == EWorldType::PIE)
+		// 로컬 플레이어가 존재하면, 그 월드를 우선 사용
+		if (GI->GetFirstLocalPlayerController())
 		{
-			return World;
+			return GI->GetFirstLocalPlayerController()->GetWorld();
 		}
+		// 아니면 기본 World 반환
+		return GI->GetWorld();
 	}
-
 	return nullptr;
 }
 
