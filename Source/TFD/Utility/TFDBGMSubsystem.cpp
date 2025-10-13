@@ -15,9 +15,7 @@ void UTFDBGMSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
 
-	// EnsureBGMManager();
-	//EnsureBGMComponent();
-	// 첫 맵도 강제 처리
+	
 	if (UWorld* World = GetWorld())
 	{
 		World->GetTimerManager().SetTimer(InitTempHandle, [this]()
@@ -38,47 +36,65 @@ void UTFDBGMSubsystem::PlayBGM(USoundBase* BGM, float FadeInTime)
 
 	UWorld* World = GetAudioWorld();
 	if (!World)
-		return; // 월드가 없으면 안전하게 리턴
+		return; // 월드가 없으면 여기서 리턴
 
-	// 이전 BGMComponent가 존재하면, 월드가 바뀌었을 수 있으므로 새로 등록
-	if (!BGMComponent || !BGMComponent->IsValidLowLevelFast() || BGMComponent->GetWorld() != World)
+	if (BGMComponent)
 	{
-		if (BGMComponent)
+		if (BGMComponent->IsPlaying())
 		{
 			BGMComponent->Stop();
-			BGMComponent->DestroyComponent();
 		}
-
-		BGMComponent = NewObject<UAudioComponent>(GetGameInstance());
-		BGMComponent->bAutoDestroy = false;
-		BGMComponent->bAllowSpatialization = false;
-		BGMComponent->RegisterComponentWithWorld(World);
+		
+		if (BGMComponent->IsRegistered())
+		{
+			BGMComponent->UnregisterComponent();
+		}
+		
+		BGMComponent->DestroyComponent();
+		BGMComponent = nullptr;
 	}
 
-	// 이미 같은 곡이 재생 중이면 아무것도 안함
-	if (CurrentPlayingBGM == BGM && BGMComponent->IsPlaying())
+	// 새로 생성
+	BGMComponent = NewObject<UAudioComponent>();
+	if (!BGMComponent)
 		return;
+
+	BGMComponent->bAutoDestroy = false;
+	BGMComponent->bAllowSpatialization = false;
+	BGMComponent->SetVolumeMultiplier(1.0f);
+
+	if (CurrentPlayingBGM == BGM)
+	{
+		return;
+	}
 
 	CurrentPlayingBGM = BGM;
 	BGMComponent->SetSound(BGM);
+
+	BGMComponent->RegisterComponentWithWorld(World);
 
 	if (UTFDGameInstance* GI = Cast<UTFDGameInstance>(GetGameInstance()))
 	{
 		float FinalVolume = GI->MasterVolume * GI->BGMVolume;
 		BGMComponent->SetVolumeMultiplier(FinalVolume);
 	}
+
 	BGMComponent->Play();
 }
 
 void UTFDBGMSubsystem::PlayUISound(EUISoundType SoundType)
 {
-	if (!GetWorld()) // Subsystem은 WorldContext가 없을 수도 있음 → 방어 코드
+	if (!GetWorld())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("PlayUISound failed: No World found."));
 		return;
 	}
 	UTFDGameInstance* TFDGI = Cast<UTFDGameInstance>(GetGameInstance());
 
+	if (!TFDGI)
+	{
+		return;
+	}
 
 	const TMap<EUISoundType, USoundBase*>& UISoundsMap = TFDGI->GetUISounds();
 	if (USoundBase* const* FoundSound = UISoundsMap.Find(SoundType))
@@ -101,11 +117,22 @@ void UTFDBGMSubsystem::PlayUISound(EUISoundType SoundType)
 
 void UTFDBGMSubsystem::StopBGM(float FadeOutTime)
 {
-	if (BGMComponent && BGMComponent->IsPlaying())
+	if (!BGMComponent)
+		return;
+	
+	if (BGMComponent->IsPlaying())
 	{
 		BGMComponent->Stop();
-		CurrentPlayingBGM = nullptr;
 	}
+	
+	if (BGMComponent->IsRegistered())
+	{
+		BGMComponent->UnregisterComponent();
+	}
+	
+	BGMComponent->DestroyComponent();
+	BGMComponent = nullptr;
+	CurrentPlayingBGM = nullptr;
 }
 
 
@@ -115,6 +142,8 @@ void UTFDBGMSubsystem::OnLevelChanged(const FName& NewLevelName)
 
 	if (!World)
 		return;
+
+	StopBGM();
 
 	// 기존 타이머 제거 후 새로 설정
 	World->GetTimerManager().ClearTimer(LevelChangeTimerHandle);
@@ -174,12 +203,10 @@ UWorld* UTFDBGMSubsystem::GetAudioWorld() const
 {
 	if (const UGameInstance* GI = GetGameInstance())
 	{
-		// 로컬 플레이어가 존재하면, 그 월드를 우선 사용
 		if (GI->GetFirstLocalPlayerController())
 		{
 			return GI->GetFirstLocalPlayerController()->GetWorld();
 		}
-		// 아니면 기본 World 반환
 		return GI->GetWorld();
 	}
 	return nullptr;
