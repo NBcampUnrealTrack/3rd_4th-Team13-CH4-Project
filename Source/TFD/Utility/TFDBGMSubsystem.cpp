@@ -174,14 +174,26 @@ UWorld* UTFDBGMSubsystem::GetAudioWorld() const
 {
 	if (const UGameInstance* GI = GetGameInstance())
 	{
-		// 로컬 플레이어가 존재하면, 그 월드를 우선 사용
-		if (GI->GetFirstLocalPlayerController())
+		// GameInstance는 여러 World를 가질 수 있음
+		// GetWorldContexts를 통해 현재 활성 월드를 가져오는 것이 가장 안전함
+		for (const FWorldContext& Context : GEngine->GetWorldContexts())
 		{
-			return GI->GetFirstLocalPlayerController()->GetWorld();
+			if (Context.World() && Context.WorldType == EWorldType::Game)
+			{
+				return Context.World();
+			}
 		}
-		// 아니면 기본 World 반환
-		return GI->GetWorld();
 	}
+	// if (const UGameInstance* GI = GetGameInstance())
+	// {
+	// 	// 로컬 플레이어가 존재하면, 그 월드를 우선 사용
+	// 	if (GI->GetFirstLocalPlayerController())
+	// 	{
+	// 		return GI->GetFirstLocalPlayerController()->GetWorld();
+	// 	}
+	// 	// 아니면 기본 World 반환
+	// 	return GI->GetWorld();
+	// }
 	return nullptr;
 }
 
