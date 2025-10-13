@@ -40,6 +40,10 @@ void USkillSlotItem::UpdateSlot(const FTFDSkillSlot& InSlot, int32 SlotIndex)
         {
             IconType = EUIIconType::ThrowSlowItem;
         }
+        else if (InSlot.SkillTag.MatchesTagExact(FGameplayTag::RequestGameplayTag("Ability.SpeedUp")))
+        {
+            IconType = EUIIconType::SpeedUp;
+        }
 
         if(IconType != EUIIconType::None)
         {
@@ -112,7 +116,7 @@ void USkillSlotItem::UpdateSlot(const FTFDSkillSlot& InSlot, int32 SlotIndex)
 
             GetWorld()->GetTimerManager().ClearTimer(CooldownTimerHandle);
 
-            FTimerHandle TempHandle;
+            FTimerHandle TempHandle; //쿨다운 완료됐을때 순간적인 크기변경으로 강조하기
 
             if (GetWorld()->GetTimerManager().IsTimerActive(TempHandle))
             {
