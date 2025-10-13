@@ -4,6 +4,8 @@
 #include "GameInstance/TFDGameInstance.h"
 #include "Styling/SlateTypes.h"
 #include "Components/Border.h"
+#include "Sound/SoundClass.h"
+
 
 
 void UUW_SoundSettings::NativeConstruct()
@@ -57,6 +59,11 @@ void UUW_SoundSettings::OnMasterVolumeChanged(float Value)
 {
 	if (UTFDGameInstance* GI = GetWorld()->GetGameInstance<UTFDGameInstance>())
 		GI->SetMasterVolume(Value);
+		USoundClass* MasterClass = LoadObject<USoundClass>(nullptr, TEXT("/Game/Sound/SoundClass/SoundClass_Master.SoundClass_Master"));
+		if (MasterClass)
+		{
+			MasterClass->Properties.Volume = Value;
+		}
 
 	UpdateVolumeText(Txt_MasterValue, Value, TEXT("Master"));
 	UpdateGaugeColor(Gauge_Master, Value);
@@ -66,6 +73,12 @@ void UUW_SoundSettings::OnBGMVolumeChanged(float Value)
 {
 	if (UTFDGameInstance* GI = GetWorld()->GetGameInstance<UTFDGameInstance>())
 		GI->SetBGMVolume(Value);
+		USoundClass* BGMClass = LoadObject<USoundClass>(nullptr, TEXT("/Game/Sound/SoundClass/SoundClass_BGM.SoundClass_BGM"));
+		if (BGMClass)
+		{
+			BGMClass->Properties.Volume = Value;
+		}
+
 
 	UpdateVolumeText(Txt_BGMValue, Value, TEXT("BGM"));
 	UpdateGaugeColor(Gauge_BGM, Value);
@@ -75,6 +88,11 @@ void UUW_SoundSettings::OnSFXVolumeChanged(float Value)
 {
 	if (UTFDGameInstance* GI = GetWorld()->GetGameInstance<UTFDGameInstance>())
 		GI->SetSFXVolume(Value);
+		USoundClass* SFXClass = LoadObject<USoundClass>(nullptr, TEXT("/Game/Sound/SoundClass/SoundClass_SFX.SoundClass_SFX"));
+		if (SFXClass)
+		{
+			SFXClass->Properties.Volume = Value;
+		}
 
 	UpdateVolumeText(Txt_SFXValue, Value, TEXT("SFX"));
 	UpdateGaugeColor(Gauge_SFX, Value);
