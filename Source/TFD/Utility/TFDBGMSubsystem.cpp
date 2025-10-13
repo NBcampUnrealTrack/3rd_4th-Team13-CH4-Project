@@ -35,9 +35,9 @@ void UTFDBGMSubsystem::PlayBGM(USoundBase* BGM, float FadeInTime)
 		return;
 
 	UWorld* World = GetAudioWorld();
-	if (!World)
-		return; // 월드가 없으면 여기서 리턴
-
+	if (!World || !World->IsGameWorld())
+		return;
+	
 	if (BGMComponent)
 	{
 		if (BGMComponent->IsPlaying())
@@ -49,19 +49,22 @@ void UTFDBGMSubsystem::PlayBGM(USoundBase* BGM, float FadeInTime)
 		{
 			BGMComponent->UnregisterComponent();
 		}
-		
-		BGMComponent->DestroyComponent();
+
+		if (BGMComponent->IsValidLowLevel())
+		{
+			BGMComponent->DestroyComponent();
+		}
 		BGMComponent = nullptr;
 	}
 
 	// 새로 생성
-	BGMComponent = NewObject<UAudioComponent>();
+	BGMComponent = NewObject<UAudioComponent>(World);
 	if (!BGMComponent)
 		return;
 
+	BGMComponent->bAutoActivate = false;
 	BGMComponent->bAutoDestroy = false;
 	BGMComponent->bAllowSpatialization = false;
-	BGMComponent->SetVolumeMultiplier(1.0f);
 
 	if (CurrentPlayingBGM == BGM)
 	{
@@ -70,8 +73,10 @@ void UTFDBGMSubsystem::PlayBGM(USoundBase* BGM, float FadeInTime)
 
 	CurrentPlayingBGM = BGM;
 	BGMComponent->SetSound(BGM);
-
-	BGMComponent->RegisterComponentWithWorld(World);
+	if (!BGMComponent->IsRegistered())
+	{
+		BGMComponent->RegisterComponentWithWorld(World);
+	}
 
 	if (UTFDGameInstance* GI = Cast<UTFDGameInstance>(GetGameInstance()))
 	{
@@ -122,15 +127,24 @@ void UTFDBGMSubsystem::StopBGM(float FadeOutTime)
 	
 	if (BGMComponent->IsPlaying())
 	{
-		BGMComponent->Stop();
+		if (FadeOutTime > 0.f)
+		{
+			BGMComponent->FadeOut(FadeOutTime, 0.f);
+		}
+		else
+		{
+			BGMComponent->Stop();
+		}
 	}
 	
 	if (BGMComponent->IsRegistered())
 	{
 		BGMComponent->UnregisterComponent();
 	}
-	
-	BGMComponent->DestroyComponent();
+	if (BGMComponent->IsValidLowLevel())
+	{
+		BGMComponent->DestroyComponent();
+	}
 	BGMComponent = nullptr;
 	CurrentPlayingBGM = nullptr;
 }
@@ -203,13 +217,26 @@ UWorld* UTFDBGMSubsystem::GetAudioWorld() const
 {
 	if (const UGameInstance* GI = GetGameInstance())
 	{
-		if (GI->GetFirstLocalPlayerController())
+		UWorld* GIWorld = GI->GetWorld();
+
+
+		if (GIWorld && GIWorld->IsGameWorld())
 		{
-			return GI->GetFirstLocalPlayerController()->GetWorld();
+			return GIWorld;
 		}
-		return GI->GetWorld();
+
+	
+		if (const APlayerController* PC = GI->GetFirstLocalPlayerController())
+		{
+			if (UWorld* PCWorld = PC->GetWorld())
+			{
+				return PCWorld;
+			}
+		}
 	}
-	return nullptr;
+
+	// 최후의 보루: 전역 GWorld
+	return GEngine ? GEngine->GetWorldContexts()[0].World() : nullptr;
 }
 
 
