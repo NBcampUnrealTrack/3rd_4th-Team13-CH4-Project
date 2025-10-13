@@ -101,7 +101,7 @@ protected:
 
 	// 안티치트: 속도 최대값
 	UPROPERTY(EditDefaultsOnly, Category = "AntiCheat")
-	float MaxAllowedSpeed = 800.f;
+	float MaxAllowedSpeed = 1000.f;
 
 	// 안티치트: 한 번에 변경 가능한 최대 속도 차이
 	UPROPERTY(EditDefaultsOnly, Category = "AntiCheat")
