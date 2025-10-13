@@ -107,7 +107,7 @@ void UMatchStateWidget::UpdateTeamIconAsync()
 		if (Sprite && TeamIcon)
 		{
 			const FVector2D& Size = TeamIcon->GetDesiredSize();
-			FSlateBrush Brush = UUIResourceAsset::MakeBrushFromSprite(Sprite, Size.X, Size.Y);
+			FSlateBrush Brush = UUIResourceAsset::MakeBrushFromSprite(Sprite, 40.f, 40.f);
 			TeamIcon->SetBrush(Brush);
 		}
 	});
@@ -119,8 +119,8 @@ void UMatchStateWidget::UpdateTeamIconAsync()
 	{
 		if (Sprite && GoldIcon)
 		{
-			const FVector2D& Size = TeamIcon->GetDesiredSize();
-			FSlateBrush Brush = UUIResourceAsset::MakeBrushFromSprite(Sprite, Size.X, Size.Y);
+			const FVector2D& Size = GoldIcon->GetDesiredSize();
+			FSlateBrush Brush = UUIResourceAsset::MakeBrushFromSprite(Sprite, 40.f, 40.f);
 			GoldIcon->SetBrush(Brush);
 		}
 	});
@@ -129,8 +129,8 @@ void UMatchStateWidget::UpdateTeamIconAsync()
 	{
 		if (Sprite && JailIcon)
 		{
-			const FVector2D& Size = TeamIcon->GetDesiredSize();
-			FSlateBrush Brush = UUIResourceAsset::MakeBrushFromSprite(Sprite, Size.X, Size.Y);
+			const FVector2D& Size = JailIcon->GetDesiredSize();
+			FSlateBrush Brush = UUIResourceAsset::MakeBrushFromSprite(Sprite, 40.f, 40.f);
 			JailIcon->SetBrush(Brush);
 		}
 	});
