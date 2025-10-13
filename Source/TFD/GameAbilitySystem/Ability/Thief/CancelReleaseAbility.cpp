@@ -33,12 +33,6 @@ void UCancelReleaseAbility::ActivateAbility(
 	// 취소할 태그 지정
 	static const FGameplayTag CancelTag = TAG_Ability_Thief_Release;
 
-	for (const FGameplayAbilitySpec& Spec : ASC->GetActivatableAbilities())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Ability Tag: %s, Active: %d"),
-			*Spec.Ability->AbilityTags.ToString(), Spec.IsActive());
-	}
-
 	// 활성화된 Ability 순회
 	for (const FGameplayAbilitySpec& Spec : ASC->GetActivatableAbilities())
 	{
@@ -55,8 +49,6 @@ void UCancelReleaseAbility::ActivateAbility(
 			}
 		}
 	}
-
-
 
 	// 즉시 Ability 종료
 	EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
