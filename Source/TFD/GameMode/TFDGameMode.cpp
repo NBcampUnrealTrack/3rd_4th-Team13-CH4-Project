@@ -1,5 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
+// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "GameMode/TFDGameMode.h"
 
@@ -20,7 +19,6 @@
 #include "Constants/TFDGameConstants.h"
 #include "Utility/TFDBGMSubsystem.h"
 
-
 ATFDGameMode::ATFDGameMode()
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -33,7 +31,6 @@ ATFDGameMode::ATFDGameMode()
 void ATFDGameMode::BeginPlay()
 {
 	Super::BeginPlay();
-
 
 	if (UWorld* World = GetWorld())
 	{
@@ -57,80 +54,124 @@ void ATFDGameMode::BeginPlay()
 
 void ATFDGameMode::AssignTeams()
 {
-	// 모든 플레이어의 PlayerState와 선호팀 정보 수집
 	TArray<ATFDPlayerState*> AllPlayers;
 	TArray<FGameplayTag> PreferredTeams;
-
 	GatherPreferredTeams(AllPlayers, PreferredTeams);
 
-	const int32 PoliceTeamMax = UInGameUtility::GetPoliceRoleCount(AllPlayers.Num());
+	const int32 Total = AllPlayers.Num();
+	const int32 PoliceMax = UInGameUtility::GetPoliceRoleCount(Total);
+	const int32 ThiefMax = Total - PoliceMax;
 
-	TArray<ATFDPlayerState*> PreferredPolicePlayers;
-	TArray<ATFDPlayerState*> OtherPlayers;
+	TArray<ATFDPlayerState*> PrefCop;
+	TArray<ATFDPlayerState*> PrefThief;
+	TArray<ATFDPlayerState*> Neutral;
+	PrefCop.Reserve(Total);
+	PrefThief.Reserve(Total);
+	Neutral.Reserve(Total);
 
-	for (int32 i = 0; i < PreferredTeams.Num(); ++i)
+	for (int32 i = 0; i < Total; ++i)
 	{
-		if (PreferredTeams[i] == TAG_Team_Cop)
+		if (PreferredTeams.IsValidIndex(i))
 		{
-			PreferredPolicePlayers.Add(AllPlayers[i]);
+			if (PreferredTeams[i] == TAG_Team_Cop)
+			{
+				PrefCop.Add(AllPlayers[i]);
+			}
+			else if (PreferredTeams[i] == TAG_Team_Thief)
+			{
+				PrefThief.Add(AllPlayers[i]);
+			}
+			else
+			{
+				Neutral.Add(AllPlayers[i]);
+			}
 		}
 		else
 		{
-			OtherPlayers.Add(AllPlayers[i]);
+			Neutral.Add(AllPlayers[i]);
 		}
 	}
 
-	TArray<ATFDPlayerState*> AssignedPolice;
+	auto TakeRandom = [](TArray<ATFDPlayerState*>& Src, int32 Count, TArray<ATFDPlayerState*>& Out)
+	{
+		for (int32 i = 0; i < Count && Src.Num() > 0; ++i)
+		{
+			const int32 Idx = FMath::RandRange(0, Src.Num() - 1);
+			Out.Add(Src[Idx]);
+			Src.RemoveAtSwap(Idx);
+		}
+	};
 
-	// 0명 -> 랜덤
-	if (PreferredPolicePlayers.Num() == 0)
+	TArray<ATFDPlayerState*> AssignedCop;
+	TArray<ATFDPlayerState*> AssignedThief;
+	AssignedCop.Reserve(PoliceMax);
+	AssignedThief.Reserve(ThiefMax);
+
+	// 1차: 선호 최소 보장
 	{
-		int32 NumToAssign = FMath::Min(PoliceTeamMax, OtherPlayers.Num());
-		for (int32 i = 0; i < NumToAssign; ++i)
-		{
-			int32 RandomIndex = FMath::RandRange(0, OtherPlayers.Num() - 1);
-			AssignedPolice.Add(OtherPlayers[RandomIndex]);
-			OtherPlayers[RandomIndex]->SetActualTeam(TAG_Team_Cop);
-			OtherPlayers.RemoveAt(RandomIndex);
-		}
-	}
-	else if (PreferredPolicePlayers.Num() <= PoliceTeamMax)
-	{
-		for (ATFDPlayerState* Player : PreferredPolicePlayers)
-		{
-			Player->SetActualTeam(TAG_Team_Cop);
-			AssignedPolice.Add(Player);
-		}
-	}
-	else
-	{
-		for (int32 i = PreferredPolicePlayers.Num() - 1; i > 0; --i)
-		{
-			int32 SwapIndex = FMath::RandRange(0, i);
-			PreferredPolicePlayers.Swap(i, SwapIndex);
-		}
-		for (int32 i = 0; i < PoliceTeamMax; ++i)
-		{
-			PreferredPolicePlayers[i]->SetActualTeam(TAG_Team_Cop);
-			AssignedPolice.Add(PreferredPolicePlayers[i]);
-		}
-		for (int32 i = PoliceTeamMax; i < PreferredPolicePlayers.Num(); ++i)
-		{
-			PreferredPolicePlayers[i]->SetActualTeam(TAG_Team_Thief);
-			OtherPlayers.Add(PreferredPolicePlayers[i]);
-		}
+		const int32 CopFirst = FMath::Min(PrefCop.Num(), PoliceMax);
+		const int32 ThiefFirst = FMath::Min(PrefThief.Num(), ThiefMax);
+
+		TakeRandom(PrefCop, CopFirst, AssignedCop);
+		TakeRandom(PrefThief, ThiefFirst, AssignedThief);
 	}
 
-	for (ATFDPlayerState* Player : OtherPlayers)
+	// 2차: 정원 보충 (Neutral 우선 → 상대 선호 초과분 차용)
 	{
-		Player->SetActualTeam(TAG_Team_Thief);
+		int32 NeedCop = PoliceMax - AssignedCop.Num();
+		if (NeedCop > 0)
+		{
+			TakeRandom(Neutral, NeedCop, AssignedCop);
+			NeedCop = PoliceMax - AssignedCop.Num();
+			if (NeedCop > 0)
+			{
+				TakeRandom(PrefThief, NeedCop, AssignedCop);
+			}
+		}
+
+		int32 NeedThief = ThiefMax - AssignedThief.Num();
+		if (NeedThief > 0)
+		{
+			TakeRandom(Neutral, NeedThief, AssignedThief);
+			NeedThief = ThiefMax - AssignedThief.Num();
+			if (NeedThief > 0)
+			{
+				TakeRandom(PrefCop, NeedThief, AssignedThief);
+			}
+		}
 	}
 
+	// 3차: 잔여는 모두 상대 팀
+	for (ATFDPlayerState* P : Neutral)
+	{
+		AssignedThief.Add(P);
+	}
+	for (ATFDPlayerState* P : PrefCop)
+	{
+		AssignedThief.Add(P);
+	}
+	for (ATFDPlayerState* P : PrefThief)
+	{
+		AssignedCop.Add(P);
+	}
+
+	// 적용
+	for (ATFDPlayerState* P : AssignedCop)
+	{
+		P->SetActualTeam(TAG_Team_Cop);
+	}
+	for (ATFDPlayerState* P : AssignedThief)
+	{
+		P->SetActualTeam(TAG_Team_Thief);
+	}
+
+	// 검증 로그
+	UE_LOG(LogTemp, Log, TEXT("Assigned Cop=%d/%d, Thief=%d/%d, Total=%d"),
+		AssignedCop.Num(), PoliceMax, AssignedThief.Num(), ThiefMax, Total);
 	for (ATFDPlayerState* Player : AllPlayers)
 	{
-		UE_LOG(LogTemp, Log, TEXT("Player %s assigned to team %s"),
-		       *Player->GetPlayerName(),
-		       *Player->GetActualTeam().ToString());
+		UE_LOG(LogTemp, Log, TEXT("Player %s -> %s"),
+			*Player->GetPlayerName(), *Player->GetActualTeam().ToString());
 	}
 }
 
@@ -158,8 +199,8 @@ void ATFDGameMode::AssignTeamsOnGameStart()
 		{
 			TFDPS->SetActualTeam(TFDPS->GetPreferredTeam());
 			UE_LOG(LogTemp, Log, TEXT("Player %s assigned ActualTeam: %s"),
-			       *TFDPS->GetPlayerName(),
-			       *TFDPS->GetActualTeam().GetTagName().ToString());
+				*TFDPS->GetPlayerName(),
+				*TFDPS->GetActualTeam().GetTagName().ToString());
 		}
 	}
 }
@@ -182,7 +223,6 @@ APawn* ATFDGameMode::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, 
 		return nullptr;
 	}
 
-
 	// Pawn 클래스 가져오기
 	TSubclassOf<APawn> PawnClass = GetDefaultPawnClassForController(NewPlayer);
 	if (!PawnClass) return nullptr;
@@ -190,7 +230,6 @@ APawn* ATFDGameMode::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, 
 	// SpawnTransform 설정
 	FTransform SpawnTransform = StartSpot->GetActorTransform();
 	FVector SpawnLocation = GetRandomPointInSpawnAreaTag(PS->GetActualTeam());
-
 
 	SpawnTransform.SetLocation(SpawnLocation);
 
@@ -220,7 +259,6 @@ APawn* ATFDGameMode::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, 
 	return Pawn;
 }
 
-
 bool ATFDGameMode::ReadyToStartMatch_Implementation()
 {
 	return MatchState == MatchState::InProgress;
@@ -249,7 +287,6 @@ void ATFDGameMode::HandleMatchHasEnded()
 	Super::HandleMatchHasEnded();
 	UE_LOG(LogTemp, Warning, TEXT("HandleMatchHasEnded"));
 	//게임 종료 처리
-
 
 	SetActorTickEnabled(false);
 
@@ -320,7 +357,6 @@ void ATFDGameMode::SpawnAI()
 	FVector SpawnLoc = GetRandomPointInSpawnArea();
 	FRotator SpawnRot = FRotator::ZeroRotator;
 
-
 	TSubclassOf<ATFDCharacterBase> AIClass = RuleData->PawnClassAI;
 
 	for (ATFDSpawnVolume* SpawnVolume : AIVolumes)
@@ -349,7 +385,6 @@ void ATFDGameMode::SpawnItemStart()
 		}
 	}
 }
-
 
 UDataTable* ATFDGameMode::GetDTAllowedTeamTag()
 {
@@ -451,7 +486,6 @@ FSpawnPointArray ATFDGameMode::GetSpawnPointArrayTag(ETeamType InEnum)
 	// 키가 존재하지 않을 경우 빈 배열 반환
 	return FSpawnPointArray();
 }
-
 
 FVector ATFDGameMode::GetRandomPointInSpawnArea()
 {
@@ -573,18 +607,17 @@ void ATFDGameMode::InitializeSpawnPoints()
 	for (auto& Pair : WorldSpawnPointsByTeam)
 	{
 		UE_LOG(LogTemp, Display, TEXT("%s: %d spawn points found."),
-		       *UEnum::GetValueAsString(Pair.Key),
-		       Pair.Value.Points.Num());
+			*UEnum::GetValueAsString(Pair.Key),
+			Pair.Value.Points.Num());
 	}
 
 	// FSpawnPointArray* CopSpawns = WorldSpawnPointsByTeam.Find(ETeamType::Cop);
 	// if (CopSpawns && CopSpawns->Points.Num() > 0)
 	// {
 	// 	ATFDSpawnpoint* RandomSpawn = CopSpawns->Points[FMath::RandRange(0, CopSpawns->Points.Num() - 1)];
-	// 	
+	//
 	// }
 }
-
 
 void ATFDGameMode::InitializeSpawnVolumes()
 {
@@ -618,10 +651,9 @@ void ATFDGameMode::MovePlayerToRandomSpawnPoint(APlayerController* PlayerControl
 	{
 		PlayerPawn->SetActorLocation(SpawnLocation);
 		UE_LOG(LogTemp, Display, TEXT("Player moved to random location, X: %.1f,Y:%.1f"), SpawnLocation.X,
-		       SpawnLocation.Y);
+			SpawnLocation.Y);
 	}
 }
-
 
 bool ATFDGameMode::OnCatchThief(APawn* Pawn)
 {
@@ -640,7 +672,6 @@ bool ATFDGameMode::OnCatchThief(APawn* Pawn)
 
 		GetGameState()->OnThievesChanged.Broadcast();
 	}
-
 
 	if (GetGameState()->CaughtThiefPlayerStateArray.Num() == GetGameState()->ThiefPlayerStateArray.Num())
 	{
@@ -762,7 +793,6 @@ ATFDGameState* ATFDGameMode::GetGameState()
 	}
 	return GameState;
 }
-
 
 void ATFDGameMode::Tick(float DeltaTime)
 {
