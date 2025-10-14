@@ -13,6 +13,7 @@
 
 #include "Controller/TFDPlayerController.h"
 #include "GameState/TFDGameStateBase_Lobby.h"
+#include "Constants/TFDGameConstants.h" // 상수 정의된 헤더 포함
 
 void UUW_Lobby::UpdateUIByRole()
 {
@@ -20,13 +21,36 @@ void UUW_Lobby::UpdateUIByRole()
 	{
 		ATFDPlayerController* LobbyPC = Cast<ATFDPlayerController>(PC);
 
+		// Host 전용 UI 보이기
 		if (LobbyPC && LobbyPC->IsHostPlayer())
-		{// Host 전용 UI 보이기
-			if (Btn_Play)
+		{
+			int32 CurrentPlayerCount = 0;
+
+			if (UWorld* World = GetWorld())
 			{
-				Btn_Play->SetVisibility(ESlateVisibility::Visible);
+				if (AGameStateBase* GS = World->GetGameState<AGameStateBase>())
+				{
+					CurrentPlayerCount = GS->PlayerArray.Num();
+				}
 			}
 
+			// 최소 인원 조건 체크
+			if (CurrentPlayerCount >= TFDGameConstants::MinPlayerCount)
+			{
+				if (Btn_Play)
+				{
+					Btn_Play->SetVisibility(ESlateVisibility::Visible);
+				}
+			}
+			else
+			{
+				if (Btn_Play)
+				{
+					Btn_Play->SetVisibility(ESlateVisibility::Collapsed);
+				}
+			}
+
+			// IP는 항상 표시
 			if (Txt_HostIP)
 			{
 				Txt_HostIP->SetVisibility(ESlateVisibility::Visible);
@@ -288,5 +312,8 @@ void UUW_Lobby::HandlePlayerListChanged()
 		}
 
 		UpdatePlayerList(GS->PlayerArray);
+
+		// 인원 수가 바뀔 때마다 Play 버튼 상태도 갱신
+		UpdateUIByRole();
 	}
 }
