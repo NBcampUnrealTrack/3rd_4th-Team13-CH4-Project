@@ -81,15 +81,7 @@ void ATFDPlayerController_Title::JoinServer(const FString& ServerIP)
 				}
 			}
 		}
-
-		if (bIsLocal)
-		{// 로컬 또는 사설 네트워크라면 기본 포트 7777 사용
-			TravelURL = FString::Printf(TEXT("%s:7777"), *ServerIP);
-		}
-		else
-		{// 그 외는 외부 IP로 간주
-			TravelURL = FString::Printf(TEXT("%s:17777"), *ServerIP);
-		}
+		TravelURL = FString::Printf(TEXT("%s:7777"), *ServerIP);
 	}
 
 	// 최종 접속 URL (디버깅용)
