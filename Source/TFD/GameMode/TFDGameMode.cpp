@@ -168,6 +168,8 @@ void ATFDGameMode::AssignTeams()
 		AssignedCop.Add(P);
 	}
 
+	
+
 	// 적용
 	for (ATFDPlayerState* P : AssignedCop)
 	{
@@ -432,6 +434,8 @@ FGameplayTagContainer ATFDGameMode::GetDTAllowedTeamTagContainer(FGameplayTag Ar
 		}
 	}
 
+	
+
 	if (ResultContainer.IsEmpty())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("No matching ItemTag found for: %s"), *ArgGameplayTag.ToString());
@@ -456,8 +460,13 @@ TSubclassOf<AActor> ATFDGameMode::GetDTAllowedTeamTag_Item(FGameplayTag ArgGamep
 	{
 		if (Row && Row->ItemTag == ArgGameplayTag)
 		{
-			ResultItem = Row->ItemClass;
-			break;
+			if (Row && Row->ItemTag == ArgGameplayTag && Row->ItemClasses.Num() > 0)
+			{
+				// 랜덤 인덱스 선택
+				int32 RandomIndex = FMath::RandRange(0, Row->ItemClasses.Num() - 1);
+				ResultItem = Row->ItemClasses[RandomIndex];
+				break;
+			}
 		}
 	}
 
