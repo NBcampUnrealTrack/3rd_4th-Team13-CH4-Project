@@ -13,6 +13,7 @@
 #include "UI/UIResourceAsset.h"
 #include "GameInstance/TFDGameInstance.h"
 #include "NativeGameplayTags.h"
+#include "GameFramework/GameStateBase.h"
 
 void USkillSlotItem::UpdateSlot(const FTFDSkillSlot& InSlot, int32 SlotIndex)
 {
@@ -140,9 +141,19 @@ void USkillSlotItem::UpdateCooldown()
     if (!CooldownText || CurrentSlot.CooldownDuration <= 0.f || CurrentSlot.CooldownStartTime <= 0.f)
         return;
 
-    float Remaining = (CurrentSlot.CooldownStartTime + CurrentSlot.CooldownDuration) - GetWorld()->GetTimeSeconds();
-    float Ratio = FMath::Clamp(Remaining / CurrentSlot.CooldownDuration, 0.f, 1.f);
+    // float Remaining = (CurrentSlot.CooldownStartTime + CurrentSlot.CooldownDuration) - GetWorld()->GetTimeSeconds();
+    // float Ratio = FMath::Clamp(Remaining / CurrentSlot.CooldownDuration, 0.f, 1.f);
 
+    const UWorld* World = GetWorld();
+    const AGameStateBase* GameState = World ? World->GetGameState() : nullptr;
+
+    const float ServerTime = GameState ? GameState->GetServerWorldTimeSeconds() : World->GetTimeSeconds();
+
+    const float Remaining = (CurrentSlot.CooldownStartTime + CurrentSlot.CooldownDuration) - ServerTime;
+    const float Ratio = FMath::Clamp(Remaining / CurrentSlot.CooldownDuration, 0.f, 1.f);
+
+
+    
     if (Remaining > 0.f)
     {
         CooldownText->SetText(FText::AsNumber(FMath::RoundToInt(Remaining)));
