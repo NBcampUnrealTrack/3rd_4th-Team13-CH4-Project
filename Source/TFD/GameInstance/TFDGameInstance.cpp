@@ -21,14 +21,10 @@ void UTFDGameInstance::Shutdown()
 	Super::Shutdown();
 }
 
+
 void UTFDGameInstance::HandleLevelChanged(const FName& LevelName)
 {
 	if (!IsValid(this))
-	{
-		return;
-	}
-
-	if (GetWorld() == nullptr)
 	{
 		return;
 	}
@@ -39,15 +35,24 @@ void UTFDGameInstance::HandleLevelChanged(const FName& LevelName)
 	}
 }
 
-
 void UTFDGameInstance::SetMasterVolume(float InVolume)
 {
 	MasterVolume = FMath::Clamp(InVolume, 0.0f, 1.0f);
+
+	if (UTFDBGMSubsystem* BGM = this->GetSubsystem<UTFDBGMSubsystem>())
+	{
+		BGM->UpdateVolume();
+	}
 }
 
 void UTFDGameInstance::SetBGMVolume(float InVolume)
 {
 	BGMVolume = FMath::Clamp(InVolume, 0.0f, 1.0f);
+
+	if (UTFDBGMSubsystem* BGM = this->GetSubsystem<UTFDBGMSubsystem>())
+	{
+		BGM->UpdateVolume();
+	}
 }
 
 void UTFDGameInstance::SetSFXVolume(float InVolume)
@@ -73,20 +78,19 @@ void UTFDGameInstance::RequestUIIcon(EUIIconType IconType, TFunction<void(TObjec
 
 	FStreamableManager& SM = UAssetManager::GetStreamableManager();
 	SM.RequestAsyncLoad(UIResourceAssetRef.ToSoftObjectPath(),
-		FStreamableDelegate::CreateLambda([this, IconType, OnLoaded]()
-	{
-		LoadedUIResource = UIResourceAssetRef.Get();
-		if (LoadedUIResource)
-		{
-			LoadedUIResource->RequestIconAsync(IconType, OnLoaded);
-		}
-		else
-		{
-			OnLoaded(nullptr);
-		}
-	}));
+	                    FStreamableDelegate::CreateLambda([this, IconType, OnLoaded]()
+	                    {
+		                    LoadedUIResource = UIResourceAssetRef.Get();
+		                    if (LoadedUIResource)
+		                    {
+			                    LoadedUIResource->RequestIconAsync(IconType, OnLoaded);
+		                    }
+		                    else
+		                    {
+			                    OnLoaded(nullptr);
+		                    }
+	                    }));
 }
-
 
 const TMap<EUISoundType, USoundBase*>& UTFDGameInstance::GetUISounds()
 {

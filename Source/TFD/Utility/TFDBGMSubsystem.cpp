@@ -15,9 +15,7 @@ void UTFDBGMSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
 
-	// EnsureBGMManager();
-	//EnsureBGMComponent();
-	// 첫 맵도 강제 처리
+	
 	if (UWorld* World = GetWorld())
 	{
 		World->GetTimerManager().SetTimer(InitTempHandle, [this]()
@@ -34,126 +32,82 @@ void UTFDBGMSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 void UTFDBGMSubsystem::PlayBGM(USoundBase* BGM, float FadeInTime)
 {
 	if (!BGM)
+		return;
+
+	UWorld* World = GetAudioWorld();
+	if (!World || !World->IsGameWorld())
+		return;
+	
+	if (BGMComponent)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("PlayBGM called with null Sound"));
+		if (BGMComponent->IsPlaying())
+		{
+			BGMComponent->Stop();
+		}
+		
+		if (BGMComponent->IsRegistered())
+		{
+			BGMComponent->UnregisterComponent();
+		}
+
+		if (BGMComponent->IsValidLowLevel())
+		{
+			BGMComponent->DestroyComponent();
+		}
+		BGMComponent = nullptr;
+	}
+
+	// 새로 생성
+	BGMComponent = NewObject<UAudioComponent>(World);
+	if (!BGMComponent)
+		return;
+
+	BGMComponent->bAutoActivate = false;
+	BGMComponent->bAutoDestroy = false;
+	BGMComponent->bAllowSpatialization = false;
+
+	if (CurrentPlayingBGM == BGM)
+	{
 		return;
 	}
 
-
-	// if (!BGMComponent)
-	// {
-	// 	BGMComponent = NewObject<UAudioComponent>(this, UAudioComponent::StaticClass());
-	// 	if (BGMComponent)
-	// 	{
-	// 		BGMComponent->RegisterComponent();
-	// 		BGMComponent->bAutoActivate = false;
-	// 		BGMComponent->bIsUISound = false;
-	// 		BGMComponent->SetVolumeMultiplier(1.0f);
-	// 	}
-	// }
-
-	UWorld* World = GetWorld();
-	if (!World || !BGMComponent)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("PlayBGM failed: World or BGMComponent invalid"));
-		return;
-	}
-
-	if (CurrentPlayingBGM == BGM && BGMComponent->IsPlaying())
-	{
-		UE_LOG(LogTemp, Log, TEXT("PlayBGM skipped: Same BGM is already playing."));
-		return;
-	}
-
-	if (BGMComponent->IsPlaying())
-	{
-		UE_LOG(LogTemp, Log, TEXT("PlayBGM skipped: Same BGM is already playing."));
-		BGMComponent->Stop();
-	}
-
-	// 현재 재생 중인 BGM 갱신
 	CurrentPlayingBGM = BGM;
-
-	// 0.2초 정도 딜레이 후 재생 → 첫 맵 AudioDevice 초기화 문제 방지
-	FTimerHandle TimerHandle;
-	World->GetTimerManager().SetTimer(TimerHandle, [this, BGM]()
+	BGMComponent->SetSound(BGM);
+	if (!BGMComponent->IsRegistered())
 	{
-		if (!BGMComponent)
-			return;
+		BGMComponent->RegisterComponentWithWorld(World);
+	}
 
-		BGMComponent->SetSound(BGM);
-		BGMComponent->Play();
+	if (UTFDGameInstance* GI = Cast<UTFDGameInstance>(GetGameInstance()))
+	{
+		float FinalVolume = GI->MasterVolume * GI->BGMVolume;
+		BGMComponent->SetVolumeMultiplier(FinalVolume);
+	}
 
-		UE_LOG(LogTemp, Warning, TEXT("PlayBGM -> Now Playing: %s, IsPlaying=%d"),
-		       *BGM->GetName(),
-		       BGMComponent->IsPlaying() ? 1 : 0);
-	}, 0.2f, false);
-}
-
-void UTFDBGMSubsystem::Play_BGM_02(USoundBase* NewBGM, float FadeInTime)
-{
-	// if (!NewBGM)
-	// 	return;
-	//
-	// //EnsureBGMComponent();
-	//
-	// // 같은 곡이면 그대로 재생 && BGMComponent->IsPlaying()
-	// if (CurrentPlayingBGM == NewBGM)
-	// {
-	// 	BGMComponent->UnregisterComponent();
-	// 	BGMComponent->RegisterComponentWithWorld(GetWorld());
-	// 	// BGMComponent->SetSound(CurrentPlayingBGM);
-	// 	BGMComponent->Play();
-	// 	return;
-	// }
-	// //
-	// // if (CurrentPlayingBGM == NewBGM && BGMComponent && BGMComponent->IsPlaying())
-	// // 	return;
-	// // 레벨 전환으로 World가 바뀌었으면 재등록
-	// if (BGMComponent && GetWorld() && BGMComponent->GetWorld() != GetWorld())
-	// {
-	// 	BGMComponent->UnregisterComponent();
-	// 	BGMComponent->RegisterComponentWithWorld(GetWorld());
-	// }
-	//
-	// // 다른 BGM이면 FadeOut 후 교체
-	// if (BGMComponent && BGMComponent->IsPlaying())
-	// {
-	// 	BGMComponent->FadeOut(0.2f, 0.f);
-	// }
-	//
-	// CurrentPlayingBGM = NewBGM;
-	// BGMComponent->SetSound(NewBGM);
-	//
-	//
-	// if (UWorld* World = GetWorld())
-	// {
-	// 	World->GetTimerManager().SetTimer(PlayBGMTimerHandle, [this, FadeInTime]()
-	// 	{
-	// 		if (BGMComponent && BGMComponent->IsValidLowLevelFast())
-	// 		{
-	// 			BGMComponent->FadeIn(FadeInTime);
-	// 		}
-	// 	}, 0.15f, false);
-	// }
+	BGMComponent->Play();
 }
 
 void UTFDBGMSubsystem::PlayUISound(EUISoundType SoundType)
 {
-	if (!GetWorld()) // Subsystem은 WorldContext가 없을 수도 있음 → 방어 코드
+	if (!GetWorld())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("PlayUISound failed: No World found."));
 		return;
 	}
 	UTFDGameInstance* TFDGI = Cast<UTFDGameInstance>(GetGameInstance());
-	
+
+	if (!TFDGI)
+	{
+		return;
+	}
 
 	const TMap<EUISoundType, USoundBase*>& UISoundsMap = TFDGI->GetUISounds();
 	if (USoundBase* const* FoundSound = UISoundsMap.Find(SoundType))
 	{
 		if (*FoundSound)
 		{
-			UGameplayStatics::PlaySound2D(GetWorld(), *FoundSound);
+			float FinalVolume = TFDGI->MasterVolume * TFDGI->SFXVolume;
+			UGameplayStatics::PlaySound2D(GetWorld(), *FoundSound, FinalVolume);
 		}
 		else
 		{
@@ -168,26 +122,58 @@ void UTFDBGMSubsystem::PlayUISound(EUISoundType SoundType)
 
 void UTFDBGMSubsystem::StopBGM(float FadeOutTime)
 {
-	if (BGMComponent)
+	if (!BGMComponent)
+		return;
+	
+	if (BGMComponent->IsPlaying())
 	{
-		BGMComponent->FadeOut(FadeOutTime, 0.f);
-		CurrentPlayingBGM = nullptr;
+		if (FadeOutTime > 0.f)
+		{
+			BGMComponent->FadeOut(FadeOutTime, 0.f);
+		}
+		else
+		{
+			BGMComponent->Stop();
+		}
 	}
+	
+	if (BGMComponent->IsRegistered())
+	{
+		BGMComponent->UnregisterComponent();
+	}
+	if (BGMComponent->IsValidLowLevel())
+	{
+		BGMComponent->DestroyComponent();
+	}
+	BGMComponent = nullptr;
+	CurrentPlayingBGM = nullptr;
 }
 
 
 void UTFDBGMSubsystem::OnLevelChanged(const FName& NewLevelName)
 {
-	// EnsureBGMManager();
-	//EnsureBGMComponent();
-
 	UWorld* World = GetWorld();
 
 	if (!World)
 		return;
 
-	World->GetTimerManager().SetTimer(LevelChangeTimerHandle, [this, NewLevelName]()
+	StopBGM();
+
+	// 기존 타이머 제거 후 새로 설정
+	World->GetTimerManager().ClearTimer(LevelChangeTimerHandle);
+
+	FTimerDelegate TimerDel;
+	TWeakObjectPtr<UTFDBGMSubsystem> WeakThis(this);
+
+	TimerDel.BindLambda([WeakThis, NewLevelName]()
 	{
+		if (!WeakThis.IsValid())
+			return;
+
+		UWorld* InnerWorld = WeakThis->GetWorld();
+		if (!InnerWorld)
+			return;
+
 		FString MapName = NewLevelName.ToString();
 		if (MapName.StartsWith(TEXT("UEDPIE_")))
 		{
@@ -196,26 +182,61 @@ void UTFDBGMSubsystem::OnLevelChanged(const FName& NewLevelName)
 				MapName = MapName.RightChop(LastUnderscore + 1);
 		}
 
-		if (UTFDGameInstance* GI = Cast<UTFDGameInstance>(GetGameInstance()))
+		if (UTFDGameInstance* GI = Cast<UTFDGameInstance>(WeakThis->GetGameInstance()))
 		{
 			const TArray<FLevelBGMData>& GI_MapBGMs = GI->GetMapBGMs();
 			for (const FLevelBGMData& Data : GI_MapBGMs)
 			{
 				if (Data.MapName.ToString() == MapName)
 				{
-					// 새 레벨에 맞는 BGM 실행
-					// PlayBGM(Data.BGMSound);
-
-					Play_BGM_02(Data.BGMSound);
-
+					WeakThis->PlayBGM(Data.BGMSound);
 					return;
 				}
 			}
 		}
 
 		// 해당 레벨에 매칭되는 BGM이 없으면 정지
-		StopBGM();
-	}, 0.2f, false); // 0.2초 딜레이
+		WeakThis->StopBGM();
+	});
+
+	World->GetTimerManager().SetTimer(LevelChangeTimerHandle, TimerDel, 0.2f, false);
+}
+
+void UTFDBGMSubsystem::UpdateVolume()
+{
+	if (BGMComponent && CurrentPlayingBGM)
+	{
+		if (UTFDGameInstance* GI = Cast<UTFDGameInstance>(GetGameInstance()))
+		{
+			BGMComponent->SetVolumeMultiplier(GI->MasterVolume * GI->BGMVolume);
+		}
+	}
+}
+
+UWorld* UTFDBGMSubsystem::GetAudioWorld() const
+{
+	if (const UGameInstance* GI = GetGameInstance())
+	{
+		UWorld* GIWorld = GI->GetWorld();
+
+
+		if (GIWorld && GIWorld->IsGameWorld())
+		{
+			return GIWorld;
+		}
+
+	
+		if (const APlayerController* PC = GI->GetFirstLocalPlayerController())
+		{
+			if (UWorld* PCWorld = PC->GetWorld())
+			{
+				return PCWorld;
+			}
+		}
+	}
+
+	// 최후의 보루: 전역 GWorld
+	return GEngine ? GEngine->GetWorldContexts()[0].World() : nullptr;
 }
 
 
@@ -249,7 +270,7 @@ void UTFDBGMSubsystem::EnsureBGMComponent()
 		BGMComponent->bAutoActivate = false;
 		BGMComponent->bAutoDestroy = false;
 		BGMComponent->bAllowSpatialization = false;
-		
+
 		if (UWorld* World = GetWorld())
 		{
 			BGMComponent->RegisterComponentWithWorld(World);

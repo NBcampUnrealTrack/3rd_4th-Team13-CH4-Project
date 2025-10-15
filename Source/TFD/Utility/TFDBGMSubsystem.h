@@ -23,10 +23,7 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void PlayBGM(USoundBase* BGM, float FadeInTime = 0.5f);
-
-	UFUNCTION(BlueprintCallable)
-	void Play_BGM_02(USoundBase* NewBGM, float FadeInTime = 0.5f);
-
+	
 	UFUNCTION(BlueprintCallable)
 	void PlayUISound(EUISoundType SoundType);
 	
@@ -36,7 +33,10 @@ public:
 
 	void OnLevelChanged(const FName& NewLevelName);
 
+	void UpdateVolume();
 private:
+	UWorld* GetAudioWorld() const;
+	
 	void EnsureBGMManager();
 	
 	void EnsureBGMComponent();

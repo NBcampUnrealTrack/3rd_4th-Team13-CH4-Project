@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -14,7 +14,6 @@ class ATFDCharacter;
 class ATFDSpawnVolume;
 class ATFDSpawnpoint;
 struct FGameplayTag;
-
 
 UENUM(BlueprintType)
 enum class ETeamType : uint8
@@ -45,7 +44,8 @@ public:
 	void OffCatchThief(APawn* Pawn);
 	// 게임 종료시 처리될 내용이 담김.
 	void GameEnd(EGameCompleteType CompleteType);
-	ATFDGameState* GetGameState();
+	FORCEINLINE ATFDGameState* GetGameState() { return Super::GetGameState<ATFDGameState>(); }
+	FORCEINLINE  UTFDGameRuleData* GetRuleData() { return GetGameState()->GetRuleData(); }
 	void GamePause(bool bIsPaused);
 
 	// 모든 플레이어의 팀 선호/실제팀을 수집(내부 구현용)
@@ -89,10 +89,6 @@ protected:
 	UPROPERTY()
 	TArray<ATFDSpawnVolume*> SpawnVolumes;
 
-	ATFDGameState* GameState;
-
-	UTFDGameRuleData* RuleData;
-
 	UFUNCTION()
 	void HandleThiefScoreChanged(int32 NewScore);
 
@@ -104,7 +100,6 @@ protected:
 	UFUNCTION()
 	void ReturnToLobby();
 
-
 #pragma region 스폰관련
 
 protected:
@@ -114,7 +109,7 @@ protected:
 public:
 	void SpawnAI();
 	void SpawnItemStart();
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DataTable")
 	UDataTable* DTAllowedTeamTag;
 

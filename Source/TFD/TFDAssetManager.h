@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "TFDDA_AbilityCatalog.h"
 #include "Engine/AssetManager.h"
 #include "TFDAssetManager.generated.h"
 
@@ -16,4 +17,14 @@ class TFD_API UTFDAssetManager : public UAssetManager
 
 public:
 	virtual void StartInitialLoading() override;
+
+	static UTFDAssetManager& Get();
+
+private:
+
+	void OnAbilityCatalogLoaded();
+
+	UPROPERTY()
+	UTFDDA_AbilityCatalog* TFDDA_AbilityCatalog;  
+	
 };
