@@ -174,6 +174,9 @@ void ATFDCharacterBase::BaseSetting()
 
 void ATFDCharacterBase::SetDAPlayerStat()
 {
+	if (!CharacterData.Get())
+		CharacterData.LoadSynchronous();
+	
 	if (!HasAuthority() || !CharacterData.Get())
 		return;
 	// AttributeSet의 초기값을 데이터 에셋의 값으로 설정
