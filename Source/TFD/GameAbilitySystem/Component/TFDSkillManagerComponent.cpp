@@ -138,20 +138,26 @@ void UTFDSkillManagerComponent::HandleEffectAdded(UAbilitySystemComponent* InASC
 			if (ActiveEffect)
 			{
 				float Duration = ActiveEffect->GetDuration();
-				float CurrentTime = GetWorld()->GetTimeSeconds();
+				//float CurrentTime = GetWorld()->GetTimeSeconds();
+				// 수정: 서버 시간 사용
+				float ServerTime = InASC->GetWorld()->GetTimeSeconds();
 
 				// UI용 쿨다운 정보
 				Slot.CooldownDuration = Duration;
-				Slot.CooldownStartTime = CurrentTime;
+				//Slot.CooldownStartTime = CurrentTime;
+				Slot.CooldownStartTime = ServerTime;
 
 				// 서버 쿨다운 검증용 (추가)
 				if (GetOwner()->HasAuthority())
 				{
-					ServerCooldownEndTimes.Add(i, CurrentTime + Duration);
+					//ServerCooldownEndTimes.Add(i, CurrentTime + Duration);
+					// 수정: FindOrAdd 사용
+					ServerCooldownEndTimes.FindOrAdd(i) = ServerTime + Duration;
 
+					// 수정: ServerTime과 EndTime 추가
 					UE_LOG(LogTemp, Log,
-						TEXT("[UTFDSkillManagerComponent][HandleEffectAdded][Server] Cooldown started for slot %d: %.2fs"),
-						i, Duration);
+						TEXT("[UTFDSkillManagerComponent][HandleEffectAdded][Server] Cooldown started for slot %d: Duration=%.2fs, ServerTime=%.2f, EndTime=%.2f"),
+						i, Duration, ServerTime, ServerTime + Duration);
 				}
 			}
 
@@ -193,6 +199,9 @@ void UTFDSkillManagerComponent::HandleEffectRemoved(const FActiveGameplayEffect&
 			{
 				ServerCooldownEndTimes.Remove(i);
 
+				// 추가: LastSkillUseTimes도 정리
+				LastSkillUseTimes.Remove(i);
+
 				UE_LOG(LogTemp, Log,
 					TEXT("[UTFDSkillManagerComponent][HandleEffectRemoved][Server] Cooldown ended for slot %d"), i);
 			}
@@ -218,18 +227,23 @@ void UTFDSkillManagerComponent::ApplyExistingCooldownToSlot(int32 SlotIndex, TSu
 	FGameplayEffectQuery Query = FGameplayEffectQuery::MakeQuery_MatchAnyOwningTags(*CooldownTags);
 	TArray<FActiveGameplayEffectHandle> ActiveEffects = ASC->GetActiveEffects(Query);
 
+	// 수정: 서버 시간 사용
+	float ServerTime = ASC->GetWorld()->GetTimeSeconds();
+
 	for (FActiveGameplayEffectHandle ActiveHandle : ActiveEffects)
 	{
 		const FActiveGameplayEffect* ActiveEffect = ASC->GetActiveGameplayEffect(ActiveHandle);
 		if (!ActiveEffect) continue;
 
 		float Duration = ActiveEffect->GetDuration();
-		float TimeRemaining = ActiveEffect->GetTimeRemaining(GetWorld()->GetTimeSeconds());
+		//float TimeRemaining = ActiveEffect->GetTimeRemaining(GetWorld()->GetTimeSeconds());
+		float TimeRemaining = ActiveEffect->GetTimeRemaining(ServerTime);
 
 		if (Duration > 0.f && TimeRemaining > 0.f)
 		{
 			SkillSlots[SlotIndex].CooldownDuration = Duration;
-			SkillSlots[SlotIndex].CooldownStartTime = GetWorld()->GetTimeSeconds() - (Duration - TimeRemaining);
+			//SkillSlots[SlotIndex].CooldownStartTime = GetWorld()->GetTimeSeconds() - (Duration - TimeRemaining);
+			SkillSlots[SlotIndex].CooldownStartTime = ServerTime - (Duration - TimeRemaining);
 			return; // 첫 번째 매칭만 적용
 		}
 	}
@@ -483,14 +497,16 @@ void UTFDSkillManagerComponent::AddSkill(TSubclassOf<UGameplayAbility> SkillClas
 			{
 				float CooldownEnd = ServerCooldownEndTimes[i];
 				ServerCooldownEndTimes.Remove(i);
-				ServerCooldownEndTimes.Add(i - 1, CooldownEnd);
+				//ServerCooldownEndTimes.Add(i - 1, CooldownEnd);
+				ServerCooldownEndTimes.FindOrAdd(i - 1) = CooldownEnd;
 			}
 
 			if (LastSkillUseTimes.Contains(i))
 			{
 				float LastUseTime = LastSkillUseTimes[i];
 				LastSkillUseTimes.Remove(i);
-				LastSkillUseTimes.Add(i - 1, LastUseTime);
+				//LastSkillUseTimes.Add(i - 1, LastUseTime);
+				LastSkillUseTimes.FindOrAdd(i - 1) = LastUseTime;
 			}
 		}
 
@@ -599,14 +615,16 @@ void UTFDSkillManagerComponent::RemoveSkill(FGameplayTag SkillTag)
 					{
 						float CooldownEnd = ServerCooldownEndTimes[j];
 						ServerCooldownEndTimes.Remove(j);
-						ServerCooldownEndTimes.Add(j - 1, CooldownEnd);
+						//ServerCooldownEndTimes.Add(j - 1, CooldownEnd);
+						ServerCooldownEndTimes.FindOrAdd(j - 1) = CooldownEnd;
 					}
 
 					if (LastSkillUseTimes.Contains(j))
 					{
 						float LastUseTime = LastSkillUseTimes[j];
 						LastSkillUseTimes.Remove(j);
-						LastSkillUseTimes.Add(j - 1, LastUseTime);
+						//LastSkillUseTimes.Add(j - 1, LastUseTime);
+						LastSkillUseTimes.FindOrAdd(j - 1) = LastUseTime;
 					}
 				}
 
@@ -696,7 +714,10 @@ void UTFDSkillManagerComponent::UseSkillAtSlot(int32 SlotIndex)
 		{
 			// 4. 스팸 방지용 시간 기록
 			// ServerCooldownEndTimes는 HandleEffectAdded에서 자동으로 설정됨
-			LastSkillUseTimes.Add(SlotIndex, CurrentTime);
+			//LastSkillUseTimes.Add(SlotIndex, CurrentTime);
+
+			// 수정: FindOrAdd 사용
+			LastSkillUseTimes.FindOrAdd(SlotIndex) = CurrentTime;
 
 			Slot.UsageCount--;
 
