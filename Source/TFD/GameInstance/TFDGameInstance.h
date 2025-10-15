@@ -7,7 +7,6 @@
 #include "Engine/GameInstance.h"
 #include "TFDGameInstance.generated.h"
 
-
 UENUM(BlueprintType)
 enum class EUISoundType : uint8
 {
@@ -19,7 +18,6 @@ enum class EUISoundType : uint8
 	Confirm,
 	Cancel
 };
-
 
 USTRUCT(BlueprintType)
 struct FLevelBGMData
@@ -34,7 +32,7 @@ struct FLevelBGMData
 };
 
 /**
- * 
+ *
  */
 UCLASS()
 class TFD_API UTFDGameInstance : public UGameInstance
@@ -44,11 +42,9 @@ class TFD_API UTFDGameInstance : public UGameInstance
 public:
 	virtual void Init() override;
 	virtual void Shutdown() override;
-	
+
 	void HandleLevelChanged(const FName& LevelName);
 
-
-	
 	const TMap<EUISoundType, USoundBase*>& GetUISounds();
 	const TArray<FLevelBGMData> GetMapBGMs();
 
@@ -66,24 +62,26 @@ public:
 public:
 	UPROPERTY(EditAnywhere)
 	TMap<EUISoundType, USoundBase*> UISoundsMap;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Audio")
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
 	TArray<FLevelBGMData> MapBGMs;
 
 	//종합 크기
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Audio|Volume")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Audio|Volume")
 	float MasterVolume = 1.f;
 
 	//브금 크기
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Audio|Volume")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Audio|Volume")
 	float BGMVolume = 1.f;
 
 	//UI 사운드 & 상호작용,이펙트 크기
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Audio|Volume")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Audio|Volume")
 	float SFXVolume = 1.f;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="UI")
-	TSoftObjectPtr<UUIResourceAsset> UIResourceAssetRef; 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "UI")
+	TSoftObjectPtr<UUIResourceAsset> UIResourceAssetRef;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "UI")
 	TObjectPtr<UUIResourceAsset> LoadedUIResource = nullptr;
 
 	// Sprite 요청 (비동기 로드 후 콜백 실행)

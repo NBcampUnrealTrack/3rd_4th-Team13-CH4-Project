@@ -35,7 +35,6 @@ void UTFDGameInstance::HandleLevelChanged(const FName& LevelName)
 	}
 }
 
-
 void UTFDGameInstance::SetMasterVolume(float InVolume)
 {
 	MasterVolume = FMath::Clamp(InVolume, 0.0f, 1.0f);
@@ -92,7 +91,6 @@ void UTFDGameInstance::RequestUIIcon(EUIIconType IconType, TFunction<void(TObjec
 		                    }
 	                    }));
 }
-
 
 const TMap<EUISoundType, USoundBase*>& UTFDGameInstance::GetUISounds()
 {
