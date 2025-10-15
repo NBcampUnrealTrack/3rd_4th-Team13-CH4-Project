@@ -106,7 +106,13 @@ void ATFDCharacterBase::PossessedBy(AController* NewController)
 				AbilitySystemComponent->InitAbilityActorInfo(PS, this);
 			}
 		}
-
+		else 
+		{
+			if (AbilitySystemComponent)
+			{
+				AbilitySystemComponent->InitAbilityActorInfo(NewController, this);
+			}
+		}
 		SetDAPlayerStat();
 	}
 
