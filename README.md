@@ -4,6 +4,7 @@
 ## [양한아_OutGameSystem](Docs/작업내용/양한아_OutGameSystem.md)
 ## [양한아_SkillSystem](Docs/작업내용/양한아_SkillSystem.md)
 ## [장민재](Docs/작업내용/장민재.md)
+## [서정원](Docs/작업내용/서정원.md)
 
 # 🥷🆚👮‍♂️ 도둑과 경찰: 비대칭 멀티플레이 액션 게임
 
