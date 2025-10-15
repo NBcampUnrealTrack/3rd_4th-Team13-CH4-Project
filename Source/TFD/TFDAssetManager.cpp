@@ -35,15 +35,20 @@ void UTFDAssetManager::OnAbilityCatalogLoaded()
 {
 	const FPrimaryAssetId CatalogAssetId(TEXT("DataAsset"), TEXT("TFDDA_AbilityCatalog"));
 
-	TFDDA_AbilityCatalog = Cast<UTFDDA_AbilityCatalog>(
-		GetPrimaryAssetObject(CatalogAssetId)
-	);
+	UObject* LoadedObject = GetPrimaryAssetObject(CatalogAssetId);
+	if (!LoadedObject)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Failed to find Ability Catalog asset object!"));
+		return;
+	}
 
+	TFDDA_AbilityCatalog = Cast<UTFDDA_AbilityCatalog>(LoadedObject);
 	if (!TFDDA_AbilityCatalog)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Ability Catalog failed to load!"));
+		UE_LOG(LogTemp, Error, TEXT("Ability Catalog asset is not of expected class UTFDDA_AbilityCatalog!"));
 		return;
 	}
 
 	UE_LOG(LogTemp, Log, TEXT("Ability Catalog loaded successfully!"));
+
 }
