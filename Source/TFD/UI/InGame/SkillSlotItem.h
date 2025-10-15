@@ -37,6 +37,7 @@ protected:
 	TObjectPtr<UTextBlock> CooldownText;
 
 private:
+	UPROPERTY()
 	FTFDSkillSlot CurrentSlot;
 
 	FTimerHandle CooldownTimerHandle;
